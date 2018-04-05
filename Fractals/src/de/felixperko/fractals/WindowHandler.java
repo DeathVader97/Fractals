@@ -37,8 +37,11 @@ public class WindowHandler {
 	private void generateImage() {
 		if (temp_img == null)
 			temp_img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-		int nextPointPercentage = 10;
-		System.out.println();
+		long startTime = System.nanoTime();
+		long printProgressTimer = startTime;
+		long iterationCount = 0;
+		int[] neededIterations = new int[iterations/100 + 1];
+		int printCounter = 0;
 		for (int imgx = 0; imgx < w; imgx++) {
 			for (int imgy = 0; imgy < h; imgy++) {
 //				img.setRGB(imgx, imgy, new Color((int)(255*imgx/w),(int)(255*imgy/h),0).getRGB());
@@ -51,27 +54,43 @@ public class WindowHandler {
 						double imag = 0;
 //						System.out.println(real+", "+imag);
 						for (int i = 0 ; i < iterations ; i++) {
-							if (real*real + imag*imag > 10) {
-								sat += (((double)i/iterations))/(quality*quality);
-								break;
-							}
 							double real2 = real*real - (imag*imag) - creal;
 							double imag2 = real*imag + (imag*real) - cimag;
 							real = real2;
 							imag = imag2;
+							iterationCount++;
+							if (real*real + imag*imag > 4) {
+								sat += (((double)i/iterations))/(quality*quality);
+								neededIterations[i/100]++;
+								break;
+							}
+							if (i == iterations-1)
+								neededIterations[neededIterations.length-1]++;
 						}
 					}
 				}
-				Color color = Color.getHSBColor((float)-sat, 1, (float)sat);
+				Color color = Color.getHSBColor((float)-sat, 1, (float)Math.pow(sat, 0.1));
 				temp_img.setRGB(imgx, imgy, color.getRGB());
 			}
-			double percentage = Math.round((double)imgx*100/w);
-			if (percentage > nextPointPercentage) {
-				nextPointPercentage += 10;
-				System.out.print(".");
+			long percentage = Math.round((double)imgx*100/w);
+			if (System.nanoTime()-printProgressTimer > 1000000000) {
+//				System.out.print(percentage+"%...");
+				System.out.println(percentage+";"+iterationCount);
+//				if (++printCounter % 20 == 0)
+//					System.out.println();
+				printProgressTimer = System.nanoTime();
 			}
+//			if (percentage > nextPointPercentage) {
+//				nextPointPercentage += 10;
+//				System.out.print(".");
+//			}
 				
 		}
+		System.out.println();
+		System.out.println(Math.round((System.nanoTime()-startTime)/1000000)/1000.+" s");
+		System.out.println();
+		for (int i = 0 ; i < neededIterations.length ; i++)
+			System.out.println(neededIterations[i]);
 		BufferedImage t = img;
 		this.img = temp_img;
 		temp_img = t;
