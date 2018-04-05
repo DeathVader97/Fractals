@@ -9,8 +9,8 @@ public class WindowHandler {
 	
 	static int w = 1280, h = 720;
 	
-	int iterations;
-	double midx = 2, midy = 0;
+	int iterations = 100;
+	double midx = 0, midy = 0;
 	double range = 3;
 	
 	int prev_iterations = iterations;
@@ -20,6 +20,8 @@ public class WindowHandler {
 	JFrame jframe;
 	BufferedImage img;
 	BufferedImage temp_img;
+
+	public int quality = 1;
 	
 	public WindowHandler() {
 		jframe = new JFrame("Fractals");
@@ -27,26 +29,30 @@ public class WindowHandler {
 		jframe.setSize(w,h);
 		jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		jframe.addMouseListener(new MouseControls());
+		jframe.addMouseWheelListener(new MouseWheelControls(this));
+		jframe.addKeyListener(new KeyListenerControls(this));
 		generateImage();
 	}
 
 	private void generateImage() {
 		if (temp_img == null)
 			temp_img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+		int nextPointPercentage = 10;
+		System.out.println();
 		for (int imgx = 0; imgx < w; imgx++) {
 			for (int imgy = 0; imgy < h; imgy++) {
 //				img.setRGB(imgx, imgy, new Color((int)(255*imgx/w),(int)(255*imgy/h),0).getRGB());
 				double sat = 0;
-				for (int subx = 0 ; subx < 2 ; subx++) {
-					for (int suby = 0 ; suby < 2 ; suby++) {
-						double creal = getReal(imgx+subx*0.5);
-						double cimag = getImag(imgy+suby*0.5);
+				for (int subx = 0 ; subx < quality ; subx++) {
+					for (int suby = 0 ; suby < quality ; suby++) {
+						double creal = getReal(imgx+subx/quality);
+						double cimag = getImag(imgy+suby/quality);
 						double real = 0;
 						double imag = 0;
 //						System.out.println(real+", "+imag);
 						for (int i = 0 ; i < iterations ; i++) {
 							if (real*real + imag*imag > 10) {
-								sat += (1 - ((double)i/iterations))*0.25;
+								sat += (((double)i/iterations))/(quality*quality);
 								break;
 							}
 							double real2 = real*real - (imag*imag) - creal;
@@ -56,9 +62,15 @@ public class WindowHandler {
 						}
 					}
 				}
-				Color color = Color.getHSBColor(1-(float) sat, 1, (float)sat);
+				Color color = Color.getHSBColor((float)-sat, 1, (float)sat);
 				temp_img.setRGB(imgx, imgy, color.getRGB());
 			}
+			double percentage = Math.round((double)imgx*100/w);
+			if (percentage > nextPointPercentage) {
+				nextPointPercentage += 10;
+				System.out.print(".");
+			}
+				
 		}
 		BufferedImage t = img;
 		this.img = temp_img;
@@ -71,18 +83,23 @@ public class WindowHandler {
 		if (img != null) {
 			g.drawImage(img, 0, 0, null);
 		}
+		try {
+			Thread.sleep(1);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void tick() {
-		iterations = 2000;
-		if (prev_iterations != iterations) {
-			prev_iterations = iterations;
-			changed = true;
-		}
 		if (changed) {
 			changed = false;
 			generateImage();
 		}
+	}
+	
+	public void setIterations(int iterations) {
+		System.out.println("set interations: "+iterations);
+		this.iterations = iterations;
 	}
 
 	public void clickedMouse(int x, int y) {
@@ -96,10 +113,20 @@ public class WindowHandler {
 	}
 	
 	public double getReal(double imgx) {
-		return (((double)(h-imgx)/h)*range-range/2)+midx;
+		return (((double)(h-imgx)/h)*range+range/2)+midx;
 	}
 	
 	public double getImag(double imgy) {
 		return (((double)(h-imgy)/h)*range-range/2)+midy;
+	}
+
+	public void setQuality(int quality) {
+		System.out.println("set quality: "+quality);
+		this.quality = quality;
+	}
+
+	public void setRedraw() {
+		System.out.println("set redraw...");
+		changed = true;
 	}
 }
