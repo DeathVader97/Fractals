@@ -5,10 +5,15 @@ public class DataDescriptor {
 	double start_x, start_y;
 	double spacing;
 	
-	int dim_sampled_x, dim_sampled_y;
+	public int dim_sampled_x;
+	public int dim_sampled_y;
 	int dim_goal_x, dim_goal_y;
 	
-	int maxIterations;
+	public int maxIterations;
+	
+	public double[] xcoords;
+	public double[] ycoords;
+	boolean calculatedCoords = false;
 	
 	public DataDescriptor(double start_x, double start_y, double spacing, int dim_sampled_x, int dim_sampled_y,
 			int dim_goal_x, int dim_goal_y, int maxIterations) {
@@ -20,6 +25,35 @@ public class DataDescriptor {
 		this.dim_goal_x = dim_goal_x;
 		this.dim_goal_y = dim_goal_y;
 		this.maxIterations = maxIterations;
+		xcoords = new double[dim_sampled_x];
+		ycoords = new double[dim_sampled_y];
+	}
+	
+	public void calculateCoords() {
+		int samples_x = getDim_sampled_x();
+		int samples_y = getDim_sampled_y();
+		double start_x = getStart_x();
+		double start_y = getStart_y();
+		double spacing = getSpacing();
+		for (int i = 0 ; i < samples_x ; i++) {
+			xcoords[i] = start_x + spacing * i;
+		}
+		for (int i = 0 ; i < samples_y ; i++) {
+			ycoords[i] = start_y + spacing * i;
+		}
+		calculatedCoords = true;
+	}
+
+	public double[] getXcoords() throws Exception{
+		if (!calculatedCoords)
+			throw new Exception("coordinates not yet calculated!");
+		return xcoords;
+	}
+
+	public double[] getYcoords() throws Exception{
+		if (!calculatedCoords)
+			throw new Exception("coordinates not yet calculated!");
+		return ycoords;
 	}
 
 	public double getStart_x() {

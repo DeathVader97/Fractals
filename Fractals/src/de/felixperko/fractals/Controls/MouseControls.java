@@ -1,15 +1,17 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.Controls;
 
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+
+import de.felixperko.fractals.FractalsMain;
 
 public class MouseControls implements MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
 		Point p = arg0.getPoint();
-		FractalsMain.windowHandler.clickedMouse(p.x, p.y);
+		FractalsMain.getWindowHandler().clickedMouse(p.x, p.y);
 	}
 
 	@Override

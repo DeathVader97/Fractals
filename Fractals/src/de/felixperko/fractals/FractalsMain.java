@@ -2,7 +2,7 @@ package de.felixperko.fractals;
 
 public class FractalsMain {
 	
-	static WindowHandler windowHandler;
+	private static WindowHandler windowHandler;
 	
 	public static void main(String[] args) {
 		windowHandler = new WindowHandler();
@@ -13,5 +13,9 @@ public class FractalsMain {
 	private static void startRendering() {
 		while (!Thread.interrupted())
 			windowHandler.render();
+	}
+
+	public static WindowHandler getWindowHandler() {
+		return windowHandler;
 	}
 }

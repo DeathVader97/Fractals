@@ -1,7 +1,9 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.Controls;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
+import de.felixperko.fractals.WindowHandler;
 
 public class MouseWheelControls implements MouseWheelListener {
 	
@@ -13,7 +15,7 @@ public class MouseWheelControls implements MouseWheelListener {
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		windowHandler.setIterations(windowHandler.iterations + e.getWheelRotation()*100);
+		windowHandler.setIterations(windowHandler.getIterations() + e.getWheelRotation()*100);
 	}
 
 }

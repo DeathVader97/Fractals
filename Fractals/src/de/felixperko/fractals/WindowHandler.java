@@ -5,15 +5,19 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
+import de.felixperko.fractals.Controls.KeyListenerControls;
+import de.felixperko.fractals.Controls.MouseControls;
+import de.felixperko.fractals.Controls.MouseWheelControls;
+
 public class WindowHandler {
 	
 	static int w = 1280, h = 720;
 	
-	int iterations = 100;
+	private int iterations = 100;
 	double midx = 0, midy = 0;
 	double range = 3;
 	
-	int prev_iterations = iterations;
+	int prev_iterations = getIterations();
 	
 	boolean changed = true;
 	
@@ -40,7 +44,7 @@ public class WindowHandler {
 		long startTime = System.nanoTime();
 		long printProgressTimer = startTime;
 		long iterationCount = 0;
-		int[] neededIterations = new int[iterations/100 + 1];
+		int[] neededIterations = new int[getIterations()/100 + 1];
 		int printCounter = 0;
 		for (int imgx = 0; imgx < w; imgx++) {
 			for (int imgy = 0; imgy < h; imgy++) {
@@ -53,18 +57,18 @@ public class WindowHandler {
 						double real = 0;
 						double imag = 0;
 //						System.out.println(real+", "+imag);
-						for (int i = 0 ; i < iterations ; i++) {
+						for (int i = 0 ; i < getIterations() ; i++) {
 							double real2 = real*real - (imag*imag) - creal;
 							double imag2 = real*imag + (imag*real) - cimag;
 							real = real2;
 							imag = imag2;
 							iterationCount++;
 							if (real*real + imag*imag > 4) {
-								sat += (((double)i/iterations))/(quality*quality);
+								sat += (((double)i/getIterations()))/(quality*quality);
 								neededIterations[i/100]++;
 								break;
 							}
-							if (i == iterations-1)
+							if (i == getIterations()-1)
 								neededIterations[neededIterations.length-1]++;
 						}
 					}
@@ -115,11 +119,6 @@ public class WindowHandler {
 			generateImage();
 		}
 	}
-	
-	public void setIterations(int iterations) {
-		System.out.println("set interations: "+iterations);
-		this.iterations = iterations;
-	}
 
 	public void clickedMouse(int x, int y) {
 		double real = getReal(x);
@@ -147,5 +146,15 @@ public class WindowHandler {
 	public void setRedraw() {
 		System.out.println("set redraw...");
 		changed = true;
+	}
+
+	public int getIterations() {
+		return iterations;
+	}
+	
+	public void setIterations(int iterations) {
+		if (iterations != this.iterations)
+			System.out.println("set interations: "+iterations);
+		this.iterations = iterations;
 	}
 }

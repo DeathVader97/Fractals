@@ -1,7 +1,9 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.Controls;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
+import de.felixperko.fractals.WindowHandler;
 
 public class KeyListenerControls implements KeyListener {
 	
