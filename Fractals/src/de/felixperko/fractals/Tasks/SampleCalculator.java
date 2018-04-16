@@ -62,10 +62,10 @@ public class SampleCalculator {
 				
 				if (real*real + imag*imag > 4) {//check if outside
 					results[i] = j;
-					y++;
-					if (y == dim_y) {
-						y = 0;
-						x++;
+					x++;
+					if (x == dim_x) {
+						x = 0;
+						y++;
 					}
 					continue mainLoop;
 				}
@@ -79,10 +79,10 @@ public class SampleCalculator {
 			} else { //max iterations reached -> declared as in the mandelbrot set
 				results[i] = -1;
 			}
-			y++;
-			if (y == dim_y) {
-				y = 0;
-				x++;
+			x++;
+			if (x == dim_x) {
+				x = 0;
+				y++;
 			}
 		}
 	}

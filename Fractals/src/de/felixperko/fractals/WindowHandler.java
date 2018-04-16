@@ -1,7 +1,9 @@
 package de.felixperko.fractals;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
@@ -11,7 +13,8 @@ import de.felixperko.fractals.Controls.MouseWheelControls;
 
 public class WindowHandler {
 	
-	static int w = 1280, h = 720;
+	static int w = 400, h = 300;
+	static int target_fps = 60;
 	
 	private int iterations = 100;
 	double midx = 0, midy = 0;
@@ -27,15 +30,27 @@ public class WindowHandler {
 
 	public int quality = 1;
 	
+	public FractalRenderer mainRenderer;
+	
 	public WindowHandler() {
+		
+//		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//		w = screenSize.width;
+//		h = screenSize.height;
+		
 		jframe = new JFrame("Fractals");
+
+		jframe.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		jframe.setUndecorated(true);
 		jframe.setVisible(true);
-		jframe.setSize(w,h);
+		w = jframe.getWidth();
+		h = jframe.getHeight();
+		
 		jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		jframe.addMouseListener(new MouseControls());
 		jframe.addMouseWheelListener(new MouseWheelControls(this));
 		jframe.addKeyListener(new KeyListenerControls(this));
-		generateImage();
+//		generateImage();
 	}
 
 	private void generateImage() {
@@ -102,9 +117,12 @@ public class WindowHandler {
 
 	public void render() {
 		Graphics g = jframe.getGraphics();
-		tick();
-		if (img != null) {
-			g.drawImage(img, 0, 0, null);
+//		tick();
+//		if (img != null) {
+//			g.drawImage(img, 0, 0, null);
+//		}
+		if (mainRenderer != null) {
+			mainRenderer.render(g);
 		}
 		try {
 			Thread.sleep(1);
@@ -128,6 +146,7 @@ public class WindowHandler {
 //		iterations *= 1.1;
 		range *= 0.5;
 		changed = true;
+		mainRenderer.updateLocation(x, y, 0.5);
 	}
 	
 	public double getReal(double imgx) {
@@ -141,11 +160,7 @@ public class WindowHandler {
 	public void setQuality(int quality) {
 		System.out.println("set quality: "+quality);
 		this.quality = quality;
-	}
-
-	public void setRedraw() {
-		System.out.println("set redraw...");
-		changed = true;
+		mainRenderer.setQuality(quality);
 	}
 
 	public int getIterations() {
@@ -156,5 +171,19 @@ public class WindowHandler {
 		if (iterations != this.iterations)
 			System.out.println("set interations: "+iterations);
 		this.iterations = iterations;
+		mainRenderer.setMaxIterations(iterations);
+	}
+
+	public void setRedraw() {
+		System.out.println("set redraw...");
+		changed = true;
+	}
+
+	public FractalRenderer getMainRenderer() {
+		return mainRenderer;
+	}
+
+	public void setMainRenderer(FractalRenderer mainRenderer) {
+		this.mainRenderer = mainRenderer;
 	}
 }

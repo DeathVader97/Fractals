@@ -23,18 +23,18 @@ public class WorkerThread extends Thread {
 		while (continueWorking || !Thread.interrupted()) {
 			continueWorking = false;
 			while (taskProvider == null || (task = taskProvider.getTask()) == null) {
-				System.out.println(name+" ("+getName()+") no task");
+//				System.out.println(name+" ("+getName()+") no task");
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {
-					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
+//					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
 				}
 			}
 			
 			TaskProvider tp = taskProvider;
 			task.run(tp.dataDescriptor);
 			tp.taskFinished(task);
-			System.out.println(name+" task finished...");
+//			System.out.println(name+" task finished... "+task.samplesPerMs+" samples/ms");
 		}
 	}
 

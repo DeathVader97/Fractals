@@ -20,6 +20,13 @@ public class Task {
 	int[] currentIterations;
 	int[] results;
 	
+	long start_time;
+	long end_time;
+	long end_sample_count;
+	int samplesPerMs;
+	
+	int jobId;
+	
 	public Task(int startSample, int endSample, int maxIterations, int[] currentIterations, double[] currentpos_real,
 			double[] currentpos_imag, int[] results) {
 		this.startSample = startSample;
@@ -31,7 +38,7 @@ public class Task {
 		this.results = results;
 	}
 	
-	public Task(int startSample, int endSample, int maxIterations) {
+	public Task(int startSample, int endSample, int maxIterations, int jobId) {
 		this.startSample = startSample;
 		this.endSample = endSample;
 		this.maxIterations = maxIterations;
@@ -40,10 +47,16 @@ public class Task {
 		this.currentIterations = new int[endSample-startSample];
 		this.currentpos_real = new double[endSample-startSample];
 		this.currentpos_imag = new double[endSample-startSample];
+		
+		this.jobId = jobId;
 	}
 	
 	public void run(DataDescriptor dataDescriptor) {
+		this.start_time = System.nanoTime();
 		SampleCalculator sc = new SampleCalculator(dataDescriptor);
 		sc.calculate_samples(startSample, endSample, currentIterations, maxIterations, currentpos_real, currentpos_imag, results);
+		this.end_time = System.nanoTime();
+		this.end_sample_count = sc.iterations_total;
+		this.samplesPerMs = (int)((double)end_sample_count/((end_time-start_time)/1000000.));
 	}
 }

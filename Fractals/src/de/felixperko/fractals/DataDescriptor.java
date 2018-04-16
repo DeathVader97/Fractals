@@ -25,11 +25,11 @@ public class DataDescriptor {
 		this.dim_goal_x = dim_goal_x;
 		this.dim_goal_y = dim_goal_y;
 		this.maxIterations = maxIterations;
-		xcoords = new double[dim_sampled_x];
-		ycoords = new double[dim_sampled_y];
 	}
 	
 	public void calculateCoords() {
+		xcoords = new double[dim_sampled_x];
+		ycoords = new double[dim_sampled_y];
 		int samples_x = getDim_sampled_x();
 		int samples_y = getDim_sampled_y();
 		double start_x = getStart_x();

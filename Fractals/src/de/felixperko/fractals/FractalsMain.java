@@ -7,14 +7,12 @@ import de.felixperko.fractals.Tasks.ThreadManager;
 
 public class FractalsMain {
 	
-	final static int HELPER_THREAD_COUNT = 8;
+	final static int HELPER_THREAD_COUNT = 4;
 	
 	private static WindowHandler windowHandler;
 	
 	public static ThreadManager threadManager;
 	public static TaskManager taskManager;
-	public static DataDescriptor dataDescriptor;
-	public static DataContainer dataContainer;
 	public static TaskProvider taskProvider;
 	
 	public static void main(String[] args) {
@@ -22,16 +20,17 @@ public class FractalsMain {
 		
 		threadManager = new ThreadManager(HELPER_THREAD_COUNT, null);
 		
-		dataDescriptor = new DataDescriptor(-2, -2, 4./1080, 1920, 1080, 1920, 1080, 100);
-		dataContainer = new DataContainer(dataDescriptor);
+		FractalRenderer renderer = new FractalRenderer();
 		
 //		windowHandler.getMainRenderer().setDataContainer(dataContainer);
 		
-		taskManager = new TaskManager(dataDescriptor, dataContainer);
+		taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
 		taskManager.generateTasks();
 		
-		taskProvider = new LocalTaskProvider(taskManager, dataDescriptor);
+		taskProvider = new LocalTaskProvider(taskManager, renderer.getDataDescriptor());
 		threadManager.addTaskProvider(taskProvider);
+		
+		windowHandler.setMainRenderer(renderer);
 		
 		startRendering();
 	}
