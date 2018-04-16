@@ -20,6 +20,10 @@ public class DataContainer {
 		int samples_y = descriptor.getDim_sampled_y();
 		samples = new int[samples_x*samples_y];
 		values = new int[descriptor.getDim_goal_x()][descriptor.getDim_goal_y()];
+		
+		currentSamplePos_real = new double[samples_x*samples_y];
+		currentSamplePos_imag = new double[samples_x*samples_y];
+		currentSampleIterations = new int[samples_x*samples_y];
 	}
 
 	public DataDescriptor getDescriptor() {

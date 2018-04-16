@@ -1,20 +1,88 @@
 package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
 	TaskProvider taskProvider;
 	
+	List<TaskProvider> providers = new ArrayList<>();
+	
 	public ThreadManager(int threads, TaskProvider taskProvider) {
-		this.workerThreads = new WorkerThread[threads];
-		for (int i = 0 ; i < threads ; i++) {
-			workerThreads[i] = new WorkerThread(i, taskProvider);
+		startThreads(threads);
+	}
+	
+	public void setThreadCount(int threadCount) {
+		if (workerThreads.length > threadCount)
+			intteruptThreads(workerThreads.length - threadCount);
+		else if (workerThreads.length < threadCount)
+			startThreads(threadCount - workerThreads.length);
+	}
+
+	private void intteruptThreads(int count) {
+		for (int i = workerThreads.length-1-count ; i < workerThreads.length-1 ; i++) {
+			workerThreads[i].interrupt();
 		}
-		
-		for (int i = 0; i < workerThreads.length; i++) {
-			workerThreads[i].run();
+		workerThreads = Arrays.copyOf(workerThreads, workerThreads.length-count);
+		//TODO providers
+	}
+
+	private void startThreads(int count) {
+		WorkerThread[] threads;
+		if (workerThreads == null) {
+			threads = new WorkerThread[count];
+			for (int i = 0 ; i < count ; i++) {
+				threads[i] = startThread();
+			}
+		} else {
+			threads = Arrays.copyOf(workerThreads, count+workerThreads.length);
+			for (int i = workerThreads.length ; i < threads.length ; i++) {
+				threads[i] = startThread();
+			}
+		}
+		this.workerThreads = threads;
+		updateProviders();
+	}
+
+	private WorkerThread startThread() {
+		WorkerThread thread = new WorkerThread(taskProvider);
+		thread.start();
+		return thread;
+	}
+	
+	public void addTaskProvider(TaskProvider tp) {
+		if (!providers.contains(tp))
+			providers.add(tp);
+		updateProviders();
+	}
+	
+	public void removeTaskProvider(TaskProvider tp) {
+		providers.remove(tp);
+		updateProviders();
+	}
+	
+	public void updateProviders() {
+		if (providers.size() == 0)
+			return;
+		double remainder = 0;
+		double step = workerThreads.length / providers.size();
+		int nextFreeThread = 0;
+		for (TaskProvider tp : providers) {
+			remainder += step % 1;
+			int assignedThreads = (int)step;
+			if (remainder > 1) {
+				remainder--;
+				assignedThreads++;
+			}
+			for (int i = nextFreeThread ; i < nextFreeThread+assignedThreads ; i++) {
+				workerThreads[i].setTaskProvider(tp);
+			}
 		}
 	}
 }

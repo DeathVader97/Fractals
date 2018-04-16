@@ -1,5 +1,7 @@
 package de.felixperko.fractals.Tasks;
 
+import java.util.ArrayList;
+
 import de.felixperko.fractals.DataDescriptor;
 
 public class LocalTaskProvider extends TaskProvider {
@@ -14,7 +16,7 @@ public class LocalTaskProvider extends TaskProvider {
 
 	@Override
 	public Task getTask() {
-		return taskManager.getTasks(1).get(0);
+		return taskManager.getTask();
 	}
 
 	@Override

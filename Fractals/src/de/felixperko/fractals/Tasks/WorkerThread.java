@@ -1,34 +1,46 @@
 package de.felixperko.fractals.Tasks;
 
-import de.felixperko.fractals.DataDescriptor;
-
 public class WorkerThread extends Thread {
 	
-	int id;
-	TaskProvider taskProvider;
+	static int ID_COUNTER = 0;
 	
-	public WorkerThread(int id, TaskProvider taskProvider) {
-		this.id = id;
+	TaskProvider taskProvider;
+	String name;
+	
+	boolean continueWorking = false;
+	
+	public WorkerThread(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
+		this.name = "WorkerThread "+ID_COUNTER++;
 	}
 	
 	@Override
 	public void run() {
-		System.out.println("starting worker thread "+id+"...");
+		System.out.println("starting worker thread: "+name);
 		
 		Task task;
 		
-		while (!Thread.interrupted()) {
-			while ((task = taskProvider.getTask()) == null) {
+		while (continueWorking || !Thread.interrupted()) {
+			continueWorking = false;
+			while (taskProvider == null || (task = taskProvider.getTask()) == null) {
+				System.out.println(name+" ("+getName()+") no task");
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
 				}
 			}
 			
-			task.run(taskProvider.dataDescriptor);
-			taskProvider.taskFinished(task);
+			TaskProvider tp = taskProvider;
+			task.run(tp.dataDescriptor);
+			tp.taskFinished(task);
+			System.out.println(name+" task finished...");
 		}
+	}
+
+	public void setTaskProvider(TaskProvider taskProvider) {
+		this.taskProvider = taskProvider;
+		continueWorking = true;
+		interrupt();
 	}
 }

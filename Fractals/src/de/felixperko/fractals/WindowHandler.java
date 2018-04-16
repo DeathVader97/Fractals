@@ -73,7 +73,7 @@ public class WindowHandler {
 						}
 					}
 				}
-				Color color = Color.getHSBColor((float)-sat, 1, (float)Math.pow(sat, 0.1));
+				Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
 				temp_img.setRGB(imgx, imgy, color.getRGB());
 			}
 			long percentage = Math.round((double)imgx*100/w);
@@ -131,11 +131,11 @@ public class WindowHandler {
 	}
 	
 	public double getReal(double imgx) {
-		return (((double)(h-imgx)/h)*range+range/2)+midx;
+		return (((double)(h-imgx)/h)*range)+midx;
 	}
 	
 	public double getImag(double imgy) {
-		return (((double)(h-imgy)/h)*range-range/2)+midy;
+		return (((double)(h-imgy)/h - 0.5)*range)+midy;
 	}
 
 	public void setQuality(int quality) {

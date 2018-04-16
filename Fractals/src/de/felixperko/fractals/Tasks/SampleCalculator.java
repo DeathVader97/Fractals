@@ -37,9 +37,10 @@ public class SampleCalculator {
 //	}
 	
 	public void calculate_samples(int start, int end, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
+		int dim_x = descriptor.getDim_sampled_x();
 		int dim_y = descriptor.getDim_sampled_y();
-		int x = start % dim_y;
-		int y = start / dim_y;
+		int x = start % dim_x;
+		int y = start / dim_x;
 		
 		mainLoop : 
 		for (int i = 0 ; i < end-start ; i++) {
@@ -61,7 +62,8 @@ public class SampleCalculator {
 				
 				if (real*real + imag*imag > 4) {//check if outside
 					results[i] = j;
-					if (++y == dim_y) {
+					y++;
+					if (y == dim_y) {
 						y = 0;
 						x++;
 					}
@@ -77,7 +79,8 @@ public class SampleCalculator {
 			} else { //max iterations reached -> declared as in the mandelbrot set
 				results[i] = -1;
 			}
-			if (++y == dim_y) {
+			y++;
+			if (y == dim_y) {
 				y = 0;
 				x++;
 			}
