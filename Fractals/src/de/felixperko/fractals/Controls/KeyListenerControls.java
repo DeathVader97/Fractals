@@ -17,11 +17,10 @@ public class KeyListenerControls implements KeyListener {
 	public void keyTyped(KeyEvent e) {
 		switch (e.getKeyChar()) {
 		case '+':
-			windowHandler.setQuality(windowHandler.quality + 1);
+			windowHandler.setQuality(windowHandler.quality*2);
 			break;
 		case '-':
-			if (windowHandler.quality > 1)
-				windowHandler.setQuality(windowHandler.quality - 1);
+			windowHandler.setQuality(windowHandler.quality*0.5);
 			break;
 		}
 		

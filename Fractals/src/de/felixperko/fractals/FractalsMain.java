@@ -7,7 +7,7 @@ import de.felixperko.fractals.Tasks.ThreadManager;
 
 public class FractalsMain {
 	
-	final static int HELPER_THREAD_COUNT = 4;
+	final static int HELPER_THREAD_COUNT = 8;
 	
 	private static WindowHandler windowHandler;
 	

@@ -19,7 +19,7 @@ public class FractalRenderer {
 	
 	long lastDrawn = 0;
 	
-	int q = 1;
+	double q = 1;
 	
 	int disp_x = 0;
 	int disp_y = 0;
@@ -29,7 +29,7 @@ public class FractalRenderer {
 	boolean allow_zooming = true;
 	
 	public FractalRenderer() {
-		dataDescriptor = new DataDescriptor(-2, -2, 4./(WindowHandler.h*q), WindowHandler.w*q, WindowHandler.h*q, WindowHandler.w, WindowHandler.h, 1000);
+		dataDescriptor = new DataDescriptor(-2, -2, 4./(WindowHandler.h*q), (int)Math.round(WindowHandler.w*q), (int)Math.round(WindowHandler.h*q), WindowHandler.w, WindowHandler.h, 1000);
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
 		draw_img = new BufferedImage(dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y, BufferedImage.TYPE_INT_RGB);
@@ -48,9 +48,20 @@ public class FractalRenderer {
 			for (int imgx = 0; imgx < draw_img.getWidth(); imgx++) {
 				for (int imgy = 0; imgy < draw_img.getHeight(); imgy++) {
 					int it = dataContainer.samples[imgx+imgy*draw_img.getWidth()];
-					double sat = (double)it / dataDescriptor.getMaxIterations();
-					Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
-					draw_img.setRGB(imgx, imgy, color.getRGB());
+					
+//					double sat = (double)it / dataDescriptor.getMaxIterations();
+//					Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
+//					draw_img.setRGB(imgx, imgy, color.getRGB());
+					
+					if (it >= 0) {
+						double real = dataContainer.currentSamplePos_real[imgx+imgy*draw_img.getWidth()];
+						double imag = dataContainer.currentSamplePos_imag[imgx+imgy*draw_img.getWidth()];
+						float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(real*real+imag*imag))/Math.log(2)));
+						sat /= dataDescriptor.maxIterations;
+						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(1f+5*sat, 0.6f,1f));
+					} else {
+						draw_img.setRGB(imgx, imgy, 0);
+					}
 				}
 			}
 			lastDrawn = System.nanoTime();
@@ -91,13 +102,13 @@ public class FractalRenderer {
 		reset();
 	}
 	
-	public synchronized void setQuality(int quality) {
+	public synchronized void setQuality(double quality) {
 		if (quality == q)
 			return;
 		dataDescriptor.spacing /= (double)quality/q;
 		this.q = quality;
-		dataDescriptor.dim_sampled_x = dataDescriptor.dim_goal_x*q;
-		dataDescriptor.dim_sampled_y = dataDescriptor.dim_goal_y*q;
+		dataDescriptor.dim_sampled_x = (int)Math.round(dataDescriptor.dim_goal_x*q);
+		dataDescriptor.dim_sampled_y = (int)Math.round(dataDescriptor.dim_goal_y*q);
 		draw_img = new BufferedImage(dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y, BufferedImage.TYPE_INT_RGB);
 		reset();
 	}
@@ -108,8 +119,8 @@ public class FractalRenderer {
 		try {
 			allow_zooming = false;
 			dataDescriptor.spacing *= spacing_factor;
-			dataDescriptor.start_x = dataDescriptor.getXcoords()[mouse_x*q] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
-			dataDescriptor.start_y = dataDescriptor.getYcoords()[mouse_y*q] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;
+			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(mouse_x*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
+			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(mouse_y*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;
 			
 			double rangeX = (disp_x2-disp_x)*spacing_factor;
 			double rangeY = (disp_y2-disp_y)*spacing_factor;

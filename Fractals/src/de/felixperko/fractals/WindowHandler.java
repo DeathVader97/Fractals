@@ -28,7 +28,7 @@ public class WindowHandler {
 	BufferedImage img;
 	BufferedImage temp_img;
 
-	public int quality = 1;
+	public double quality = 1;
 	
 	public FractalRenderer mainRenderer;
 	
@@ -157,7 +157,7 @@ public class WindowHandler {
 		return (((double)(h-imgy)/h - 0.5)*range)+midy;
 	}
 
-	public void setQuality(int quality) {
+	public void setQuality(double quality) {
 		System.out.println("set quality: "+quality);
 		this.quality = quality;
 		mainRenderer.setQuality(quality);
