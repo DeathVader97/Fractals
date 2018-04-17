@@ -22,6 +22,8 @@ public class KeyListenerControls implements KeyListener {
 		case '-':
 			windowHandler.setQuality(windowHandler.quality*0.5);
 			break;
+		case 's':
+			windowHandler.save = true;
 		}
 		
 		switch (e.getKeyCode()) {

@@ -7,7 +7,7 @@ import de.felixperko.fractals.Tasks.ThreadManager;
 
 public class FractalsMain {
 	
-	final static int HELPER_THREAD_COUNT = 8;
+	final static int HELPER_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	
 	private static WindowHandler windowHandler;
 	

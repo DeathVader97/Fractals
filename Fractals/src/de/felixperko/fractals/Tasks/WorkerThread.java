@@ -23,7 +23,6 @@ public class WorkerThread extends Thread {
 		while (continueWorking || !Thread.interrupted()) {
 			continueWorking = false;
 			while (taskProvider == null || (task = taskProvider.getTask()) == null) {
-//				System.out.println(name+" ("+getName()+") no task");
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {

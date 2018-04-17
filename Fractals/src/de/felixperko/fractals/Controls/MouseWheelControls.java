@@ -15,7 +15,9 @@ public class MouseWheelControls implements MouseWheelListener {
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
-		windowHandler.setIterations(windowHandler.getIterations() - e.getWheelRotation()*100);
+		int newMaxIterations = windowHandler.getIterations() - e.getWheelRotation()*100;
+		if (newMaxIterations > 0)
+			windowHandler.setIterations(newMaxIterations);
 	}
 
 }

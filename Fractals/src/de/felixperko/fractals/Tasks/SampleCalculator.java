@@ -62,6 +62,7 @@ public class SampleCalculator {
 				
 				if (real*real + imag*imag > 4) {//check if outside
 					results[i] = j;
+					currentIterations[i] = j;
 					currentpos_real[i] = real;
 					currentpos_imag[i] = imag;
 					x++;

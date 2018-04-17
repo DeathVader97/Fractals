@@ -6,6 +6,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 public class FractalRenderer {
 	
@@ -16,6 +20,7 @@ public class FractalRenderer {
 	public DataContainer dataContainer;
 	
 	boolean redraw = true;
+	int drawn_depth = 0;
 	
 	long lastDrawn = 0;
 	
@@ -38,26 +43,28 @@ public class FractalRenderer {
 		disp_y2 = disp_img.getHeight();
 	}
 	
-	public synchronized void render(Graphics g) {
+	public synchronized void render(Graphics g, boolean save) {
 		
 //		if (System.nanoTime()-lastDrawn > 10000000) {
 //			redraw = true;
 //		}
-		
-		if (redraw && FractalsMain.taskManager.isFinished()) {
+		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
+		if ((save || redraw) || drawn_depth != finishedDepth) {
 			for (int imgx = 0; imgx < draw_img.getWidth(); imgx++) {
 				for (int imgy = 0; imgy < draw_img.getHeight(); imgy++) {
-					int it = dataContainer.samples[imgx+imgy*draw_img.getWidth()];
+					int i = imgx+imgy*draw_img.getWidth();
+					int it = dataContainer.samples[i];
 					
 //					double sat = (double)it / dataDescriptor.getMaxIterations();
 //					Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
 //					draw_img.setRGB(imgx, imgy, color.getRGB());
 					
-					if (it >= 0) {
+					if (it > 0 || (it == 0 && dataContainer.currentSampleIterations[i] < finishedDepth)) {
 						double real = dataContainer.currentSamplePos_real[imgx+imgy*draw_img.getWidth()];
 						double imag = dataContainer.currentSamplePos_imag[imgx+imgy*draw_img.getWidth()];
 						float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(real*real+imag*imag))/Math.log(2)));
 						sat /= dataDescriptor.maxIterations;
+						sat = (float)Math.pow(sat, 0.25);
 						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(1f+5*sat, 0.6f,1f));
 					} else {
 						draw_img.setRGB(imgx, imgy, 0);
@@ -65,20 +72,39 @@ public class FractalRenderer {
 				}
 			}
 			lastDrawn = System.nanoTime();
-			redraw = false;
 			Graphics2D g2 = (Graphics2D) disp_img.getGraphics();
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 			RenderingHints.VALUE_ANTIALIAS_ON);
 			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
 			RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-			g2.drawImage(draw_img, 0, 0, WindowHandler.w, WindowHandler.h, 0, 0, draw_img.getWidth(), draw_img.getHeight(), null);
+			if (redraw || drawn_depth != finishedDepth)
+				g2.drawImage(draw_img, 0, 0, WindowHandler.w, WindowHandler.h, 0, 0, draw_img.getWidth(), draw_img.getHeight(), null);
+			if (save && FractalsMain.taskManager.isFinished()) {
+				exportImage();
+			}
 			disp_x = 0;
 			disp_y = 0;
 			disp_x2 = disp_img.getWidth();
 			disp_y2 = disp_img.getHeight();
 			allow_zooming = true;
+			redraw = false;
+			drawn_depth = finishedDepth;
 		}
 		g.drawImage(disp_img, 0, 0, WindowHandler.w, WindowHandler.h, disp_x, disp_y, disp_x2, disp_y2, null);
+	}
+
+	private void exportImage() {
+		try {
+			int counter = 0;
+			File f;
+			while ((f = new File("img"+counter+".png")).exists()) {
+				counter++;
+			}
+			ImageIO.write(draw_img, "png", f);
+			System.out.println("exported image to "+f.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public DataDescriptor getDataDescriptor() {
@@ -95,6 +121,10 @@ public class FractalRenderer {
 
 	public void setDataContainer(DataContainer dataContainer) {
 		this.dataContainer = dataContainer;
+	}
+
+	public int getMaxIterations() {
+		return dataDescriptor.maxIterations;
 	}
 	
 	public void setMaxIterations(int maxIterations) {
