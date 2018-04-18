@@ -9,7 +9,7 @@ public class FractalsMain {
 	
 	final static int HELPER_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	
-	private static WindowHandler windowHandler;
+	public static WindowHandler windowHandler;
 	
 	public static ThreadManager threadManager;
 	public static TaskManager taskManager;

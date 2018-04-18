@@ -19,7 +19,7 @@ public class FractalRenderer {
 	public DataDescriptor dataDescriptor;
 	public DataContainer dataContainer;
 	
-	boolean redraw = true;
+	boolean redraw = false;
 	int drawn_depth = 0;
 	
 	long lastDrawn = 0;
@@ -43,13 +43,29 @@ public class FractalRenderer {
 		disp_y2 = disp_img.getHeight();
 	}
 	
+	boolean newFinish = true;
+	
 	public synchronized void render(Graphics g, boolean save) {
 		
 //		if (System.nanoTime()-lastDrawn > 10000000) {
 //			redraw = true;
 //		}
 		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
-		if ((save || redraw) || drawn_depth != finishedDepth) {
+		if (FractalsMain.taskManager.isFinished() || (drawn_depth != finishedDepth && finishedDepth > 0.5 * FractalsMain.windowHandler.mainRenderer.getMaxIterations())) {
+			if (newFinish) {
+				redraw = true;
+				newFinish = false;
+			}
+		} else {
+			newFinish = true;
+		}
+//		if ((save || redraw) || (drawn_depth != finishedDepth && finishedDepth > 0.5 * FractalsMain.windowHandler.mainRenderer.getMaxIterations())) {
+		if (redraw) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			for (int imgx = 0; imgx < draw_img.getWidth(); imgx++) {
 				for (int imgy = 0; imgy < draw_img.getHeight(); imgy++) {
 					int i = imgx+imgy*draw_img.getWidth();
@@ -67,7 +83,10 @@ public class FractalRenderer {
 						sat = (float)Math.pow(sat, 0.25);
 						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(1f+5*sat, 0.6f,1f));
 					} else {
-						draw_img.setRGB(imgx, imgy, 0);
+						float b = finishedDepth == 0 ? 0 : dataContainer.currentSampleIterations[i]/(float)finishedDepth;
+						if (b > 1)
+							b = 1;
+						draw_img.setRGB(imgx, imgy, new Color(b, b, b).getRGB());
 					}
 				}
 			}
@@ -79,7 +98,7 @@ public class FractalRenderer {
 			RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 			if (redraw || drawn_depth != finishedDepth)
 				g2.drawImage(draw_img, 0, 0, WindowHandler.w, WindowHandler.h, 0, 0, draw_img.getWidth(), draw_img.getHeight(), null);
-			if (save && FractalsMain.taskManager.isFinished()) {
+			if (save) {
 				exportImage();
 			}
 			disp_x = 0;
@@ -144,8 +163,8 @@ public class FractalRenderer {
 	}
 	
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
-		if (!allow_zooming)
-			return;
+//		if (!allow_zooming)
+//			return;
 		try {
 			allow_zooming = false;
 			dataDescriptor.spacing *= spacing_factor;
@@ -173,6 +192,5 @@ public class FractalRenderer {
 		FractalsMain.taskManager.setDataContainer(dataContainer);
 		FractalsMain.taskManager.clearTasks();
 		FractalsMain.taskManager.generateTasks();
-		redraw = true;
 	}
 }

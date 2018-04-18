@@ -16,7 +16,7 @@ public class SampleCalculator {
 //			int first_y = (x == start_x) ? start_y : 0;
 //			for (int y = first_y ; y < dim_y ; ++y) {
 //				
-//			}
+//			}	
 //		}
 //	}
 	
@@ -60,7 +60,7 @@ public class SampleCalculator {
 				real = new_real;
 				imag = new_imag;
 				
-				if (real*real + imag*imag > 4) {//check if outside
+				if (real*real + imag*imag > 4) {//outside -> done
 					results[i] = j;
 					currentIterations[i] = j;
 					currentpos_real[i] = real;

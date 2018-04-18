@@ -13,7 +13,7 @@ public class Task {
 	
 	int startSample, endSample;
 	
-	int maxIterations;
+	private int maxIterations;
 	
 	double[] currentpos_real;
 	double[] currentpos_imag;
@@ -26,6 +26,8 @@ public class Task {
 	int samplesPerMs;
 	
 	int jobId;
+
+	private int previousMaxIterations = -1;
 	
 	public Task(int startSample, int endSample, int maxIterations, int[] currentIterations, double[] currentpos_real,
 			double[] currentpos_imag, int[] results) {
@@ -42,13 +44,16 @@ public class Task {
 		this.startSample = startSample;
 		this.endSample = endSample;
 		this.maxIterations = maxIterations;
-
+		
+		this.jobId = jobId;
+		instantiateArrays();
+	}
+	
+	public void instantiateArrays() {
 		this.results = new int[endSample-startSample];
 		this.currentIterations = new int[endSample-startSample];
 		this.currentpos_real = new double[endSample-startSample];
 		this.currentpos_imag = new double[endSample-startSample];
-		
-		this.jobId = jobId;
 	}
 	
 	public void run(DataDescriptor dataDescriptor) {
@@ -58,5 +63,26 @@ public class Task {
 		this.end_time = System.nanoTime();
 		this.end_sample_count = sc.iterations_total;
 		this.samplesPerMs = (int)((double)end_sample_count/((end_time-start_time)/1000000.));
+	}
+	
+	public Task successor(int depth) {
+		return new Task(startSample, endSample, depth, currentIterations, currentpos_real, currentpos_imag, results);
+	}
+
+	public void setState(int state) {
+		this.state = state;
+	}
+
+	public int getMaxIterations() {
+		return maxIterations;
+	}
+
+	public void setMaxIterations(int maxIterations) {
+		this.previousMaxIterations = this.maxIterations;
+		this.maxIterations = maxIterations;
+	}
+
+	public int getPreviousMaxIterations() {
+		return previousMaxIterations;
 	}
 }

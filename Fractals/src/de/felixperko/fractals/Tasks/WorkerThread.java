@@ -24,7 +24,7 @@ public class WorkerThread extends Thread {
 			continueWorking = false;
 			while (taskProvider == null || (task = taskProvider.getTask()) == null) {
 				try {
-					Thread.sleep(10);
+					Thread.sleep(1);
 				} catch (InterruptedException e) {
 //					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
 				}

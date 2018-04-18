@@ -2,6 +2,7 @@ package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.felixperko.fractals.DataContainer;
@@ -20,7 +22,7 @@ public class TaskManager {
 	DataDescriptor dd;
 	DataContainer dc;
 	
-	int sample_size = 10000;
+	int sample_size = 1000;
 	int iteration_step_size = 500;
 	
 	AtomicInteger unfinishedTasksCount = new AtomicInteger();
@@ -59,13 +61,17 @@ public class TaskManager {
 			prepare_depth(depth, index);
 			index++;
 		}
-		if (remain != 0) {
+		generateParents(iteration_step_size);
+//		if (remain != 0) {
 			prepare_depth(maxIterations, index);
-			generateTasksInSampleRange(maxIterations);
-		}
-		for (int i = maxIterations-remain ; i > 0 ; i -= iteration_step_size) {
-			generateTasksInSampleRange(i);
-		}
+//			generateAndAddChildren(maxIterations);
+////			generateTasksInSampleRange(maxIterations);
+//		}
+//		for (int i = maxIterations-remain ; i > iteration_step_size ; i -= iteration_step_size) {
+//			generateAndAddChildren(i);
+////			generateTasksInSampleRange(i);
+//		}
+		addParents();
 		
 		finished = unfinishedTasksCount.get() == 0;
 		System.out.println("generated "+unfinishedTasksCount.get()+" tasks");
@@ -77,7 +83,43 @@ public class TaskManager {
 		depth_unfinishedTaskCount.add(new AtomicInteger());
 		depth_cumulativeClosedIterations.add(new AtomicInteger());
 	}
+	
+	HashMap<Integer, Task> parents = new HashMap<>();
+	
+	private void generateParents(int depth) {
+		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+		int start = 0;
+		int c = 0;
+		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
+			parents.put(end, new Task(start, end, depth, jobId));
+			start = end;
+			c++;
+		}
+	}
+	
+	public void addParents() {
+		Collection<Task> coll = parents.values();
+		openTasks.addAll(coll);
+		unfinishedTasksCount.addAndGet(coll.size());
+		for (AtomicInteger i : depth_unfinishedTaskCount) {
+			i.set(coll.size());
+		}
+//		depth_unfinishedTaskCount.get(depth_to_index.get(iteration_step_size)).set(coll.size());
+	}
+	
+	private void generateAndAddChildren(int depth) {
 
+		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+		int start = 0;
+		int c = 0;
+		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
+			openTasks.add(parents.get(end).successor(depth));
+		}
+		unfinishedTasksCount.addAndGet(c);
+		depth_unfinishedTaskCount.get(depth_to_index.get(depth)).set(c);
+	}
+		
+	@Deprecated
 	private int generateTasksInSampleRange(int depth) {
 		
 		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
@@ -113,7 +155,7 @@ public class TaskManager {
 			return null;
 		Task task = openTasks.get(openTasks.size()-1);
 		openTasks.remove(task);
-		task.state = Task.STATE_ASSINGED;
+		task.setState(Task.STATE_ASSINGED);
 		return task;
 	}
 	
@@ -125,6 +167,29 @@ public class TaskManager {
 		if (task.jobId != jobId)
 			return;
 		System.arraycopy(task.results, 0, dc.samples, task.startSample, task.endSample-task.startSample);
+		if (task.startSample > 0) {
+			int[] buff = {dc.samples[task.startSample-1], dc.samples[task.startSample], dc.samples[task.startSample+1]};
+			int c = 0;
+			for (int s = task.startSample ; s < task.endSample-3 ; s++) {
+				if (buff[c%3] <= 0 && buff[(c+1)%3] <= 0 && buff[(c+2)%3] <= 0) {
+					dc.samples[s] = -2;
+					task.results[c] = -2;
+				}
+				c++;
+				buff[c%3] = dc.samples[s+2];
+			}
+		} else {
+			int[] buff = {dc.samples[task.startSample], dc.samples[task.startSample+1], dc.samples[task.startSample+2]};
+			int c = 0;
+			for (int s = task.startSample ; s < task.endSample-4 ; s++) {
+				if (buff[c%3] <= 0 && buff[(c+1)%3] <= 0 && buff[(c+2)%3] <= 0) {
+					dc.samples[s] = -2;
+					task.results[c] = -2;
+				}
+				c++;
+				buff[c%3] = dc.samples[s+3];
+			}
+		}
 		System.arraycopy(task.currentIterations, 0, dc.currentSampleIterations, task.startSample, task.endSample-task.startSample);
 		System.arraycopy(task.currentpos_real, 0, dc.currentSamplePos_real, task.startSample, task.endSample-task.startSample);
 		System.arraycopy(task.currentpos_imag, 0, dc.currentSamplePos_imag, task.startSample, task.endSample-task.startSample);
@@ -140,16 +205,13 @@ public class TaskManager {
 	private synchronized void postTaskFinish(Task task) {
 		if (finished)
 			return;
-		Integer depth = task.maxIterations;
+		Integer depth = task.getMaxIterations();
 		Integer depth_index = depth_to_index.get(depth);
 		
 		if (depth_index == null) {
 			System.err.println("error: depth index not found!");
 		} else {
-			int prev_depth = depth_index == 0 ? -1 : depth_to_index.entrySet().stream()
-		              .filter(entry -> entry.getValue() == depth_index-1)
-		              .map(Map.Entry::getKey)
-		              .collect(java.util.stream.Collectors.toSet()).iterator().next();
+			int prev_depth = task.getPreviousMaxIterations();
 			int closedIterations = 0;
 			for (int i = 0 ; i < task.results.length ; i++) {
 				if (task.currentIterations[i] > prev_depth && task.currentIterations[i] != depth)
@@ -166,7 +228,7 @@ public class TaskManager {
 					depth_cumulativeClosedIterations.get(depth_index).set(cul);
 					System.out.println("closed "+totalClosedAtCurrentDepth+" iterations at depth "+depth+" "+rel);
 					finishedDepth = depth;
-					if (cul > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality...
+					if (cul > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality much...
 						finished = true;
 	//					for (int i = 0 ; i < dc.currentSampleIterations.length ; i++) { //mark not finished samples as in the set
 	//						if (dc.currentSampleIterations[i] == depth && dc.samples[i] == 0) {
@@ -178,6 +240,14 @@ public class TaskManager {
 					}
 				}
 			}
+		}
+		if (task.getMaxIterations() < dd.getMaxIterations()) {
+			task.setState(Task.STATE_NOT_ASSIGNED);
+			int newMaxIterations = task.getMaxIterations() + iteration_step_size;
+			if (newMaxIterations > dd.getMaxIterations())
+				newMaxIterations = dd.getMaxIterations();
+			task.setMaxIterations(newMaxIterations);
+			openTasks.add(0, task);
 		}
 	}
 
