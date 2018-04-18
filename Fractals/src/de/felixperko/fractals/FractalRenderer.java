@@ -11,6 +11,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import de.felixperko.fractals.Tasks.TaskManager;
+
 public class FractalRenderer {
 	
 	BufferedImage disp_img;
@@ -26,12 +28,15 @@ public class FractalRenderer {
 	
 	double q = 1;
 	
+	double cul_spacing_factor = 1;
 	int disp_x = 0;
 	int disp_y = 0;
 	int disp_x2 = 0;
 	int disp_y2 = 0;
 	
 	boolean allow_zooming = true;
+	
+	float colorOffset = 0.5f;
 	
 	public FractalRenderer() {
 		dataDescriptor = new DataDescriptor(-2, -2, 4./(WindowHandler.h*q), (int)Math.round(WindowHandler.w*q), (int)Math.round(WindowHandler.h*q), WindowHandler.w, WindowHandler.h, 1000);
@@ -44,6 +49,8 @@ public class FractalRenderer {
 	}
 	
 	boolean newFinish = true;
+	boolean newPartFinish = true;
+	double nextGoal = 0.2;
 	
 	public synchronized void render(Graphics g, boolean save) {
 		
@@ -51,16 +58,26 @@ public class FractalRenderer {
 //			redraw = true;
 //		}
 		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
-		if (FractalsMain.taskManager.isFinished() || (drawn_depth != finishedDepth && finishedDepth > 0.5 * FractalsMain.windowHandler.mainRenderer.getMaxIterations())) {
+		TaskManager tm = FractalsMain.taskManager;
+		if (tm.isFinished()) {
 			if (newFinish) {
 				redraw = true;
+				nextGoal = 0;
 				newFinish = false;
 			}
 		} else {
 			newFinish = true;
 		}
+		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal)) {
+			if (newPartFinish) {
+				redraw = true;
+				newPartFinish = false;
+			}
+		} else {
+			newPartFinish = true;
+		}
 //		if ((save || redraw) || (drawn_depth != finishedDepth && finishedDepth > 0.5 * FractalsMain.windowHandler.mainRenderer.getMaxIterations())) {
-		if (redraw) {
+		if (redraw || save) {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -74,19 +91,23 @@ public class FractalRenderer {
 //					double sat = (double)it / dataDescriptor.getMaxIterations();
 //					Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
 //					draw_img.setRGB(imgx, imgy, color.getRGB());
-					
-					if (it > 0 || (it == 0 && dataContainer.currentSampleIterations[i] < finishedDepth)) {
-						double real = dataContainer.currentSamplePos_real[imgx+imgy*draw_img.getWidth()];
-						double imag = dataContainer.currentSamplePos_imag[imgx+imgy*draw_img.getWidth()];
+//					System.out.println(dataContainer.currentSampleIterations[i]);
+					double real = dataContainer.currentSamplePos_real[i];
+					double imag = dataContainer.currentSamplePos_imag[i];
+					if (it > 0 || real*real+imag*imag > 4) {
 						float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(real*real+imag*imag))/Math.log(2)));
 						sat /= dataDescriptor.maxIterations;
-						sat = (float)Math.pow(sat, 0.25);
-						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(1f+5*sat, 0.6f,1f));
+//						sat = (float)Math.pow(sat, 0.25);
+						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(colorOffset+10*sat, 0.6f,1f));
 					} else {
-						float b = finishedDepth == 0 ? 0 : dataContainer.currentSampleIterations[i]/(float)finishedDepth;
-						if (b > 1)
-							b = 1;
-						draw_img.setRGB(imgx, imgy, new Color(b, b, b).getRGB());
+//						float b = finishedDepth == 0 ? 0 : dataContainer.currentSampleIterations[i]/(float)finishedDepth;
+//						if (b > 1)
+//							b = 1;
+//						draw_img.setRGB(imgx, imgy, new Color(b, b, b).getRGB());
+						if (it == -2)
+							draw_img.setRGB(imgx, imgy, new Color(1f,0,0).getRGB());
+						else
+							draw_img.setRGB(imgx, imgy, 0);
 					}
 				}
 			}
@@ -101,6 +122,7 @@ public class FractalRenderer {
 			if (save) {
 				exportImage();
 			}
+			cul_spacing_factor = 1;
 			disp_x = 0;
 			disp_y = 0;
 			disp_x2 = disp_img.getWidth();
@@ -170,7 +192,7 @@ public class FractalRenderer {
 			dataDescriptor.spacing *= spacing_factor;
 			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(mouse_x*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
 			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(mouse_y*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;
-			
+			cul_spacing_factor *= spacing_factor;
 			double rangeX = (disp_x2-disp_x)*spacing_factor;
 			double rangeY = (disp_y2-disp_y)*spacing_factor;
 			disp_x = (int) (mouse_x - rangeX/2);
@@ -192,5 +214,11 @@ public class FractalRenderer {
 		FractalsMain.taskManager.setDataContainer(dataContainer);
 		FractalsMain.taskManager.clearTasks();
 		FractalsMain.taskManager.generateTasks();
+	}
+
+	public void addColorOffset(float additionalOffset) {
+		colorOffset += additionalOffset;
+		colorOffset = colorOffset%1;
+		redraw = true;
 	}
 }

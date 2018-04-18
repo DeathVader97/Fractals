@@ -1,6 +1,7 @@
 package de.felixperko.fractals.Tasks;
 
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.FractalsMain;
 
 public class SampleCalculator {
 	
@@ -37,10 +38,9 @@ public class SampleCalculator {
 //	}
 	
 	public void calculate_samples(int start, int end, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
+
 		int dim_x = descriptor.getDim_sampled_x();
-		int dim_y = descriptor.getDim_sampled_y();
-		int x = start % dim_x;
-		int y = start / dim_x;
+//		int dim_y = descriptor.getDim_sampled_y();
 		
 		mainLoop : 
 		for (int i = 0 ; i < end-start ; i++) {
@@ -48,8 +48,13 @@ public class SampleCalculator {
 			if (results[i] != 0)
 				continue;
 			
+			int x = (i+start) % dim_x;
+			int y = (i+start) / dim_x;
+			
 			int j = currentIterations[i];
 			double real = currentpos_real[i], imag = currentpos_imag[i];
+//			int j = 0;
+//			double real = 0, imag = 0;
 			double creal = descriptor.xcoords[x];
 			double cimag = descriptor.ycoords[y];
 			
@@ -65,11 +70,11 @@ public class SampleCalculator {
 					currentIterations[i] = j;
 					currentpos_real[i] = real;
 					currentpos_imag[i] = imag;
-					x++;
-					if (x == dim_x) {
-						x = 0;
-						y++;
-					}
+//					x++;
+//					if (x == dim_x) {
+//						x = 0;
+//						y++;
+//					}
 					continue mainLoop;
 				}
 			}
@@ -82,11 +87,11 @@ public class SampleCalculator {
 			} else { //max iterations reached -> declared as in the mandelbrot set
 				results[i] = -1;
 			}
-			x++;
-			if (x == dim_x) {
-				x = 0;
-				y++;
-			}
+//			x++;
+//			if (x == dim_x) {
+//				x = 0;
+//				y++;
+//			}
 		}
 	}
 }

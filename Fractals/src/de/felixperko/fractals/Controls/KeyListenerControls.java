@@ -9,6 +9,8 @@ public class KeyListenerControls implements KeyListener {
 	
 	WindowHandler windowHandler;
 	
+	boolean setSave = true;
+	
 	public KeyListenerControls(WindowHandler windowHandler) {
 		this.windowHandler = windowHandler;
 	}
@@ -22,8 +24,8 @@ public class KeyListenerControls implements KeyListener {
 		case '-':
 			windowHandler.setQuality(windowHandler.quality*0.5);
 			break;
-		case 's':
-			windowHandler.save = true;
+		case 'c':
+			windowHandler.loopColor(0.01f);
 		}
 		
 		switch (e.getKeyCode()) {
@@ -35,14 +37,16 @@ public class KeyListenerControls implements KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
-
+		if (setSave && e.getKeyChar() == 's') {
+			windowHandler.save = true;
+			setSave = false;
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
+		if (e.getKeyChar() == 's')
+			setSave = true;
 	}
 
 }

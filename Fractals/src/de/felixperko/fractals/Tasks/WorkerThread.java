@@ -1,5 +1,7 @@
 package de.felixperko.fractals.Tasks;
 
+import de.felixperko.fractals.FractalsMain;
+
 public class WorkerThread extends Thread {
 	
 	static int ID_COUNTER = 0;
@@ -29,9 +31,17 @@ public class WorkerThread extends Thread {
 //					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
 				}
 			}
-			
+			if (FractalsMain.taskManager.jobId != task.jobId)
+				continue;
+//			System.out.println(name+" task started ("+task.startSample+" "+task.getMaxIterations()+")");
 			TaskProvider tp = taskProvider;
-			task.run(tp.dataDescriptor);
+			try {
+				task.run(tp.dataDescriptor);
+			} catch (Exception e) {
+				if (FractalsMain.taskManager.jobId != task.jobId)
+					continue;
+				e.printStackTrace();
+			}
 			tp.taskFinished(task);
 //			System.out.println(name+" task finished... "+task.samplesPerMs+" samples/ms");
 		}

@@ -22,8 +22,8 @@ public class TaskManager {
 	DataDescriptor dd;
 	DataContainer dc;
 	
-	int sample_size = 1000;
-	int iteration_step_size = 500;
+	int sample_size = 10000;
+	int iteration_step_size = 100;
 	
 	AtomicInteger unfinishedTasksCount = new AtomicInteger();
 	
@@ -32,9 +32,11 @@ public class TaskManager {
 	List<AtomicInteger> depth_cumulativeClosedIterations = new ArrayList<>();
 	HashMap<Integer, Integer> depth_to_index = new HashMap<>();
 	
+	HashMap<Integer, Task> tasks_by_start_index = new HashMap<>();
+	
 	long generation_time = 0;
 	
-	ArrayList<Task> openTasks = new ArrayList<>();
+	List<Task> openTasks = Collections.synchronizedList(new ArrayList<>());
 	
 	Random random = new Random(42);
 	int jobId = 0;
@@ -42,6 +44,12 @@ public class TaskManager {
 	int finishedDepth = 0;
 	
 	boolean finished = false;
+	
+	int minimum_skip_finish = 1000;
+	double skip_max_closed_relative = 0.0001;
+	
+	public double last_step_closed_relative = 1;
+	public int last_step_closed_total = 0;
 //	ArrayList<Task> activeTasks = new ArrayList<>();
 		
 	public TaskManager(DataDescriptor dd, DataContainer dc) {
@@ -50,6 +58,7 @@ public class TaskManager {
 	}
 	
 	public synchronized void generateTasks() {
+//		sample_size = dd.dim_sampled_x*dd.dim_sampled_y;
 		jobId = random.nextInt();
 		generation_time = System.nanoTime();
 		int maxIterations = dd.maxIterations;
@@ -61,15 +70,16 @@ public class TaskManager {
 			prepare_depth(depth, index);
 			index++;
 		}
-		generateParents(iteration_step_size);
-//		if (remain != 0) {
+		if (remain != 0) {
 			prepare_depth(maxIterations, index);
 //			generateAndAddChildren(maxIterations);
 ////			generateTasksInSampleRange(maxIterations);
-//		}
+		}
+		generateParents(iteration_step_size);
 //		for (int i = maxIterations-remain ; i > iteration_step_size ; i -= iteration_step_size) {
+//			prepare_depth(i, index);
 //			generateAndAddChildren(i);
-////			generateTasksInSampleRange(i);
+//			generateTasksInSampleRange(i);
 //		}
 		addParents();
 		
@@ -87,18 +97,29 @@ public class TaskManager {
 	HashMap<Integer, Task> parents = new HashMap<>();
 	
 	private void generateParents(int depth) {
+		parents.clear();
 		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+		System.out.println("generating "+samples_total+" samples");
 		int start = 0;
 		int c = 0;
 		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
 			parents.put(end, new Task(start, end, depth, jobId));
+			System.out.println("samples "+start+" - "+end);
 			start = end;
 			c++;
 		}
+		if (start < samples_total) {
+			parents.put(samples_total, new Task(start, samples_total, depth, jobId));
+			c++;
+		}
+		System.out.println("generated "+c+" parents");
 	}
 	
 	public void addParents() {
 		Collection<Task> coll = parents.values();
+		for (Task t : coll) {
+			tasks_by_start_index.put(t.startSample, t);
+		}
 		openTasks.addAll(coll);
 		unfinishedTasksCount.addAndGet(coll.size());
 		for (AtomicInteger i : depth_unfinishedTaskCount) {
@@ -151,7 +172,7 @@ public class TaskManager {
 //	}
 	
 	public synchronized Task getTask() {
-		if (openTasks.size() == 0)
+		if (openTasks.size() <= 0)
 			return null;
 		Task task = openTasks.get(openTasks.size()-1);
 		openTasks.remove(task);
@@ -159,47 +180,79 @@ public class TaskManager {
 		return task;
 	}
 	
-	int minimum_skip_finish = 1000;
-	double skip_max_closed_relative = 0.002;
-	
 	public void taskFinished(Task task) {
 //		System.out.println(Arrays.toString(task.results));
 		if (task.jobId != jobId)
 			return;
 		System.arraycopy(task.results, 0, dc.samples, task.startSample, task.endSample-task.startSample);
-		if (task.startSample > 0) {
-			int[] buff = {dc.samples[task.startSample-1], dc.samples[task.startSample], dc.samples[task.startSample+1]};
-			int c = 0;
-			for (int s = task.startSample ; s < task.endSample-3 ; s++) {
-				if (buff[c%3] <= 0 && buff[(c+1)%3] <= 0 && buff[(c+2)%3] <= 0) {
-					dc.samples[s] = -2;
-					task.results[c] = -2;
-				}
-				c++;
-				buff[c%3] = dc.samples[s+2];
-			}
-		} else {
-			int[] buff = {dc.samples[task.startSample], dc.samples[task.startSample+1], dc.samples[task.startSample+2]};
-			int c = 0;
-			for (int s = task.startSample ; s < task.endSample-4 ; s++) {
-				if (buff[c%3] <= 0 && buff[(c+1)%3] <= 0 && buff[(c+2)%3] <= 0) {
-					dc.samples[s] = -2;
-					task.results[c] = -2;
-				}
-				c++;
-				buff[c%3] = dc.samples[s+3];
-			}
-		}
+		
+//		int dimx = dd.dim_sampled_x;
+//		int dimy = dd.dim_sampled_y;
+//		int c = 0;
+//		for (int s = task.startSample ; s < task.endSample-3 ; s++) {
+//			int y = s/dimx;
+//			int x = s%dimx;
+//			int sample = dc.samples[s];
+//			int start_x = x == 0 ? 0 : x-1;
+//			int end_x = x == dimx-1 ? x : x+1;
+//			int start_y = y == 0 ? 0 : y-1;
+//			int end_y = y == dimy-1 ? y : y+1;
+//			if (sample > 0) {
+//
+//				for (int x2 = start_x ; x2 <= end_x ; x2++) {
+//					for (int y2 = start_y ; y2 <= end_y ; y2++) {
+//						if ((x2 != x || y2 != y) && dc.samples[x2+y2*dimx] == -2) {
+//							changeTaskResult(x2+y2*dimx, 0);
+//						}
+//					}
+//				}
+////				if (x > 0 && dc.samples[s-1] == -2) {
+////					changeTaskResult(s-1, 0);
+////				}
+////				if (x < dimx-1 && dc.samples[s+1] == -2) {
+////					changeTaskResult(s+1, 0);
+////				}
+////				if (y > 0 && dc.samples[s-dimx] == -2) {
+////					changeTaskResult(s-dimx, 0);
+////				}
+////				if (y < dimy-1 && dc.samples[s+dimx] == -2) {
+////					changeTaskResult(s+dimx, 0);
+////				}
+//			} else {
+//				boolean allLowerEqual0 = true;
+//				exit : for (int x2 = start_x ; x2 <= end_x ; x2++) {
+//					for (int y2 = start_y ; y2 <= end_y ; y2++) {
+//						if (dc.samples[x2+y2*dimx] > 0) {
+//							allLowerEqual0 = false;
+//							break exit;
+//						}
+//					}
+//				}
+//				if (allLowerEqual0) {
+//					dc.samples[s] = -2;
+//					task.results[c] = -2;
+//				}
+////				if ((x == 0 || dc.samples[s-1] <= 0) && (x == dimx-1 || dc.samples[s+1] <= 0)
+////						&& (y == dimy-1 || dc.samples[s+dimx] <= 0) && (y == 0 || dc.samples[s-dimx] <= 0)) {
+////					dc.samples[s] = -2;
+////					task.results[c] = -2;
+////				}
+//			}
+//			c++;
+//		}
+		
 		System.arraycopy(task.currentIterations, 0, dc.currentSampleIterations, task.startSample, task.endSample-task.startSample);
 		System.arraycopy(task.currentpos_real, 0, dc.currentSamplePos_real, task.startSample, task.endSample-task.startSample);
 		System.arraycopy(task.currentpos_imag, 0, dc.currentSamplePos_imag, task.startSample, task.endSample-task.startSample);
 		
 		postTaskFinish(task);
-		
-		if (unfinishedTasksCount.decrementAndGet() == 0) {
-			finished = true;
-			clearTasks();
-		}
+	}
+
+	private void changeTaskResult(int sample, int result) {
+		int offset = sample%sample_size;
+		int startIndex = sample-offset;
+		tasks_by_start_index.get(startIndex).results[offset] = result;
+		dc.samples[sample] = result;
 	}
 
 	private synchronized void postTaskFinish(Task task) {
@@ -209,7 +262,8 @@ public class TaskManager {
 		Integer depth_index = depth_to_index.get(depth);
 		
 		if (depth_index == null) {
-			System.err.println("error: depth index not found!");
+			System.err.println("error: depth index not found! ("+depth+")");
+			depth_to_index.forEach((k,v) -> System.out.println(" - "+k+" ["+v+"]"));
 		} else {
 			int prev_depth = task.getPreviousMaxIterations();
 			int closedIterations = 0;
@@ -220,7 +274,7 @@ public class TaskManager {
 			if (depth_closedIterations.size() != 0) {
 				int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
 				int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
-				
+//				System.out.println("finished t. depth="+depth+" "+unfinishedTasks+" left");
 				if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
 					int prev_cul = depth_index == 0 ? 0 : depth_cumulativeClosedIterations.get(depth_index - 1).get();
 					int cul = prev_cul + totalClosedAtCurrentDepth;
@@ -228,6 +282,10 @@ public class TaskManager {
 					depth_cumulativeClosedIterations.get(depth_index).set(cul);
 					System.out.println("closed "+totalClosedAtCurrentDepth+" iterations at depth "+depth+" "+rel);
 					finishedDepth = depth;
+					if (rel != Double.NaN) {
+						last_step_closed_relative = rel;
+						last_step_closed_total = cul;
+					}
 					if (cul > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality much...
 						finished = true;
 	//					for (int i = 0 ; i < dc.currentSampleIterations.length ; i++) { //mark not finished samples as in the set
@@ -235,7 +293,7 @@ public class TaskManager {
 	//							dc.samples[i] = -1;
 	//						}
 	//					}
-						System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s");
+						System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s (reached quality goal)");
 						clearTasks();
 					}
 				}
@@ -248,6 +306,12 @@ public class TaskManager {
 				newMaxIterations = dd.getMaxIterations();
 			task.setMaxIterations(newMaxIterations);
 			openTasks.add(0, task);
+		} else {
+			if (unfinishedTasksCount.decrementAndGet() == 0) {
+				finished = true;
+				clearTasks();
+				System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s (reached max iterations)");
+			}
 		}
 	}
 

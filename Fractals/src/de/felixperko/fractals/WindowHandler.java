@@ -201,4 +201,8 @@ public class WindowHandler {
 	public void setMainRenderer(FractalRenderer mainRenderer) {
 		this.mainRenderer = mainRenderer;
 	}
+
+	public void loopColor(float additionalOffset) {
+		mainRenderer.addColorOffset(additionalOffset);
+	}
 }

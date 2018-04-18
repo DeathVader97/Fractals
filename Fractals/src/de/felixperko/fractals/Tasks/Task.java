@@ -2,6 +2,7 @@ package de.felixperko.fractals.Tasks;
 
 import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.FractalsMain;
 
 public class Task {
 	
