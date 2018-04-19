@@ -18,7 +18,7 @@ public class WindowHandler {
 	static int w = 1280, h = 720;
 	static int target_fps = 60;
 	
-	private int iterations = 1000;
+	private int iterations = 1000000;
 	double midx = 0, midy = 0;
 	double range = 3;
 	
@@ -45,14 +45,14 @@ public class WindowHandler {
 		
 		jframe = new JFrame("Fractals");
 		
-//		jframe.setSize(w, h);
-//		jframe.setVisible(true);
-
-		jframe.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		jframe.setUndecorated(true);
+		jframe.setSize(w, h);
 		jframe.setVisible(true);
-		w = jframe.getWidth();
-		h = jframe.getHeight();
+
+//		jframe.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//		jframe.setUndecorated(true);
+//		jframe.setVisible(true);
+//		w = jframe.getWidth();
+//		h = jframe.getHeight();
 		
 		jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		jframe.addMouseListener(new MouseControls());

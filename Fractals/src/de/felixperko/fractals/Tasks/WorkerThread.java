@@ -65,8 +65,8 @@ public class WorkerThread extends Thread {
 
 	public void setTaskProvider(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
-		continueWorking = true;
-		interrupt();
+//		continueWorking = true;
+//		interrupt();
 	}
 	
 	public String getPhase() {

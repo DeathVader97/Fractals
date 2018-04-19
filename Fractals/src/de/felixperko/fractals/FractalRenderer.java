@@ -105,7 +105,7 @@ public class FractalRenderer {
 					double imag = dataContainer.currentSamplePos_imag[i];
 					if (it > 0 || real*real+imag*imag > 4) {
 						float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(real*real+imag*imag))/Math.log(2)));
-						sat /= dataDescriptor.maxIterations;
+						sat /= 1000;
 //						sat = (float)Math.pow(sat, 0.25);
 						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(colorOffset+10*sat, 0.6f,1f));
 					} else {
@@ -114,7 +114,7 @@ public class FractalRenderer {
 //							b = 1;
 //						draw_img.setRGB(imgx, imgy, new Color(b, b, b).getRGB());
 						if (it == -2)
-							draw_img.setRGB(imgx, imgy, new Color(1f,0,0).getRGB());
+							draw_img.setRGB(imgx, imgy, new Color(0f,0,0).getRGB());
 						else
 							draw_img.setRGB(imgx, imgy, 0);
 					}

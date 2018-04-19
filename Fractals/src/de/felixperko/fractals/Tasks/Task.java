@@ -1,5 +1,7 @@
 package de.felixperko.fractals.Tasks;
 
+import java.util.ArrayList;
+
 import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
@@ -26,7 +28,11 @@ public class Task {
 	long end_sample_count;
 	int samplesPerMs;
 	
+	SampleCalculator sampleCalculator = new SampleCalculator(null, this);
+	
 	int jobId;
+	
+	public ArrayList<Integer> changedIndices = new ArrayList<>();
 
 	private int previousMaxIterations = -1;
 	
@@ -59,10 +65,12 @@ public class Task {
 	
 	public void run(DataDescriptor dataDescriptor) {
 		this.start_time = System.nanoTime();
-		SampleCalculator sc = new SampleCalculator(dataDescriptor);
-		sc.calculate_samples(startSample, endSample, currentIterations, maxIterations, currentpos_real, currentpos_imag, results);
+		changedIndices.clear();
+		sampleCalculator.descriptor = dataDescriptor;
+		sampleCalculator.run_iterations = 0;
+		sampleCalculator.calculate_samples(startSample, endSample, currentIterations, maxIterations, currentpos_real, currentpos_imag, results);
 		this.end_time = System.nanoTime();
-		this.end_sample_count = sc.iterations_total;
+		this.end_sample_count = sampleCalculator.run_iterations;
 		this.samplesPerMs = (int)((double)end_sample_count/((end_time-start_time)/1000000.));
 	}
 	
