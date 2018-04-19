@@ -4,6 +4,7 @@ import de.felixperko.fractals.Tasks.LocalTaskProvider;
 import de.felixperko.fractals.Tasks.TaskManager;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.ThreadManager;
+import de.felixperko.fractals.gui.MainWindow;
 
 public class FractalsMain {
 	

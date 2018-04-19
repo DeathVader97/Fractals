@@ -6,10 +6,12 @@ import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
 import de.felixperko.fractals.Controls.MouseWheelControls;
+import de.felixperko.fractals.Tasks.WorkerThread;
 
 public class WindowHandler {
 	
@@ -25,6 +27,7 @@ public class WindowHandler {
 	boolean changed = true;
 	
 	JFrame jframe;
+	JPanel panel;
 	BufferedImage img;
 	BufferedImage temp_img;
 
@@ -55,6 +58,8 @@ public class WindowHandler {
 		jframe.addMouseListener(new MouseControls());
 		jframe.addMouseWheelListener(new MouseWheelControls(this));
 		jframe.addKeyListener(new KeyListenerControls(this));
+		panel = new JPanel();
+		jframe.add(panel);
 //		generateImage();
 	}
 
@@ -121,7 +126,8 @@ public class WindowHandler {
 //	}
 
 	public void render() {
-		Graphics g = jframe.getGraphics();
+		
+		Graphics g = panel.getGraphics();
 //		tick();
 //		if (img != null) {
 //			g.drawImage(img, 0, 0, null);
@@ -131,6 +137,15 @@ public class WindowHandler {
 			mainRenderer.render(g, save);
 			save = false;
 		}
+		
+		int y = 15;
+		for (WorkerThread thread : FractalsMain.threadManager.getThreads()) {
+			g.drawString(thread.getPhase(), 10, y);
+			y += 15;
+		}
+		
+		g.dispose();
+		
 		try {
 			Thread.sleep(1);
 		} catch (InterruptedException e) {

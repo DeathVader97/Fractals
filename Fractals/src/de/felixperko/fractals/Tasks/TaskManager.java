@@ -128,35 +128,35 @@ public class TaskManager {
 //		depth_unfinishedTaskCount.get(depth_to_index.get(iteration_step_size)).set(coll.size());
 	}
 	
-	private void generateAndAddChildren(int depth) {
-
-		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
-		int start = 0;
-		int c = 0;
-		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
-			openTasks.add(parents.get(end).successor(depth));
-		}
-		unfinishedTasksCount.addAndGet(c);
-		depth_unfinishedTaskCount.get(depth_to_index.get(depth)).set(c);
-	}
-		
-	@Deprecated
-	private int generateTasksInSampleRange(int depth) {
-		
-		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
-		int start = 0;
-		int c = 0;
-		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
-			openTasks.add(new Task(start, end, depth, jobId));
-			start = end;
-			c++;
-		}
-		
-		unfinishedTasksCount.addAndGet(c);
-		depth_unfinishedTaskCount.get(depth_to_index.get(depth)).set(c);
-		
-		return c;
-	}
+//	private void generateAndAddChildren(int depth) {
+//
+//		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+//		int start = 0;
+//		int c = 0;
+//		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
+//			openTasks.add(parents.get(end).successor(depth));
+//		}
+//		unfinishedTasksCount.addAndGet(c);
+//		depth_unfinishedTaskCount.get(depth_to_index.get(depth)).set(c);
+//	}
+//		
+//	@Deprecated
+//	private int generateTasksInSampleRange(int depth) {
+//		
+//		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+//		int start = 0;
+//		int c = 0;
+//		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
+//			openTasks.add(new Task(start, end, depth, jobId));
+//			start = end;
+//			c++;
+//		}
+//		
+//		unfinishedTasksCount.addAndGet(c);
+//		depth_unfinishedTaskCount.get(depth_to_index.get(depth)).set(c);
+//		
+//		return c;
+//	}
 
 //	public synchronized ArrayList<Task> getTasks(int amount){
 //		ArrayList<Task> tasks = new ArrayList<>();
@@ -339,5 +339,9 @@ public class TaskManager {
 
 	public int getFinishedDepth() {
 		return finishedDepth;
+	}
+
+	public int getJobId() {
+		return jobId;
 	}
 }

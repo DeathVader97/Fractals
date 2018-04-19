@@ -51,6 +51,8 @@ public class FractalRenderer {
 	boolean newFinish = true;
 	boolean newPartFinish = true;
 	double nextGoal = 0.2;
+	int currentGoalJob = 0;
+	int currentDrawDepth = 0;
 	
 	public synchronized void render(Graphics g, boolean save) {
 		
@@ -59,19 +61,26 @@ public class FractalRenderer {
 //		}
 		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
 		TaskManager tm = FractalsMain.taskManager;
+		if (tm.getJobId() != currentGoalJob) {
+			currentGoalJob = tm.getJobId();
+			nextGoal = 0.2;
+			currentDrawDepth = 0;
+		}
 		if (tm.isFinished()) {
 			if (newFinish) {
 				redraw = true;
-				nextGoal = 0;
 				newFinish = false;
+				System.out.println("redraw");
 			}
 		} else {
 			newFinish = true;
 		}
-		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal)) {
+		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
 			if (newPartFinish) {
 				redraw = true;
-				newPartFinish = false;
+				currentDrawDepth = finishedDepth;
+//				newPartFinish = false;
+				System.out.println("redraw temp");
 			}
 		} else {
 			newPartFinish = true;

@@ -85,4 +85,8 @@ public class ThreadManager {
 			}
 		}
 	}
+
+	public WorkerThread[] getThreads() {
+		return workerThreads;
+	}
 }
