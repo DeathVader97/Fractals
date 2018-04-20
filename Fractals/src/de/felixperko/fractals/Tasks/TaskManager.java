@@ -257,7 +257,6 @@ public class TaskManager {
 	private void finish(String msg) {
 		finished = true;
 		clearTasks();
-		cumulativeClosedIterations = 0;
 		System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s ("+msg+")");
 	}
 
@@ -268,6 +267,7 @@ public class TaskManager {
 		depth_to_index.clear();
 		depth_unfinishedTaskCount.clear();
 		finishedDepth = 0;
+		cumulativeClosedIterations = 0;
 	}
 
 	public DataContainer getDataContainer() {
