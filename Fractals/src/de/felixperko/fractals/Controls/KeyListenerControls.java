@@ -10,6 +10,8 @@ public class KeyListenerControls implements KeyListener {
 	WindowHandler windowHandler;
 	
 	boolean setSave = true;
+	boolean jumpToLocation = true;
+	boolean saveLocation = true;
 	
 	public KeyListenerControls(WindowHandler windowHandler) {
 		this.windowHandler = windowHandler;
@@ -41,12 +43,24 @@ public class KeyListenerControls implements KeyListener {
 			windowHandler.save = true;
 			setSave = false;
 		}
+		if (jumpToLocation && e.getKeyCode() == KeyEvent.VK_TAB) {
+			windowHandler.jumpToSavedLocation(e.isShiftDown());
+			jumpToLocation = false;
+		}
+		if (saveLocation && e.getKeyChar() == 'l') {
+			windowHandler.saveLocation();
+			saveLocation = false;
+		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
 		if (e.getKeyChar() == 's')
 			setSave = true;
+		if (e.getKeyCode() == KeyEvent.VK_TAB)
+			jumpToLocation = true;
+		if (e.getKeyChar() == 'l')
+			saveLocation = true;
 	}
 
 }

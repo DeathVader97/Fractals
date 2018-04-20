@@ -17,8 +17,17 @@ public class FractalsMain {
 	public static TaskManager taskManager;
 	public static TaskProvider taskProvider;
 	
+	public static LocationHolder locationHolder;
+	
 	public static void main(String[] args) {
 		windowHandler = new WindowHandler();
+		locationHolder = new LocationHolder();
+		
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
 		threadManager = new ThreadManager(HELPER_THREAD_COUNT, null);
 		

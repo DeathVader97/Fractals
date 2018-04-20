@@ -34,8 +34,6 @@ public class FractalRenderer {
 	int disp_x2 = 0;
 	int disp_y2 = 0;
 	
-	boolean allow_zooming = true;
-	
 	float colorOffset = 0.5f;
 	
 	public FractalRenderer() {
@@ -55,10 +53,13 @@ public class FractalRenderer {
 	int currentDrawDepth = 0;
 	
 	public synchronized void render(Graphics g, boolean save) {
-		
-//		if (System.nanoTime()-lastDrawn > 10000000) {
-//			redraw = true;
-//		}
+		int finishedDepth = checkDrawConditions();
+		if (redraw || save)
+			redraw(save, finishedDepth);
+		g.drawImage(disp_img, 0, 0, WindowHandler.w, WindowHandler.h, disp_x, disp_y, disp_x2, disp_y2, null);
+	}
+	
+	private int checkDrawConditions() {
 		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
 		TaskManager tm = FractalsMain.taskManager;
 		if (tm.getJobId() != currentGoalJob) {
@@ -79,68 +80,60 @@ public class FractalRenderer {
 			if (newPartFinish) {
 				redraw = true;
 				currentDrawDepth = finishedDepth;
-//				newPartFinish = false;
 				System.out.println("redraw temp");
 			}
 		} else {
 			newPartFinish = true;
 		}
-//		if ((save || redraw) || (drawn_depth != finishedDepth && finishedDepth > 0.5 * FractalsMain.windowHandler.mainRenderer.getMaxIterations())) {
-		if (redraw || save) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			for (int imgx = 0; imgx < draw_img.getWidth(); imgx++) {
-				for (int imgy = 0; imgy < draw_img.getHeight(); imgy++) {
-					int i = imgx+imgy*draw_img.getWidth();
-					int it = dataContainer.samples[i];
-					
-//					double sat = (double)it / dataDescriptor.getMaxIterations();
-//					Color color = Color.getHSBColor((float)-Math.pow(sat,0.1), 1, (float)Math.pow(sat, 0.2));
-//					draw_img.setRGB(imgx, imgy, color.getRGB());
-//					System.out.println(dataContainer.currentSampleIterations[i]);
-					double real = dataContainer.currentSamplePos_real[i];
-					double imag = dataContainer.currentSamplePos_imag[i];
-					if (it > 0 || real*real+imag*imag > 4) {
-						float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(real*real+imag*imag))/Math.log(2)));
-						sat /= 1000;
-//						sat = (float)Math.pow(sat, 0.25);
-						draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(colorOffset+10*sat, 0.6f,1f));
-					} else {
-//						float b = finishedDepth == 0 ? 0 : dataContainer.currentSampleIterations[i]/(float)finishedDepth;
-//						if (b > 1)
-//							b = 1;
-//						draw_img.setRGB(imgx, imgy, new Color(b, b, b).getRGB());
-						if (it == -2)
-							draw_img.setRGB(imgx, imgy, new Color(0f,0,0).getRGB());
-						else
-							draw_img.setRGB(imgx, imgy, 0);
-					}
+		return finishedDepth;
+	}
+
+	private void redraw(boolean save, int finishedDepth) {
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		for (int imgx = 0; imgx < draw_img.getWidth(); imgx++) {
+			for (int imgy = 0; imgy < draw_img.getHeight(); imgy++) {
+				int i = imgx+imgy*draw_img.getWidth();
+				int it = dataContainer.samples[i];
+				double real = dataContainer.currentSamplePos_real[i];
+				double imag = dataContainer.currentSamplePos_imag[i];
+				double absoluteSquared = real*real+imag*imag;
+				if (it > 0 || absoluteSquared > 4) {
+					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
+					sat /= 1000;
+					draw_img.setRGB(imgx, imgy, Color.HSBtoRGB(colorOffset+10*sat, 0.6f,1f));
+				} else {
+					if (it == -2)
+						draw_img.setRGB(imgx, imgy, new Color(0f,0,0).getRGB());
+					else
+						draw_img.setRGB(imgx, imgy, 0);
 				}
 			}
-			lastDrawn = System.nanoTime();
-			Graphics2D g2 = (Graphics2D) disp_img.getGraphics();
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-			RenderingHints.VALUE_ANTIALIAS_ON);
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-			RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-			if (redraw || drawn_depth != finishedDepth)
-				g2.drawImage(draw_img, 0, 0, WindowHandler.w, WindowHandler.h, 0, 0, draw_img.getWidth(), draw_img.getHeight(), null);
-			if (save) {
-				exportImage();
-			}
-			cul_spacing_factor = 1;
-			disp_x = 0;
-			disp_y = 0;
-			disp_x2 = disp_img.getWidth();
-			disp_y2 = disp_img.getHeight();
-			allow_zooming = true;
-			redraw = false;
-			drawn_depth = finishedDepth;
 		}
-		g.drawImage(disp_img, 0, 0, WindowHandler.w, WindowHandler.h, disp_x, disp_y, disp_x2, disp_y2, null);
+		lastDrawn = System.nanoTime();
+		
+		Graphics2D g2 = (Graphics2D) disp_img.getGraphics();
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+		RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+		RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		
+		if (redraw || drawn_depth != finishedDepth)
+			g2.drawImage(draw_img, 0, 0, WindowHandler.w, WindowHandler.h, 0, 0, draw_img.getWidth(), draw_img.getHeight(), null);
+		if (save) {
+			exportImage();
+		}
+		
+		cul_spacing_factor = 1;
+		disp_x = 0;
+		disp_y = 0;
+		disp_x2 = disp_img.getWidth();
+		disp_y2 = disp_img.getHeight();
+		redraw = false;
+		drawn_depth = finishedDepth;
 	}
 
 	private void exportImage() {
@@ -194,10 +187,7 @@ public class FractalRenderer {
 	}
 	
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
-//		if (!allow_zooming)
-//			return;
 		try {
-			allow_zooming = false;
 			dataDescriptor.spacing *= spacing_factor;
 			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(mouse_x*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
 			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(mouse_y*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;
@@ -208,13 +198,10 @@ public class FractalRenderer {
 			disp_y = (int) (mouse_y - rangeY/2);
 			disp_x2 = (int) (mouse_x + rangeX/2);
 			disp_y2 = (int) (mouse_y + rangeY/2);
-			
 			reset();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-//		dataDescriptor.start_x = mid_x - dataDescriptor.spacing*dataDescriptor.dim_sampled_x;
-//		dataDescriptor.start_y = mid_y - dataDescriptor.spacing*dataDescriptor.dim_sampled_y;
 	}
 	
 	public void reset() {
@@ -229,5 +216,20 @@ public class FractalRenderer {
 		colorOffset += additionalOffset;
 		colorOffset = colorOffset%1;
 		redraw = true;
+	}
+
+	public void setLocation(Location location) {
+		dataDescriptor.spacing = location.spacing;
+		dataDescriptor.start_x = location.startX;
+		dataDescriptor.start_y = location.startY;
+		disp_x = 0;
+		disp_y = 0;
+		disp_x2 = disp_img.getWidth();
+		disp_y2 = disp_img.getHeight();
+		reset();
+	}
+
+	public Location getLocation() {
+		return new Location(dataDescriptor.start_x, dataDescriptor.start_y, dataDescriptor.spacing);
 	}
 }
