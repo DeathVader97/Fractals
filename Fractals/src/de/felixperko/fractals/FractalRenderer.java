@@ -21,7 +21,7 @@ public class FractalRenderer {
 	public DataDescriptor dataDescriptor;
 	public DataContainer dataContainer;
 	
-	boolean redraw = false;
+	protected boolean redraw = false;
 	int drawn_depth = 0;
 	
 	long lastDrawn = 0;
@@ -29,10 +29,10 @@ public class FractalRenderer {
 	double q = 1;
 	
 	double cul_spacing_factor = 1;
-	int disp_x = 0;
-	int disp_y = 0;
-	int disp_x2 = 0;
-	int disp_y2 = 0;
+	protected int disp_x = 0;
+	protected int disp_y = 0;
+	protected int disp_x2 = 0;
+	protected int disp_y2 = 0;
 	
 	float colorOffset = 0.5f;
 	
@@ -59,13 +59,15 @@ public class FractalRenderer {
 		g.drawImage(disp_img, 0, 0, WindowHandler.w, WindowHandler.h, disp_x, disp_y, disp_x2, disp_y2, null);
 	}
 	
-	private int checkDrawConditions() {
+	protected int checkDrawConditions() {
 		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
 		TaskManager tm = FractalsMain.taskManager;
 		if (tm.getJobId() != currentGoalJob) {
 			currentGoalJob = tm.getJobId();
 			nextGoal = 0.2;
 			currentDrawDepth = 0;
+			newFinish = true;
+			newPartFinish = true;
 		}
 		if (tm.isFinished()) {
 			if (newFinish) {
@@ -88,7 +90,7 @@ public class FractalRenderer {
 		return finishedDepth;
 	}
 
-	private void redraw(boolean save, int finishedDepth) {
+	protected void redraw(boolean save, int finishedDepth) {
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {

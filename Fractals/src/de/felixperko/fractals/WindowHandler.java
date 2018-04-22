@@ -37,6 +37,7 @@ public class WindowHandler {
 	
 	public boolean save = false;
 	
+	@Deprecated
 	public WindowHandler() {
 		
 //		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -57,7 +58,7 @@ public class WindowHandler {
 		jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		jframe.addMouseListener(new MouseControls());
 		jframe.addMouseWheelListener(new MouseWheelControls(this));
-		jframe.addKeyListener(new KeyListenerControls(this));
+//		jframe.addKeyListener(new KeyListenerControls(this));
 		jframe.setFocusTraversalKeysEnabled(false);
 		panel = new JPanel();
 		jframe.add(panel);

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,7 +24,7 @@ public class TaskManager {
 	
 	List<AtomicInteger> depth_unfinishedTaskCount = new ArrayList<>();
 	List<AtomicInteger> depth_closedIterations = new ArrayList<>();
-	HashMap<Integer, Integer> depth_to_index = new HashMap<>();
+	Map<Integer, Integer> depth_to_index = Collections.synchronizedMap(new HashMap<>());
 	
 	HashMap<Integer, Task> tasks_by_start_index = new HashMap<>();
 	
@@ -80,6 +81,7 @@ public class TaskManager {
 	}
 
 	private void prepare_depth(int depth, int index) {
+		System.out.println("prepare depth "+depth);
 		depth_to_index.put(depth, index);
 		depth_closedIterations.add(new AtomicInteger());
 		depth_unfinishedTaskCount.add(new AtomicInteger());

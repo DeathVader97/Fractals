@@ -13,6 +13,8 @@ public class FractalsMain {
 	
 	public static WindowHandler windowHandler;
 	
+	public static MainWindow mainWindow;
+	
 	public static ThreadManager threadManager;
 	public static TaskManager taskManager;
 	public static TaskProvider taskProvider;
@@ -20,7 +22,9 @@ public class FractalsMain {
 	public static LocationHolder locationHolder;
 	
 	public static void main(String[] args) {
-		windowHandler = new WindowHandler();
+//		windowHandler = new WindowHandler();
+		mainWindow = new MainWindow();
+		
 		locationHolder = new LocationHolder();
 		
 		try {
@@ -31,7 +35,8 @@ public class FractalsMain {
 		
 		threadManager = new ThreadManager(HELPER_THREAD_COUNT, null);
 		
-		FractalRenderer renderer = new FractalRenderer();
+//		FractalRenderer renderer = new FractalRenderer();
+		FractalRendererSWT renderer = new FractalRendererSWT(mainWindow.getDisplay());
 		
 //		windowHandler.getMainRenderer().setDataContainer(dataContainer);
 		
@@ -41,9 +46,10 @@ public class FractalsMain {
 		taskProvider = new LocalTaskProvider(taskManager, renderer.getDataDescriptor());
 		threadManager.addTaskProvider(taskProvider);
 		
-		windowHandler.setMainRenderer(renderer);
+		mainWindow.setMainRenderer(renderer);
+		mainWindow.open();
 		
-		startRendering();
+//		startRendering();
 	}
 
 	private static void startRendering() {
@@ -53,5 +59,9 @@ public class FractalsMain {
 
 	public static WindowHandler getWindowHandler() {
 		return windowHandler;
+	}
+
+	public static void shutdown() {
+		System.exit(0);
 	}
 }
