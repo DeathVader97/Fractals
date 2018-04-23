@@ -76,7 +76,7 @@ public class WindowHandler {
 		
 		int y = 15;
 		for (WorkerThread thread : FractalsMain.threadManager.getThreads()) {
-			g.drawString(thread.getPhase(), 10, y);
+			g.drawString(thread.getPhase().getName(), 10, y);
 			y += 15;
 		}
 		

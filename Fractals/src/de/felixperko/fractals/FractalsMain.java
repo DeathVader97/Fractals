@@ -1,6 +1,7 @@
 package de.felixperko.fractals;
 
 import de.felixperko.fractals.Tasks.LocalTaskProvider;
+import de.felixperko.fractals.Tasks.PerformanceMonitor;
 import de.felixperko.fractals.Tasks.TaskManager;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.ThreadManager;
@@ -17,6 +18,7 @@ public class FractalsMain {
 	
 	public static ThreadManager threadManager;
 	public static TaskManager taskManager;
+	public static PerformanceMonitor performanceMonitor;
 	public static TaskProvider taskProvider;
 	
 	public static LocationHolder locationHolder;
@@ -34,6 +36,7 @@ public class FractalsMain {
 		}
 		
 		threadManager = new ThreadManager(HELPER_THREAD_COUNT, null);
+		performanceMonitor = new PerformanceMonitor(threadManager);
 		
 //		FractalRenderer renderer = new FractalRenderer();
 		FractalRendererSWT renderer = new FractalRendererSWT(mainWindow.getDisplay());

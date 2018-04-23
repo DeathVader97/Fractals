@@ -1,5 +1,7 @@
 package de.felixperko.fractals.gui;
 
+import java.awt.Color;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -12,6 +14,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.custom.SashForm;
 import swing2swt.layout.BoxLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -62,6 +65,8 @@ import org.eclipse.swt.custom.TableTree;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.GestureEvent;
+import org.eclipse.swt.events.GestureListener;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.DisposeEvent;
 
@@ -88,18 +93,18 @@ public class MainWindow {
 
 	private Label lbl_draw_dim;
 
-	/**
-	 * Launch the application.
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		try {
-			MainWindow window = new MainWindow();
-			window.open();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	/**
+//	 * Launch the application.
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+//		try {
+//			MainWindow window = new MainWindow();
+//			window.open();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	/**
 	 * Open the window.
@@ -135,6 +140,13 @@ public class MainWindow {
 		label.setText(text);
 		label.requestLayout();
 	}
+	
+	public void setText(Label label, String text, Color color) {
+		org.eclipse.swt.graphics.Color newColor = new org.eclipse.swt.graphics.Color(display, new RGB(color.getRed(), color.getGreen(), color.getBlue()));
+		if (!label.getForeground().equals(newColor))
+			label.setForeground(newColor);
+		setText(label, text);
+	}
 
 	/**
 	 * Create contents of the window.
@@ -149,7 +161,8 @@ public class MainWindow {
 		shell.addListener(SWT.RESIZE, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				mainRenderer.resized();
+				System.out.println("shell resized");
+//				mainRenderer.resized();
 			}
 		});
 //		shell.setSize(718, 400);
@@ -180,9 +193,26 @@ public class MainWindow {
 		Composite composite_5 = new Composite(sashForm, SWT.NONE);
 		composite_5.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
-		canvas = new Canvas(composite_5, SWT.NONE);
-		canvas.addPaintListener(e -> {mainRenderer.render(e, save);});
+		canvas = new Canvas(composite_5, SWT.DOUBLE_BUFFERED);
 		canvas.addKeyListener(new KeyListenerControls(this));
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				double factor = e.button == 1 ? 0.5 : (e.button == 3 ? 2 : 1);
+				if (factor != 0) {
+					mainRenderer.updateLocation(e.x, e.y, factor);
+					canvas.redraw();
+				}
+			}
+		});
+		canvas.addPaintListener(e -> {mainRenderer.render(e, save);});
+		canvas.addListener(SWT.Resize, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				System.out.println("resize canvas");
+				mainRenderer.resized();
+			}
+		});
 		
 		TabFolder tabFolder = new TabFolder(sashForm, SWT.NONE);
 		

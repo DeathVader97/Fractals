@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.FractalsMain;
 
 public class TaskManager {
 	
@@ -49,6 +50,8 @@ public class TaskManager {
 	float denyApproximationSamplesChance = 0.0001f;
 	HashSet<Integer> denyApproximationSamples = new HashSet<>();
 //	ArrayList<Task> activeTasks = new ArrayList<>();
+	
+	ArrayList<Task> workingTasks = new ArrayList<>();
 		
 	public TaskManager(DataDescriptor dd, DataContainer dc) {
 		this.dd = dd;
@@ -56,6 +59,7 @@ public class TaskManager {
 	}
 	
 	public synchronized void generateTasks() {
+		FractalsMain.performanceMonitor.startPhase();
 		int total_samples = dd.dim_sampled_x*dd.dim_sampled_y;
 		for (int i = 0 ; i < total_samples ; i += Math.round(1/denyApproximationSamplesChance)) {
 			denyApproximationSamples.add(i);
@@ -81,7 +85,6 @@ public class TaskManager {
 	}
 
 	private void prepare_depth(int depth, int index) {
-		System.out.println("prepare depth "+depth);
 		depth_to_index.put(depth, index);
 		depth_closedIterations.add(new AtomicInteger());
 		depth_unfinishedTaskCount.add(new AtomicInteger());
@@ -116,15 +119,17 @@ public class TaskManager {
 			return null;
 		Task task = openTasks.get(openTasks.size()-1);
 		openTasks.remove(task);
+		workingTasks.add(task);
 		task.setState(Task.STATE_ASSINGED);
 		return task;
 	}
 	
-	public void taskFinished(Task task) {
+	public synchronized void taskFinished(Task task) {
 		
 		if (task.jobId != jobId)
 			return;
-		
+
+		workingTasks.remove(task);
 		int size = task.endSample - task.startSample;
 		
 		if (task.changedIndices.isEmpty()) {
@@ -158,6 +163,8 @@ public class TaskManager {
 	}
 
 	private void updateCulling(Task task) {
+		if (task.jobId != jobId)
+			return;
 		int dimx = dd.dim_sampled_x;
 		int dimy = dd.dim_sampled_y;
 		int c = 0;
@@ -259,11 +266,13 @@ public class TaskManager {
 	private void finish(String msg) {
 		finished = true;
 		clearTasks();
+		FractalsMain.performanceMonitor.endPhase();
 		System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s ("+msg+")");
 	}
 
 	public void clearTasks() {
 		openTasks.clear();
+		workingTasks.clear();
 		unfinishedTasksCount.set(0);
 		depth_closedIterations.clear();
 		depth_to_index.clear();

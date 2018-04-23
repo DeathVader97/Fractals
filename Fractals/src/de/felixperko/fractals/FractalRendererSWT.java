@@ -32,19 +32,35 @@ public class FractalRendererSWT extends FractalRenderer {
 	}
 	
 	public void render(PaintEvent e, boolean save) {
-		save = FractalsMain.mainWindow.save;
-		int finishedDepth = checkDrawConditions();
-		System.out.println("render redraw="+redraw+" save="+save);
-		if (redraw || save) {
+		try {
+			save = FractalsMain.mainWindow.save;
+			int finishedDepth = checkDrawConditions();
+			System.out.println("render redraw="+redraw+" save="+save);
 			Rectangle bounds = FractalsMain.mainWindow.canvas.getBounds();
-			if (!bounds.equals(lastBounds)) {
-				lastBounds = bounds;
-				resized();
+			if (redraw || save) {
+				if (!bounds.equals(lastBounds)) {
+					lastBounds = bounds;
+					resized();
+				}
+				redraw(save, finishedDepth);
+				System.out.println("draw with "+disp_x+","+disp_y+" - "+disp_x2+","+disp_y2);
+				e.gc.drawImage(disp_img, disp_x, disp_y, disp_x2-disp_x, disp_y2-disp_y, 0, 0, bounds.width, bounds.height);
+				if (save)
+					FractalsMain.mainWindow.save = false;
 			}
-			redraw(save, finishedDepth);
-			e.gc.drawImage(disp_img, disp_x, disp_y, disp_x2-disp_x, disp_y2-disp_y, 0, 0, bounds.width, bounds.height);
-			if (save)
-				FractalsMain.mainWindow.save = false;
+			if (disp_changed) {
+				disp_changed = false;
+				int disp_w = disp_x2-disp_x;
+				int disp_h = disp_y2-disp_y;
+				int minX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
+				int minY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
+				int maxX = (int) (disp_w < disp_img.getBounds().width ? bounds.width : bounds.width*(((double)disp_w)/disp_img.getBounds().width));
+				int maxY = (int) (disp_h < disp_img.getBounds().height ? bounds.height : bounds.height*(((double)disp_h)/disp_img.getBounds().height));
+				System.out.println(minX+","+minY+" - "+maxX+","+maxY);
+				e.gc.drawImage(disp_img, disp_x > 0 ? disp_x : 0, disp_y > 0 ? disp_y : 0, disp_w, disp_h, minX, minY, maxX, maxY);
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 	
