@@ -77,7 +77,11 @@ public class WorkerThread extends Thread {
 					continue;
 				e.printStackTrace();
 			}
-//			System.out.println(name+" task finished... "+task.samplesPerMs+" samples/ms");
+//			int notFinishedCount = 0;
+//			for (int it : task.results)
+//				if (it == 0)
+//					notFinishedCount++;
+//			System.out.println(name+" task finished... "+task.samplesPerMs+" samples/ms ; not finished: "+notFinishedCount+"/"+(task.endSample-task.startSample));
 		}
 		setPhase(PHASE_STOPPED);
 	}

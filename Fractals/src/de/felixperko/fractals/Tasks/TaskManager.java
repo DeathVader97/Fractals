@@ -19,7 +19,7 @@ public class TaskManager {
 	DataContainer dc;
 	
 	int sample_size = 10000;
-	int iteration_step_size = 500;
+	int iteration_step_size = 10000;
 	
 	AtomicInteger unfinishedTasksCount = new AtomicInteger();
 	
@@ -234,7 +234,7 @@ public class TaskManager {
 				int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
 				int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
 //				System.out.println("finished t. depth="+depth+" "+unfinishedTasks+" left");
-				if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
+				if (unfinishedTasks <= 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
 					cumulativeClosedIterations += totalClosedAtCurrentDepth;
 					double rel = totalClosedAtCurrentDepth/(double)cumulativeClosedIterations;
 					System.out.println("closed "+totalClosedAtCurrentDepth+" (total "+cumulativeClosedIterations+") iterations at depth "+depth+" "+rel);
