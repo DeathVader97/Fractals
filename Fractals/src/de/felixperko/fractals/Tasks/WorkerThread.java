@@ -112,6 +112,6 @@ public class WorkerThread extends Thread {
 	}
 	
 	public ArrayList<WorkerPhaseChange> getPerformanceData(){
-		return phaseChanges;
+		return new ArrayList<WorkerPhaseChange>(phaseChanges);
 	}
 }

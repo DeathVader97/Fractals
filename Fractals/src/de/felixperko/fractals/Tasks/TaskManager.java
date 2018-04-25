@@ -19,13 +19,16 @@ public class TaskManager {
 	DataContainer dc;
 	
 	int sample_size = 10000;
-	int iteration_step_size = 10000;
+	int iteration_step_size = 50;
+	int iteration_step_size_incr = 100;
+	int iteration_step_size_incr_incr = 500;
 	
 	AtomicInteger unfinishedTasksCount = new AtomicInteger();
 	
 	List<AtomicInteger> depth_unfinishedTaskCount = new ArrayList<>();
 	List<AtomicInteger> depth_closedIterations = new ArrayList<>();
 	Map<Integer, Integer> depth_to_index = Collections.synchronizedMap(new HashMap<>());
+	Map<Integer, Integer> index_to_depth = Collections.synchronizedMap(new HashMap<>());
 	
 	HashMap<Integer, Task> tasks_by_start_index = new HashMap<>();
 	
@@ -61,31 +64,40 @@ public class TaskManager {
 	public synchronized void generateTasks() {
 		FractalsMain.performanceMonitor.startPhase();
 		int total_samples = dd.dim_sampled_x*dd.dim_sampled_y;
-		for (int i = 0 ; i < total_samples ; i += Math.round(1/denyApproximationSamplesChance)) {
-			denyApproximationSamples.add(i);
+		for (int i = 0 ; i < total_samples*denyApproximationSamplesChance ; i++) {
+			denyApproximationSamples.add((int)(Math.random()*total_samples));
 		}
 		
 		jobId = random.nextInt();
 		generation_time = System.nanoTime();
 		int maxIterations = dd.maxIterations;
 		
-		int remain = maxIterations % iteration_step_size;
+		int step = iteration_step_size;
 		
 		int index = 0;
-		for (int depth = iteration_step_size ; depth <= maxIterations ; depth += iteration_step_size) {
+		int depth = iteration_step_size;
+		ArrayList<Integer> depthValues = new ArrayList<>();
+		for ( ; depth <= maxIterations ; depth += step) {
 			prepare_depth(depth, index);
+			depthValues.add(depth);
+			step += iteration_step_size_incr;
+			iteration_step_size_incr = iteration_step_size_incr_incr;
 			index++;
 		}
+		StringBuilder depthValueStr = new StringBuilder();
+		depthValues.forEach(v -> depthValueStr.append(v).append(", "));
+		System.out.println(depthValueStr.toString());
+		int remain = depth - maxIterations;
 		if (remain != 0)
 			prepare_depth(maxIterations, index);
 		generateTasks(iteration_step_size);
-		
-		finished = unfinishedTasksCount.get() == 0;
-		System.out.println("generated "+unfinishedTasksCount.get()+" tasks");
+		int count = unfinishedTasksCount.get();
+		finished = count == 0;
 	}
 
 	private void prepare_depth(int depth, int index) {
 		depth_to_index.put(depth, index);
+		index_to_depth.put(index, depth);
 		depth_closedIterations.add(new AtomicInteger());
 		depth_unfinishedTaskCount.add(new AtomicInteger());
 	}
@@ -125,7 +137,10 @@ public class TaskManager {
 	}
 	
 	public synchronized void taskFinished(Task task) {
-		
+		long copyTime = 0;
+		long cullingTime = 0;
+		long postTime = 0;
+		long t1 = System.nanoTime();
 		if (task.jobId != jobId)
 			return;
 
@@ -141,25 +156,60 @@ public class TaskManager {
 				}
 			}
 			if (done) {
-				for (int i = 0 ; i < depth_unfinishedTaskCount.size() ; i++) {
+				int depth = task.getMaxIterations();
+				int prev_depth = task.getPreviousMaxIterations();
+				int closedIterations = 0;
+				for (Integer i : task.changedIndices) {
+					if (task.currentIterations[i] > prev_depth && task.currentIterations[i] != depth)
+						closedIterations++;
+				}
+//				System.out.println("task is done... "+depth);
+				int depth_index = depth_to_index.get(depth);
+				int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
+				int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
+				for (int i = depth_index+1 ; i < depth_unfinishedTaskCount.size() ; i++) {
 					depth_unfinishedTaskCount.get(i).decrementAndGet();
+				}
+				if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
+					cumulativeClosedIterations += totalClosedAtCurrentDepth;
+					double rel = totalClosedAtCurrentDepth/(double)cumulativeClosedIterations;
+					System.out.println("closed "+totalClosedAtCurrentDepth+" (total "+cumulativeClosedIterations+") iterations at depth "+depth+" "+rel);
+					finishedDepth = depth;
+					if (rel != Double.NaN) {
+						last_step_closed_relative = rel;
+						last_step_closed_total = cumulativeClosedIterations;
+					}
+					if (cumulativeClosedIterations > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality much...
+						finish("reached quality goal");
+					}
 				}
 				return;
 			}
 //			depth_unfinishedTaskCount.get(depth_to_index.get(task.getMaxIterations())).decrementAndGet();
 		} else {
-		
+			long startCopy = System.nanoTime();
 			System.arraycopy(task.results, 0, dc.samples, task.startSample, size);
-			
+			long startCulling = System.nanoTime();
 			if (fastApproximation && cumulativeClosedIterations > minimum_skip_finish)
 				updateCulling(task);
-			
+			long endCulling = System.nanoTime();
 			System.arraycopy(task.currentIterations, 0, dc.currentSampleIterations, task.startSample, size);
 			System.arraycopy(task.currentpos_real, 0, dc.currentSamplePos_real, task.startSample, size);
 			System.arraycopy(task.currentpos_imag, 0, dc.currentSamplePos_imag, task.startSample, size);
+			long endCopy = System.nanoTime();
+			cullingTime = endCulling-startCulling;
+			copyTime = endCopy-startCopy - cullingTime;
 		}
-		
+		long postStart = System.nanoTime();
 		postTaskFinish(task);
+		long t2 = System.nanoTime();
+		postTime = t2-postStart;
+		double totalTime = t2-t1;
+//		System.out.println("total save time: "+totalTime/1000000+"ms copy="+percent(totalTime,copyTime)+"% culling="+percent(totalTime,cullingTime)+"% post="+percent(totalTime,postTime)+"%");
+	}
+	
+	public double percent(double totalTime, long time) {
+		return ((double)Math.round(time*1000/totalTime))/10;
 	}
 
 	private void updateCulling(Task task) {
@@ -167,17 +217,28 @@ public class TaskManager {
 			return;
 		int dimx = dd.dim_sampled_x;
 		int dimy = dd.dim_sampled_y;
-		int c = 0;
-		for (int s = task.startSample ; s < task.endSample-3 ; s++) {
+		for (Integer c : task.changedIndices) {
+			int s = c+task.startSample;
 			int y = s/dimx;
 			int x = s%dimx;
 			int sample = dc.samples[s];
-			int start_x = x == 0 ? 0 : x-1;
-			int end_x = x == dimx-1 ? x : x+1;
-			int start_y = y == 0 ? 0 : y-1;
-			int end_y = y == dimy-1 ? y : y+1;
+			int rad = sample < task.getPreviousMaxIterations() ? 5 : 1;
+			
+			int start_x = x-rad;
+			int end_x = x+rad;
+			int start_y = y-rad;
+			int end_y = y+rad;
+			
+			if (start_x < 0)
+				start_x = 0;
+			if (start_y < 0)
+				start_y = 0;
+			if (end_x >= dimx)
+				end_x = dimx-1;
+			if (end_y >= dimy)
+				end_y = dimy-1;
+			
 			if (sample > 0) {
-
 				for (int x2 = start_x ; x2 <= end_x ; x2++) {
 					for (int y2 = start_y ; y2 <= end_y ; y2++) {
 						if ((x2 != x || y2 != y) && dc.samples[x2+y2*dimx] == -2) {
@@ -221,7 +282,7 @@ public class TaskManager {
 		
 		if (depth_index == null) {
 			System.err.println("error: depth index not found! ("+depth+")");
-			depth_to_index.forEach((k,v) -> System.out.println(" - "+k+" ["+v+"]"));
+//			depth_to_index.forEach((k,v) -> System.out.println(" - "+k+" ["+v+"]"));
 		} else {
 			
 			int prev_depth = task.getPreviousMaxIterations();
@@ -233,8 +294,9 @@ public class TaskManager {
 			if (depth_closedIterations.size() != 0) {
 				int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
 				int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
+//				System.out.println(depth+": "+unfinishedTasks);
 //				System.out.println("finished t. depth="+depth+" "+unfinishedTasks+" left");
-				if (unfinishedTasks <= 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
+				if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
 					cumulativeClosedIterations += totalClosedAtCurrentDepth;
 					double rel = totalClosedAtCurrentDepth/(double)cumulativeClosedIterations;
 					System.out.println("closed "+totalClosedAtCurrentDepth+" (total "+cumulativeClosedIterations+") iterations at depth "+depth+" "+rel);
@@ -248,17 +310,17 @@ public class TaskManager {
 					}
 				}
 			}
-		}
-		if (task.getMaxIterations() < dd.getMaxIterations()) {
-			task.setState(Task.STATE_NOT_ASSIGNED);
-			int newMaxIterations = task.getMaxIterations() + iteration_step_size;
-			if (newMaxIterations > dd.getMaxIterations())
-				newMaxIterations = dd.getMaxIterations();
-			task.setMaxIterations(newMaxIterations);
-			openTasks.add(0, task);
-		} else {
-			if (unfinishedTasksCount.decrementAndGet() == 0) {
-				finish("reached max iterations");
+			if (task.getMaxIterations() < dd.getMaxIterations()) {
+				task.setState(Task.STATE_NOT_ASSIGNED);
+				int newMaxIterations = index_to_depth.get(depth_index+1);
+				if (newMaxIterations > dd.getMaxIterations())
+					newMaxIterations = dd.getMaxIterations();
+				task.setMaxIterations(newMaxIterations);
+				openTasks.add(0, task);
+			} else {
+				if (unfinishedTasksCount.decrementAndGet() == 0) {
+					finish("reached max iterations");
+				}
 			}
 		}
 	}
