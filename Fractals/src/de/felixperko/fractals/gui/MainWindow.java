@@ -1,6 +1,7 @@
 package de.felixperko.fractals.gui;
 
 import java.awt.Color;
+import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -49,6 +50,11 @@ import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
+import de.felixperko.fractals.state.DiscreteState;
+import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.state.StateChangeAction;
+import de.felixperko.fractals.state.StateChangeListener;
+import de.felixperko.fractals.state.StateListener;
 
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Group;
@@ -93,6 +99,8 @@ public class MainWindow {
 
 	private Label lbl_draw_dim;
 
+	private ArrayList<StateChangeListener<?>> stateChangeListeners = new ArrayList<>();
+
 //	/**
 //	 * Launch the application.
 //	 * @param args
@@ -116,6 +124,11 @@ public class MainWindow {
 		shell.layout();
 		int i = 0;
 		while (!shell.isDisposed()) {
+			for (StateChangeListener<?> listener : stateChangeListeners) {
+				if (!listener.isChanged())
+					continue;
+				listener.updateIfChanged(true);
+			}
 			setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 			setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 			lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
@@ -184,6 +197,30 @@ public class MainWindow {
 		
 		MenuItem mntmBeenden = new MenuItem(menu_1, SWT.NONE);
 		mntmBeenden.setText("Beenden");
+		
+		MenuItem mntmNetzwerk = new MenuItem(menu, SWT.CASCADE);
+		mntmNetzwerk.setText("Netzwerk");
+		
+		Menu menuNetzwerk = new Menu(mntmNetzwerk);
+		mntmNetzwerk.setMenu(menuNetzwerk);
+		
+		MenuItem mntmHost = new MenuItem(menuNetzwerk, SWT.NONE);
+		mntmHost.setText("Host");
+		mntmHost.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FractalsMain.threadManager.startServer();
+			}
+		});
+		
+		MenuItem mntmClient = new MenuItem(menuNetzwerk, SWT.NONE);
+		mntmClient.setText("Client");
+		mntmClient.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FractalsMain.threadManager.startClient();
+			}
+		});
 		
 		Composite composite_6 = new Composite(shell, SWT.NO_REDRAW_RESIZE);
 		composite_6.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -306,6 +343,73 @@ public class MainWindow {
 				setQuality(getQuality()*0.5);
 			}
 		});
+		
+		
+		for (State<?> state : FractalsMain.main.getStates()) {
+			Composite stateComposite = new Composite(composite_7, SWT.NONE);
+			RowLayout stateLayout = new RowLayout(SWT.HORIZONTAL);
+			stateLayout.center = true;
+			stateLayout.marginTop = 0;
+			stateLayout.marginRight = 0;
+			stateLayout.marginLeft = 0;
+			stateLayout.marginBottom = 0;
+			stateComposite.setLayout(stateLayout);
+			
+			Label stateNameLabel = new Label(stateComposite, SWT.NONE);
+			stateNameLabel.setText(state.getName()+": ");
+			
+			Label stateValueLabel = new Label(stateComposite, SWT.NONE);
+			stateValueLabel.setText(state.getValue().toString());
+			
+			StateChangeListener<?> changeListener = new StateChangeListener<>(state);
+			state.addStateListener(addStateChangeListener(changeListener));
+			changeListener.addStateChangeAction(new StateChangeAction() {
+				@Override
+				public void update() {
+					stateValueLabel.setText(state.getValue().toString());
+					stateValueLabel.requestLayout();
+				}
+			});
+			
+			if (state instanceof DiscreteState<?>) {
+				DiscreteState<Double> discreteState = (DiscreteState<Double>) state;
+				if (discreteState.isIncrementable()) {
+					Button btnIncrementState = new Button(stateComposite, SWT.NONE);
+					btnIncrementState.setText("+");
+					btnIncrementState.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseDown(MouseEvent e) {
+							discreteState.setNext();
+						}
+					});
+					changeListener.addStateChangeAction(new StateChangeAction() {
+						@Override
+						public void update() {
+							btnIncrementState.setEnabled(discreteState.getNext() != null);
+						}
+					});
+				}
+				
+				if (discreteState.isDecrementable()) {
+					Button btnDecrementState = new Button(stateComposite, SWT.NONE);
+					btnDecrementState.setText("-");
+					btnDecrementState.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseDown(MouseEvent e) {
+							discreteState.setPrevious();
+						}
+					});
+					changeListener.addStateChangeAction(new StateChangeAction() {
+						@Override
+						public void update() {
+							btnDecrementState.setEnabled(discreteState.getPrevious() != null);
+						}
+					});
+				}
+			}
+		}
+		
+		
 		TabItem tbtmPerformance = new TabItem(tabFolder, SWT.NONE);
 		tbtmPerformance.setText("Performance");
 		
@@ -351,6 +455,11 @@ public class MainWindow {
 		scrolledComposite_1.setExpandVertical(true);
 		sashForm.setWeights(new int[] {1, 1});
 
+	}
+
+	private <T> StateListener<T> addStateChangeListener(StateChangeListener<T> stateChangeListener) {
+		stateChangeListeners.add(stateChangeListener);
+		return stateChangeListener;
 	}
 
 	public double getQuality() {

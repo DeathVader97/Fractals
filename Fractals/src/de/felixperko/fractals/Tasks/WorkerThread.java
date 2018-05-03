@@ -34,6 +34,7 @@ public class WorkerThread extends Thread {
 	public WorkerThread(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
 		this.name = "WorkerThread "+ID_COUNTER++;
+		setPriority(3);
 	}
 	
 	double lastIterationsPerMs = 0;

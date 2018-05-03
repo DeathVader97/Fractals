@@ -7,12 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.felixperko.fractals.network.ClientThread;
+import de.felixperko.fractals.network.ServerThread;
+
 public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
 	TaskProvider taskProvider;
 	
 	List<TaskProvider> providers = new ArrayList<>();
+	
+	ServerThread serverThread = null;
+	ClientThread clientThread = null;
 	
 	public ThreadManager(int threads, TaskProvider taskProvider) {
 		startThreads(threads);
@@ -88,5 +94,19 @@ public class ThreadManager {
 
 	public WorkerThread[] getThreads() {
 		return workerThreads;
+	}
+	
+	public void startServer() {
+		if (serverThread != null)
+			return;
+		serverThread = new ServerThread();
+		serverThread.start();
+	}
+	
+	public void startClient() {
+		if (clientThread != null)
+			return;
+		clientThread = new ClientThread();
+		clientThread.start();
 	}
 }
