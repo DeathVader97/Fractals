@@ -74,6 +74,15 @@ public class FractalRendererSWT extends FractalRenderer {
 		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
 		ImageData draw_data = draw_img.getImageData();
 		draw_data.palette = palette;
+		int firstFinished = -1;
+		for (int imgx = 0; imgx < draw_img.getBounds().width; imgx++) {
+			for (int imgy = 0; imgy < draw_img.getBounds().height; imgy++) {
+				int i = imgx+imgy*draw_img.getBounds().width;
+				int v = dataContainer.samples[i];
+				if (v > 0 && (firstFinished == -1 || v < firstFinished))
+					firstFinished = v;
+			}
+		}
 		for (int imgx = 0; imgx < draw_img.getBounds().width; imgx++) {
 			for (int imgy = 0; imgy < draw_img.getBounds().height; imgy++) {
 				int i = imgx+imgy*draw_img.getBounds().width;
@@ -83,8 +92,8 @@ public class FractalRendererSWT extends FractalRenderer {
 				double absoluteSquared = real*real+imag*imag;
 				if (it > 0 || absoluteSquared > 4) {
 					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
-					sat /= 1000;
-					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB(colorOffset+10*sat, 0.6f,1f));
+					sat = (float)Math.log(sat);
+					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB(colorOffset+sat, 0.6f,1f));
 				} else {
 					if (it == -2)
 						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());

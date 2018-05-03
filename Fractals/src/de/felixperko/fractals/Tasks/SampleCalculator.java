@@ -8,6 +8,8 @@ public class SampleCalculator {
 	DataDescriptor descriptor;
 	Task task;
 	
+	int pow = 3;
+	
 	public SampleCalculator(DataDescriptor dataDescriptor, Task task) {
 		this.descriptor = dataDescriptor;
 		this.task = task;
@@ -40,10 +42,16 @@ public class SampleCalculator {
 			
 			for ( ; j < maxIterations ; j++) {
 				run_iterations++;
-				double new_real = real*real - (imag*imag) + creal;
-				double new_imag = real*imag + (imag*real) + cimag;
-				real = new_real;
-				imag = new_imag;
+				double new_real = 1;
+				double new_imag = 1;
+				for (int k = 1 ; k < pow ; k++){
+					new_real = (real*real - (imag*imag));
+					new_imag = (real*imag + (imag*real));
+					real = new_real;
+					imag = new_imag;
+				}
+				real += creal;
+				imag += cimag;
 				
 				if (real*real + imag*imag > 4) {//outside -> done
 					results[i] = j;
