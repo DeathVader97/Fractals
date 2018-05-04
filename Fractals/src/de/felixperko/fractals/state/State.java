@@ -21,8 +21,9 @@ public class State<T> {
 		this.configurable = false;
 	}
 
-	public void addStateListener(StateListener listener) {
+	public State<T> addStateListener(StateListener listener) {
 		listeners.add(listener);
+		return this;
 	}
 	
 	public boolean removeStateListener(StateListener<T> listener) {

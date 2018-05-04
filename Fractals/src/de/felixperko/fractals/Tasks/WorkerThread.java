@@ -30,6 +30,7 @@ public class WorkerThread extends Thread {
 	PerformanceMonitor monitor;
 
 	boolean continueWorking = false;
+	boolean end = false;
 	
 	public WorkerThread(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
@@ -44,9 +45,14 @@ public class WorkerThread extends Thread {
 	public void run() {
 		System.out.println("starting worker thread: "+name);
 		
-		while (continueWorking || !Thread.interrupted()) {
+		workLoop :
+		while (!end && (continueWorking || !Thread.interrupted())) {
 			continueWorking = false;
+			if (end)
+				break workLoop;
 			while (taskProvider == null || (task = taskProvider.getTask()) == null) {
+				if (end)
+					break workLoop;
 				if (taskProvider == null)
 					setPhase(PHASE_NO_PROVIDER);
 				else
@@ -114,5 +120,9 @@ public class WorkerThread extends Thread {
 	
 	public ArrayList<WorkerPhaseChange> getPerformanceData(){
 		return new ArrayList<WorkerPhaseChange>(phaseChanges);
+	}
+
+	public void end() {
+		end = true;
 	}
 }

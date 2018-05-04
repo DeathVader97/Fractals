@@ -26,33 +26,33 @@ public class ThreadManager {
 	
 	public void setThreadCount(int threadCount) {
 		if (workerThreads.length > threadCount)
-			intteruptThreads(workerThreads.length - threadCount);
+			endThreads(workerThreads.length - threadCount);
 		else if (workerThreads.length < threadCount)
 			startThreads(threadCount - workerThreads.length);
 	}
 
-	private void intteruptThreads(int count) {
+	private void endThreads(int count) {
 		for (int i = workerThreads.length-1-count ; i < workerThreads.length-1 ; i++) {
-			workerThreads[i].interrupt();
+			workerThreads[i].end();
 		}
 		workerThreads = Arrays.copyOf(workerThreads, workerThreads.length-count);
 		//TODO providers
 	}
 
 	private void startThreads(int count) {
-		WorkerThread[] threads;
+		WorkerThread[] newThreads;
 		if (workerThreads == null) {
-			threads = new WorkerThread[count];
+			newThreads = new WorkerThread[count];
 			for (int i = 0 ; i < count ; i++) {
-				threads[i] = startThread();
+				newThreads[i] = startThread();
 			}
 		} else {
-			threads = Arrays.copyOf(workerThreads, count+workerThreads.length);
-			for (int i = workerThreads.length ; i < threads.length ; i++) {
-				threads[i] = startThread();
+			newThreads = Arrays.copyOf(workerThreads, count+workerThreads.length);
+			for (int i = workerThreads.length ; i < newThreads.length ; i++) {
+				newThreads[i] = startThread();
 			}
 		}
-		this.workerThreads = threads;
+		this.workerThreads = newThreads;
 		updateProviders();
 	}
 

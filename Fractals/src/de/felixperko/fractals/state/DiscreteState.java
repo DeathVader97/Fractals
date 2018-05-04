@@ -29,16 +29,18 @@ public abstract class DiscreteState<T> extends State<T> {
 		return incrementable;
 	}
 
-	public void setIncrementable(boolean incrementable) {
+	public DiscreteState<T> setIncrementable(boolean incrementable) {
 		this.incrementable = incrementable;
+		return this;
 	}
 
 	public boolean isDecrementable() {
 		return decrementable;
 	}
 
-	public void setDecrementable(boolean decrementable) {
+	public DiscreteState<T> setDecrementable(boolean decrementable) {
 		this.decrementable = decrementable;
+		return this;
 	}
 
 	public abstract T getNext();

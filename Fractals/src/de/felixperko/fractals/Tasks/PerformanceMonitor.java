@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import de.felixperko.fractals.util.NumberUtil;
+
 public class PerformanceMonitor {
 	
 	static WorkerPhase PHASE_UNDEFINED = new WorkerPhase("undefined", Color.MAGENTA);
@@ -26,7 +28,7 @@ public class PerformanceMonitor {
 	public void endPhase() {
 		long endTime = System.nanoTime();
 		long totalTime = endTime-startTime;
-		System.out.println("----Performance Review---- Total Time: ");
+		System.out.println("----Performance Review---- Total Time: "+NumberUtil.getRoundedDouble(NumberUtil.NS_TO_S*totalTime, 2)+"s");
 		for (WorkerThread thread : threadManager.getThreads()) {
 			HashMap<WorkerPhase, Long> phaseTimes = new HashMap<>();
 			WorkerPhase currentPhase = PHASE_UNDEFINED;

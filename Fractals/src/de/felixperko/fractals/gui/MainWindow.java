@@ -55,6 +55,7 @@ import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
+import de.felixperko.fractals.state.SwitchState;
 
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Group;
@@ -163,9 +164,11 @@ public class MainWindow {
 
 	/**
 	 * Create contents of the window.
+	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
 		shell = new Shell();
+		shell.setSize(497, 405);
 		shell.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
 				FractalsMain.shutdown();
@@ -287,7 +290,7 @@ public class MainWindow {
 		composite_8.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		Composite composite_7 = new Composite(composite_8, SWT.NONE);
-		GridLayout gl_composite_7 = new GridLayout(2, false);
+		GridLayout gl_composite_7 = new GridLayout(3, false);
 		gl_composite_7.horizontalSpacing = 15;
 		composite_7.setLayout(gl_composite_7);
 		
@@ -296,21 +299,27 @@ public class MainWindow {
 		
 		lblStatus = new Label(composite_7, SWT.NONE);
 		lblStatus.setText("Vorbereitung");
+		new Label(composite_7, SWT.NONE);
 		
 		Label lblRendergre_1 = new Label(composite_7, SWT.NONE);
 		lblRendergre_1.setText("Darstellungsgr\u00F6\u00DFe:");
 		
 		lbl_disp_dim = new Label(composite_7, SWT.NONE);
 		lbl_disp_dim.setText("300x300");
+		new Label(composite_7, SWT.NONE);
 		
 		Label lblBerechnungsgre = new Label(composite_7, SWT.NONE);
 		lblBerechnungsgre.setText("Berechnungsgr\u00F6\u00DFe");
 		
 		lbl_draw_dim = new Label(composite_7, SWT.NONE);
 		lbl_draw_dim.setText("300x300");
+		new Label(composite_7, SWT.NONE);
 		
 		Label lblQualitt_1 = new Label(composite_7, SWT.NONE);
 		lblQualitt_1.setText("Qualit\u00E4t:");
+		
+		qualitylbl = new Label(composite_7, SWT.NONE);
+		qualitylbl.setText("1.0x");
 		
 		Composite composite_9 = new Composite(composite_7, SWT.NONE);
 		RowLayout rl_composite_9 = new RowLayout(SWT.HORIZONTAL);
@@ -320,9 +329,6 @@ public class MainWindow {
 		rl_composite_9.marginLeft = 0;
 		rl_composite_9.marginBottom = 0;
 		composite_9.setLayout(rl_composite_9);
-		
-		qualitylbl = new Label(composite_9, SWT.NONE);
-		qualitylbl.setText("1.0x");
 		
 		Button button_2 = new Button(composite_9, SWT.NONE);
 		button_2.addMouseListener(new MouseAdapter() {
@@ -335,30 +341,18 @@ public class MainWindow {
 		
 		Button button_3 = new Button(composite_9, SWT.NONE);
 		button_3.setText("-");
+		
+		
 		scrolledComposite.setContent(composite);
 		scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-		button_3.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				setQuality(getQuality()*0.5);
-			}
-		});
 		
 		
-		for (State<?> state : FractalsMain.main.getStates()) {
-			Composite stateComposite = new Composite(composite_7, SWT.NONE);
-			RowLayout stateLayout = new RowLayout(SWT.HORIZONTAL);
-			stateLayout.center = true;
-			stateLayout.marginTop = 0;
-			stateLayout.marginRight = 0;
-			stateLayout.marginLeft = 0;
-			stateLayout.marginBottom = 0;
-			stateComposite.setLayout(stateLayout);
+		for (State<?> state : FractalsMain.mainStateHolder.getStates()) {
 			
-			Label stateNameLabel = new Label(stateComposite, SWT.NONE);
+			Label stateNameLabel = new Label(composite_7, SWT.NONE);
 			stateNameLabel.setText(state.getName()+": ");
 			
-			Label stateValueLabel = new Label(stateComposite, SWT.NONE);
+			Label stateValueLabel = new Label(composite_7, SWT.NONE);
 			stateValueLabel.setText(state.getValue().toString());
 			
 			StateChangeListener<?> changeListener = new StateChangeListener<>(state);
@@ -370,9 +364,27 @@ public class MainWindow {
 					stateValueLabel.requestLayout();
 				}
 			});
-			
+			Composite stateComposite = new Composite(composite_7, SWT.NONE);
+			RowLayout stateLayout = new RowLayout(SWT.HORIZONTAL);
+			stateLayout.center = true;
+			stateLayout.marginTop = 0;
+			stateLayout.marginRight = 0;
+			stateLayout.marginLeft = 0;
+			stateLayout.marginBottom = 0;
+			stateComposite.setLayout(stateLayout);
+			if (state instanceof SwitchState) {
+				SwitchState switchState = (SwitchState)state;
+				Button btnCheckButton = new Button(stateComposite, SWT.CHECK);
+				btnCheckButton.setSelection(switchState.getValue());
+				btnCheckButton.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseDown(MouseEvent e) {
+						switchState.flip();
+					}
+				});
+			}
 			if (state instanceof DiscreteState<?>) {
-				DiscreteState<Double> discreteState = (DiscreteState<Double>) state;
+				DiscreteState<?> discreteState = (DiscreteState<?>) state;
 				if (discreteState.isIncrementable()) {
 					Button btnIncrementState = new Button(stateComposite, SWT.NONE);
 					btnIncrementState.setText("+");
