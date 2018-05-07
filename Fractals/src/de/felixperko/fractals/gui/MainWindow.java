@@ -45,17 +45,20 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalRenderer;
 import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
 import de.felixperko.fractals.state.DiscreteState;
+import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.util.Position;
 
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Group;
@@ -71,15 +74,17 @@ import org.eclipse.swt.widgets.ExpandItem;
 import org.eclipse.swt.custom.TableTree;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.GestureEvent;
 import org.eclipse.swt.events.GestureListener;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.widgets.Slider;
 
 public class MainWindow {
 
-	protected Shell shell;
+	public Shell shell;
 	
 	Label lbl_disp_dim;
 	
@@ -125,18 +130,14 @@ public class MainWindow {
 		shell.layout();
 		int i = 0;
 		while (!shell.isDisposed()) {
-			for (StateChangeListener<?> listener : stateChangeListeners) {
-				if (!listener.isChanged())
-					continue;
-				listener.updateIfChanged(true);
-			}
-			setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
-			setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
-			lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
+			
+			tick();
+			
 			if (mainRenderer.isRedraw()) {
 				redraw = false;
 				canvas.redraw();
 			}
+			
 			if (!display.readAndDispatch()) {
 //				display.sleep();
 				try {
@@ -148,6 +149,14 @@ public class MainWindow {
 		}
 	}
 	
+	private void tick() {
+		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
+		
+		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
+		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
+		lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
+	}
+
 	public void setText(Label label, String text) {
 		if (label.getText().equals(text))
 			return;
@@ -253,6 +262,14 @@ public class MainWindow {
 				mainRenderer.resized();
 			}
 		});
+		canvas.addMouseMoveListener(new MouseMoveListener() {
+			@Override
+			public void mouseMove(MouseEvent e) {
+				DataDescriptor dd = FractalsMain.taskManager.getDataContainer().getDescriptor();
+				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
+				FractalsMain.mainStateHolder.getState("cursor image position", Position.class).setValue(new Position(dd.getStart_x()+e.x*dd.getSpacing(), dd.getStart_y()+e.y*dd.getSpacing()));
+			}
+		});
 		
 		TabFolder tabFolder = new TabFolder(sashForm, SWT.NONE);
 		
@@ -272,6 +289,12 @@ public class MainWindow {
 		
 		Button btnNeuZeichnen = new Button(composite_2, SWT.NONE);
 		btnNeuZeichnen.setText("Neu zeichnen");
+		btnNeuZeichnen.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				canvas.redraw();
+			}
+		});
 		
 		Button btnPositionen = new Button(composite_2, SWT.NONE);
 		btnPositionen.setText("Positionen...");
@@ -282,6 +305,7 @@ public class MainWindow {
 			public void mouseDown(MouseEvent e) {
 				save = true;
 				System.out.println("save -> true");
+				canvas.redraw();
 			}
 		});
 		btnBildSpeichern.setText("Bild speichern...");
@@ -340,6 +364,12 @@ public class MainWindow {
 		button_2.setText("+");
 		
 		Button button_3 = new Button(composite_9, SWT.NONE);
+		button_3.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				setQuality(getQuality()*0.5);
+			}
+		});
 		button_3.setText("-");
 		
 		
@@ -353,14 +383,14 @@ public class MainWindow {
 			stateNameLabel.setText(state.getName()+": ");
 			
 			Label stateValueLabel = new Label(composite_7, SWT.NONE);
-			stateValueLabel.setText(state.getValue().toString());
+			stateValueLabel.setText(state.getValueString());
 			
 			StateChangeListener<?> changeListener = new StateChangeListener<>(state);
 			state.addStateListener(addStateChangeListener(changeListener));
 			changeListener.addStateChangeAction(new StateChangeAction() {
 				@Override
 				public void update() {
-					stateValueLabel.setText(state.getValue().toString());
+					stateValueLabel.setText(state.getValueString());
 					stateValueLabel.requestLayout();
 				}
 			});
@@ -380,6 +410,20 @@ public class MainWindow {
 					@Override
 					public void mouseDown(MouseEvent e) {
 						switchState.flip();
+					}
+				});
+			}
+			if (state instanceof RangeState){
+				RangeState rangeState = (RangeState)state;
+				Scale scale = new Scale(stateComposite, SWT.NONE);
+				scale.setMinimum(rangeState.getMin());
+				scale.setMaximum(rangeState.getMax());
+				scale.setPageIncrement(rangeState.getStep());
+				scale.setSelection(rangeState.getValue());
+				scale.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						rangeState.setValue(scale.getSelection());
 					}
 				});
 			}
@@ -511,5 +555,9 @@ public class MainWindow {
 
 	public void setRedraw(boolean redraw) {
 		this.redraw = redraw;
+	}
+
+	public FractalRendererSWT getMainRenderer() {
+		return mainRenderer;
 	}
 }

@@ -58,4 +58,28 @@ public class State<T> {
 	public void setConfigurable(boolean configurable) {
 		this.configurable = configurable;
 	}
+	
+	public String getValueString(){
+		return getStringOutput(value);
+	}
+	
+	/**
+	 * The Output of getValueString() can be customized by overriding this method.
+	 * Normally just does value.toString()
+	 * @param value
+	 * @return
+	 */
+	protected String getStringOutput(T value) {
+		return getOutput().toString();
+	}
+
+	/**
+	 * The Output of getOutput() can be customized by overriding this method.
+	 * Normally just does value.toString()
+	 * @param value
+	 * @return
+	 */
+	protected Object getOutput() {
+		return getValue();
+	}
 }

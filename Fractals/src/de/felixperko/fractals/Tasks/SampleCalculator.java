@@ -2,13 +2,14 @@ package de.felixperko.fractals.Tasks;
 
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.state.State;
 
 public class SampleCalculator {
 	
 	DataDescriptor descriptor;
 	Task task;
 	
-	int pow = 3;
+	State<Integer> powState = FractalsMain.mainStateHolder.getState("Mandelbrot Power", Integer.class);
 	
 	public SampleCalculator(DataDescriptor dataDescriptor, Task task) {
 		this.descriptor = dataDescriptor;
@@ -21,6 +22,8 @@ public class SampleCalculator {
 
 		int dim_x = descriptor.getDim_sampled_x();
 //		int dim_y = descriptor.getDim_sampled_y();
+		
+		int pow = powState.getValue();
 		
 		mainLoop : 
 		for (int i = 0 ; i < end-start ; i++) {

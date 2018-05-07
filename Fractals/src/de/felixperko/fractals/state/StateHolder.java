@@ -11,6 +11,15 @@ public class StateHolder {
 	public State<?> getState(String name) {
 		return states.get(name);
 	}
+
+	@SuppressWarnings("unchecked")
+	public <T> State<T> getState(String name, Class<T> valueCls) {
+		try {
+			return (State<T>) states.get(name);
+		} catch (ClassCastException e){
+			return null;
+		}
+	}
 	
 	public void addState(State<?> state) {
 		states.put(state.getName(), state);

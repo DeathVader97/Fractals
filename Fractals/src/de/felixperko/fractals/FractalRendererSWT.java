@@ -5,6 +5,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -71,57 +75,40 @@ public class FractalRendererSWT extends FractalRenderer {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
-		ImageData draw_data = draw_img.getImageData();
-		draw_data.palette = palette;
-		int firstFinished = -1;
-		for (int imgx = 0; imgx < draw_img.getBounds().width; imgx++) {
-			for (int imgy = 0; imgy < draw_img.getBounds().height; imgy++) {
-				int i = imgx+imgy*draw_img.getBounds().width;
-				int v = dataContainer.samples[i];
-				if (v > 0 && (firstFinished == -1 || v < firstFinished))
-					firstFinished = v;
-			}
-		}
-		for (int imgx = 0; imgx < draw_img.getBounds().width; imgx++) {
-			for (int imgy = 0; imgy < draw_img.getBounds().height; imgy++) {
-				int i = imgx+imgy*draw_img.getBounds().width;
-				int it = dataContainer.samples[i];
-				double real = dataContainer.currentSamplePos_real[i];
-				double imag = dataContainer.currentSamplePos_imag[i];
-				double absoluteSquared = real*real+imag*imag;
-				if (it > 0 || absoluteSquared > 4) {
-					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
-					sat = (float)Math.log(sat);
-					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB(colorOffset+sat, 0.6f,1f));
-				} else {
-					if (it == -2)
-						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
-					else
-						draw_data.setPixel(imgx, imgy, 0);
-				}
-			}
-		}
-		draw_img.dispose();
-		draw_img = new Image(display, draw_data);
+//		int width = ;
+//		int height = ;
+//		ImageData draw_data = draw_img.getImageData();
+//		draw_img.dispose();
+//		draw_img = new Image(display, draw_data);
 		lastDrawn = System.nanoTime();
 		
-		GC gc = new GC(disp_img);
-		gc.setAntialias(SWT.ON);
+//		GC gc = new GC(disp_img);
+//		gc.setAntialias(SWT.ON);
 		
 		if (redraw || drawn_depth != finishedDepth) {
-			try {
-				gc.drawImage(draw_img, 0, 0, draw_img.getBounds().width, draw_img.getBounds().height, 0, 0, disp_img.getBounds().width, disp_img.getBounds().height);
-				System.out.println("disp_img updated");
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println(FractalsMain.mainWindow.canvas.getBounds().toString());
+			ImageData data = disp_img.getImageData();
+			while (true){
+				try {
+					putOnImageData(disp_img.getBounds().width, disp_img.getBounds().height, data);
+					break;
+				} catch (ArrayIndexOutOfBoundsException e){
+					e.printStackTrace();
+				}
 			}
+			disp_img.dispose();
+			disp_img = new Image(display, data);
+//			try {
+//				gc.drawImage(draw_img, 0, 0, draw_img.getBounds().width, draw_img.getBounds().height, 0, 0, disp_img.getBounds().width, disp_img.getBounds().height);
+				System.out.println("disp_img updated");
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				System.out.println(FractalsMain.mainWindow.canvas.getBounds().toString());
+//			}
 		}
 		if (save) {
 			exportImage();
 		}
-		gc.dispose();
+//		gc.dispose();
 		
 		cul_spacing_factor = 1;
 		disp_x = 0;
@@ -131,12 +118,64 @@ public class FractalRendererSWT extends FractalRenderer {
 		redraw = false;
 		drawn_depth = finishedDepth;
 	}
+
+	private void putOnImageData(int width, int height, ImageData draw_data) {
+		int qualityScaling = dataDescriptor.dim_sampled_x/dataDescriptor.dim_goal_x;
+		double[][] goalSamples = dataContainer.downsample(qualityScaling);
+		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
+		draw_data.palette = palette;
+		int firstFinished = -1;
+		for (int imgx = 0; imgx < width; imgx++) {
+			for (int imgy = 0; imgy < height; imgy++) {
+				int i = imgx+imgy*width;
+				int v = dataContainer.samples[i];
+				if (v > 0 && (firstFinished == -1 || v < firstFinished))
+					firstFinished = v;
+			}
+		}
+		for (int imgx = 0; imgx < width; imgx++) {
+			for (int imgy = 0; imgy < height; imgy++) {
+				int i = imgx*qualityScaling+imgy*qualityScaling*dataDescriptor.dim_sampled_x;
+				double it = goalSamples[imgx][imgy];
+				double real = dataContainer.currentSamplePos_real[i];
+				double imag = dataContainer.currentSamplePos_imag[i];
+				double absoluteSquared = real*real+imag*imag;
+				if (it > 0) {
+//					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
+					float sat = (float) it;
+//					System.out.println(sat+" -> "+(float)Math.log(sat));
+					sat /= 1000;
+					sat = (float) Math.log(sat);
+//					if (sat%2 <= 1)
+//						sat = sat%1;
+//					else
+//						sat = 1- (sat%1);
+					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat), 0.6f,1f));
+//					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+Math.atan2(imag, real)), 0.6f,1f));
+				} else {
+					if (it == -2)
+						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
+					else
+						draw_data.setPixel(imgx, imgy, 0);
+				}
+			}
+		}
+	}
 	
 	private void exportImage() {
 		ImageLoader loader = new ImageLoader();
-		loader.data = new ImageData[]{disp_img.getImageData()};
-		loader.save("swtimg.png", SWT.IMAGE_PNG);
-		System.out.println("saved image");
+		loader.data = new ImageData[]{draw_img.getImageData()};
+		try {
+			File f = new File("swtimg.png");
+			int c = 1;
+			while (f.exists())
+				f = new File("swtimg"+(c++)+".png");
+			OutputStream os = new FileOutputStream(f);
+			loader.save(os, SWT.IMAGE_PNG);
+			System.out.println("saved image");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 
@@ -170,6 +209,10 @@ public class FractalRendererSWT extends FractalRenderer {
 		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_img.getBounds().width*q), (int)Math.round(disp_img.getBounds().height*q));
 		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
 		reset();
+	}
+
+	public void setRedraw(boolean b) {
+		redraw = true;
 	}
 
 }
