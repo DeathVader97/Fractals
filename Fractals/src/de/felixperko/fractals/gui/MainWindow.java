@@ -379,6 +379,9 @@ public class MainWindow {
 		
 		for (State<?> state : FractalsMain.mainStateHolder.getStates()) {
 			
+			if (!state.isVisible())
+				continue;
+			
 			Label stateNameLabel = new Label(composite_7, SWT.NONE);
 			stateNameLabel.setText(state.getName()+": ");
 			

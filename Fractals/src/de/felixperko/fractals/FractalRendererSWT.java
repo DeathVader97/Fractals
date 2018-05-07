@@ -56,12 +56,18 @@ public class FractalRendererSWT extends FractalRenderer {
 				disp_changed = false;
 				int disp_w = disp_x2-disp_x;
 				int disp_h = disp_y2-disp_y;
-				int minX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
-				int minY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
-				int maxX = (int) (disp_w < disp_img.getBounds().width ? bounds.width : bounds.width*(((double)disp_w)/disp_img.getBounds().width));
-				int maxY = (int) (disp_h < disp_img.getBounds().height ? bounds.height : bounds.height*(((double)disp_h)/disp_img.getBounds().height));
-				System.out.println(minX+","+minY+" - "+maxX+","+maxY);
-				e.gc.drawImage(disp_img, disp_x > 0 ? disp_x : 0, disp_y > 0 ? disp_y : 0, disp_w, disp_h, minX, minY, maxX, maxY);
+				int imgW = disp_img.getBounds().width;
+				int imgH = disp_img.getBounds().height;
+				int minDispX = disp_x >= 0 ? disp_x : 0;
+				int minDispY = disp_y >= 0 ? disp_y : 0;
+				int adjDispW = (disp_w >= imgW) ? ((int)((disp_x2*((double)imgW/disp_w)))-minDispX) : (disp_x2-minDispX);
+				int adjDispH = (disp_h >= imgH) ? ((int)((disp_y2*((double)imgH/disp_h)))-minDispY) : (disp_y2-minDispY);
+				int minDrawX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
+				int minDrawY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
+				int maxDrawX = (int) (disp_w < imgW ? bounds.width : bounds.width*(((double)adjDispW)/imgW));
+				int maxDrawY = (int) (disp_h < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
+				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawX+","+maxDrawY);
+				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawX, maxDrawY);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();

@@ -90,7 +90,7 @@ public class MainStateHolder extends StateHolder {
 				Position p = getValue();
 				return p.getX()+", "+p.getY();
 			}
-		};
+		}.setVisible(false);
 		addState(cursorImagePosition);
 		
 		biasReal = new RangeState("bias real", 2000){
