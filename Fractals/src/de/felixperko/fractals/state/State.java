@@ -13,6 +13,7 @@ public class State<T> {
 	
 	boolean setable;
 	boolean configurable;
+	boolean visible = true;
 	
 	public State(String name, T value) {
 		this.name = name;
@@ -79,7 +80,16 @@ public class State<T> {
 	 * @param value
 	 * @return
 	 */
-	protected Object getOutput() {
+	public Object getOutput() {
 		return getValue();
+	}
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public State<T> setVisible(boolean visible) {
+		this.visible = visible;
+		return this;
 	}
 }

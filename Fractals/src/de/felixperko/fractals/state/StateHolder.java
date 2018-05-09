@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class StateHolder {
 	Map<String, State<?>> states = new HashMap<>();
+	List<State<?>> statesFIFO = new ArrayList<State<?>>();
 	
 	public State<?> getState(String name) {
 		return states.get(name);
@@ -23,6 +24,7 @@ public class StateHolder {
 	
 	public void addState(State<?> state) {
 		states.put(state.getName(), state);
+		statesFIFO.add(state);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -33,6 +35,6 @@ public class StateHolder {
 	}
 
 	public List<State<?>> getStates() {
-		return new ArrayList<>(states.values());
+		return statesFIFO;
 	}
 }

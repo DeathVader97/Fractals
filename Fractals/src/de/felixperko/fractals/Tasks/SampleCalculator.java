@@ -10,6 +10,8 @@ public class SampleCalculator {
 	Task task;
 	
 	State<Integer> powState = FractalsMain.mainStateHolder.getState("Mandelbrot Power", Integer.class);
+	State<Double> biasReal = FractalsMain.mainStateHolder.getState("bias real", Double.class);
+	State<Double> biasImag = FractalsMain.mainStateHolder.getState("bias imag", Double.class);
 	
 	public SampleCalculator(DataDescriptor dataDescriptor, Task task) {
 		this.descriptor = dataDescriptor;
@@ -24,6 +26,8 @@ public class SampleCalculator {
 //		int dim_y = descriptor.getDim_sampled_y();
 		
 		int pow = powState.getValue();
+		double startReal = (double) biasReal.getOutput();
+		double startImag = (double) biasImag.getOutput();
 		
 		mainLoop : 
 		for (int i = 0 ; i < end-start ; i++) {
@@ -40,8 +44,8 @@ public class SampleCalculator {
 			double real = currentpos_real[i], imag = currentpos_imag[i];
 //			int j = 0;
 //			double real = 0, imag = 0;
-			double creal = descriptor.xcoords[x];
-			double cimag = descriptor.ycoords[y];
+			double creal = (j == 0) ? startReal : descriptor.xcoords[x];
+			double cimag = (j == 0) ? startImag : descriptor.ycoords[y];
 			
 			for ( ; j < maxIterations ; j++) {
 				run_iterations++;

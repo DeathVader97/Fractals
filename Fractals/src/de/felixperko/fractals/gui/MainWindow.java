@@ -268,6 +268,7 @@ public class MainWindow {
 				DataDescriptor dd = FractalsMain.taskManager.getDataContainer().getDescriptor();
 				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
 				FractalsMain.mainStateHolder.getState("cursor image position", Position.class).setValue(new Position(dd.getStart_x()+e.x*dd.getSpacing(), dd.getStart_y()+e.y*dd.getSpacing()));
+				canvas.redraw();
 			}
 		});
 		

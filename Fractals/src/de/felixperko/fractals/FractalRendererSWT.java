@@ -17,8 +17,12 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
+
+import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.util.Position;
 
 public class FractalRendererSWT extends FractalRenderer {
 	
@@ -28,11 +32,14 @@ public class FractalRendererSWT extends FractalRenderer {
 	Rectangle lastBounds = new Rectangle(0,0,0,0);
 	public Image draw_img;
 	
+	State<Integer> stateVisulizationSteps;
+	
 	public FractalRendererSWT(Display display) {
 		super();
 		this.display = display;
 		draw_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y));
 		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_goal_x, dataDescriptor.dim_goal_y));
+		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
 	
 	public void render(PaintEvent e, boolean save) {
@@ -52,6 +59,8 @@ public class FractalRendererSWT extends FractalRenderer {
 				if (save)
 					FractalsMain.mainWindow.save = false;
 			}
+			int visSteps = stateVisulizationSteps.getValue();
+			disp_changed = true; //TODO Testcode
 			if (disp_changed) {
 				disp_changed = false;
 				int disp_w = disp_x2-disp_x;
@@ -68,6 +77,34 @@ public class FractalRendererSWT extends FractalRenderer {
 				int maxDrawY = (int) (disp_h < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
 				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawX+","+maxDrawY);
 				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawX, maxDrawY);
+				
+				if (visSteps > 0) {
+					Position p = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
+					Position pStart = p;
+					Position pScreen = null;
+					Position p2 = null;
+					Position p2Screen = null;
+					org.eclipse.swt.graphics.Color c = new org.eclipse.swt.graphics.Color(display, 127, 127, 127, 63);
+					e.gc.setAntialias(SWT.ON);
+					e.gc.setForeground(c);
+					for (int i = 0 ; i < visSteps ; i++) {
+						p2 = p.complexSquared();
+						p2.setX(p2.getX()+pStart.getX());
+						p2.setY(p2.getY()+pStart.getY());
+						p2Screen = p2.planeToScreen(dataDescriptor);
+						pScreen = p.planeToScreen(dataDescriptor);
+	//					if (i != 0) {
+						e.gc.setAlpha(63);
+							e.gc.drawLine((int)(pScreen.getX()), (int)(pScreen.getY()), (int)(p2Screen.getX()), (int)(p2Screen.getY()));
+	//					}
+						e.gc.setAlpha(255);
+						e.gc.drawOval((int)(pScreen.getX()-2), (int)(pScreen.getY()-2), 4, 4);
+						
+						p = p2;
+						pScreen = p2Screen;
+					}
+					c.dispose();
+				}
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -139,16 +176,25 @@ public class FractalRendererSWT extends FractalRenderer {
 					firstFinished = v;
 			}
 		}
+		int scalefactor = dataDescriptor.dim_sampled_x / dataDescriptor.dim_goal_x;
+		int scalefactorSq = scalefactor*scalefactor;
+		//TODO scalefactor for upsampling
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
-				int i = imgx*qualityScaling+imgy*qualityScaling*dataDescriptor.dim_sampled_x;
 				double it = goalSamples[imgx][imgy];
-				double real = dataContainer.currentSamplePos_real[i];
-				double imag = dataContainer.currentSamplePos_imag[i];
-				double absoluteSquared = real*real+imag*imag;
+				double absoluteSquared = 0;
+				for (int x = imgx ; x < imgx+scalefactor ; x++){
+					for (int y = imgy ; y < imgy+scalefactor ; y++){
+						int i = (imgx*qualityScaling+(x-imgx))+(imgy*qualityScaling+(y-imgy))*dataDescriptor.dim_sampled_x;
+						double real = dataContainer.currentSamplePos_real[i];
+						double imag = dataContainer.currentSamplePos_imag[i];
+						absoluteSquared += real*real+imag*imag;
+					}
+				}
+				absoluteSquared /= scalefactorSq;
 				if (it > 0) {
-//					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
-					float sat = (float) it;
+					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
+//					float sat = (float) it;
 //					System.out.println(sat+" -> "+(float)Math.log(sat));
 					sat /= 1000;
 					sat = (float) Math.log(sat);
