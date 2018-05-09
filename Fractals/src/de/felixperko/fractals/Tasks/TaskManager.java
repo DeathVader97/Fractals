@@ -18,7 +18,7 @@ public class TaskManager {
 	DataDescriptor dd;
 	DataContainer dc;
 	
-	int sample_size = 10000;
+	int sample_size = 100000;
 	int iteration_step_size = 50;
 	int iteration_step_size_incr = 100;
 	int iteration_step_size_incr_incr = 500;

@@ -139,16 +139,25 @@ public class FractalRendererSWT extends FractalRenderer {
 					firstFinished = v;
 			}
 		}
+		int scalefactor = dataDescriptor.dim_sampled_x / dataDescriptor.dim_goal_x;
+		int scalefactorSq = scalefactor*scalefactor;
+		//TODO scalefactor for upsampling
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
-				int i = imgx*qualityScaling+imgy*qualityScaling*dataDescriptor.dim_sampled_x;
 				double it = goalSamples[imgx][imgy];
-				double real = dataContainer.currentSamplePos_real[i];
-				double imag = dataContainer.currentSamplePos_imag[i];
-				double absoluteSquared = real*real+imag*imag;
+				double absoluteSquared = 0;
+				for (int x = imgx ; x < imgx+scalefactor ; x++){
+					for (int y = imgy ; y < imgy+scalefactor ; y++){
+						int i = (imgx*qualityScaling+(x-imgx))+(imgy*qualityScaling+(y-imgy))*dataDescriptor.dim_sampled_x;
+						double real = dataContainer.currentSamplePos_real[i];
+						double imag = dataContainer.currentSamplePos_imag[i];
+						absoluteSquared += real*real+imag*imag;
+					}
+				}
+				absoluteSquared /= scalefactorSq;
 				if (it > 0) {
-//					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
-					float sat = (float) it;
+					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
+//					float sat = (float) it;
 //					System.out.println(sat+" -> "+(float)Math.log(sat));
 					sat /= 1000;
 					sat = (float) Math.log(sat);
