@@ -1,8 +1,11 @@
 package de.felixperko.fractals.Tasks;
 
+import java.util.ArrayList;
+
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.util.Position;
 
 public class SampleCalculator {
 	
@@ -28,6 +31,7 @@ public class SampleCalculator {
 		int pow = powState.getValue();
 		double startReal = (double) biasReal.getOutput();
 		double startImag = (double) biasImag.getOutput();
+		//TODO bias zu DataDescriptor
 		
 		mainLoop : 
 		for (int i = 0 ; i < end-start ; i++) {
@@ -41,11 +45,15 @@ public class SampleCalculator {
 			int y = (i+start) / dim_x;
 			
 			int j = currentIterations[i];
-			double real = currentpos_real[i], imag = currentpos_imag[i];
-//			int j = 0;
-//			double real = 0, imag = 0;
-			double creal = (j == 0) ? startReal : descriptor.xcoords[x];
-			double cimag = (j == 0) ? startImag : descriptor.ycoords[y];
+			double real = (j == 0) ? startReal : descriptor.xcoords[x];
+			double imag = (j == 0) ? startImag : descriptor.ycoords[y];
+			double creal = descriptor.xcoords[x];
+			double cimag = descriptor.ycoords[y];
+//			double real = currentpos_real[i], imag = currentpos_imag[i];
+////			int j = 0;
+////			double real = 0, imag = 0;
+//			double creal = (j == 0) ? startReal : descriptor.xcoords[x];
+//			double cimag = (j == 0) ? startImag : descriptor.ycoords[y];
 			
 			for ( ; j < maxIterations ; j++) {
 				run_iterations++;
@@ -78,5 +86,40 @@ public class SampleCalculator {
 				results[i] = -1;
 			}
 		}
+	}
+	
+	public ArrayList<Position> getIterationsForPosition(Position startPos, int maxIterations){
+		
+		ArrayList<Position> positions = new ArrayList<>();
+		
+		int pow = powState.getValue();
+		
+		double real = (double) biasReal.getOutput();
+		double imag = (double) biasImag.getOutput();
+		
+		double creal = startPos.getX();
+		double cimag = startPos.getY();
+		
+		for (int j = 0 ; j < maxIterations ; j++) {
+			positions.add(new Position(real, imag));
+			run_iterations++;
+			double new_real = 1;
+			double new_imag = 1;
+			for (int k = 1 ; k < pow ; k++){
+				new_real = (real*real - (imag*imag));
+				new_imag = (real*imag + (imag*real));
+				real = new_real;
+				imag = new_imag;
+			}
+			real += creal;
+			imag += cimag;
+			
+			if (real*real + imag*imag > 4) {//outside -> done
+				break;
+			}
+		}
+		if (maxIterations != 0)
+			positions.add(new Position(real, imag));
+		return positions;
 	}
 }

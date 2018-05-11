@@ -48,13 +48,23 @@ public class MainStateHolder extends StateHolder {
 		stateVisualizationSteps = new DiscreteState<Integer>("visulization steps", 0) {
 			@Override
 			public Integer getNext() {
-				return getValue()+1;
+				if (getValue() < 10)
+					return getValue()+1;
+				else if (getValue() < 100)
+					return getValue()+10;
+				else
+					return getValue()+100;
 			}
 			@Override
 			public Integer getPrevious() {
 				if (getValue() <= 0)
 					return null;
-				return getValue()+1;
+				else if (getValue() <= 10)
+					return getValue()-1;
+				else if (getValue() <= 100)
+					return getValue()-10;
+				else
+					return getValue()-100;
 			}
 		};
 		stateVisualizationSteps.setIncrementable(true).setDecrementable(true);

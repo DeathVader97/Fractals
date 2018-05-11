@@ -13,6 +13,7 @@ import de.felixperko.fractals.network.ServerThread;
 public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
+	IterationPositionThread iterationWorkerThread;
 	TaskProvider taskProvider;
 	
 	List<TaskProvider> providers = new ArrayList<>();
@@ -40,6 +41,7 @@ public class ThreadManager {
 	}
 
 	private void startThreads(int count) {
+		
 		WorkerThread[] newThreads;
 		if (workerThreads == null) {
 			newThreads = new WorkerThread[count];
@@ -53,6 +55,10 @@ public class ThreadManager {
 			}
 		}
 		this.workerThreads = newThreads;
+		
+//		iterationWorkerThread = new IterationPositionThread();
+//		iterationWorkerThread.start();
+		
 		updateProviders();
 	}
 
@@ -108,5 +114,9 @@ public class ThreadManager {
 			return;
 		clientThread = new ClientThread();
 		clientThread.start();
+	}
+
+	public IterationPositionThread getIterationWorkerThread() {
+		return iterationWorkerThread;
 	}
 }

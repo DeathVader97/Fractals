@@ -35,7 +35,7 @@ public class FractalRenderer {
 	protected int disp_y2 = 0;
 	protected boolean disp_changed = false;
 	
-	float colorOffset = 0.5f;
+	float colorOffset = 0.0f;
 	
 	int maxIterations = 1000000;
 	
