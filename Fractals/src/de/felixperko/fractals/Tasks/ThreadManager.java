@@ -56,8 +56,8 @@ public class ThreadManager {
 		}
 		this.workerThreads = newThreads;
 		
-//		iterationWorkerThread = new IterationPositionThread();
-//		iterationWorkerThread.start();
+		iterationWorkerThread = new IterationPositionThread();
+		iterationWorkerThread.start();
 		
 		updateProviders();
 	}

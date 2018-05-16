@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -21,6 +22,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+import de.felixperko.fractals.Tasks.IterationPositionThread;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.util.Position;
 
@@ -34,6 +36,8 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	State<Integer> stateVisulizationSteps;
 	
+	IterationPositionThread ipt = FractalsMain.threadManager.getIterationWorkerThread();
+	
 	public FractalRendererSWT(Display display) {
 		super();
 		this.display = display;
@@ -41,6 +45,8 @@ public class FractalRendererSWT extends FractalRenderer {
 		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_goal_x, dataDescriptor.dim_goal_y));
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
+	
+	public boolean allowRedraw = true;
 	
 	public void render(PaintEvent e, boolean save) {
 		try {
@@ -78,22 +84,25 @@ public class FractalRendererSWT extends FractalRenderer {
 				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawX+","+maxDrawY);
 				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawX, maxDrawY);
 				if (visSteps > 0) {
-					Position p = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
-					Position pStart = p;
+					allowRedraw = false;
+					ArrayList<Position> positions = ipt.getPositions();
+//					Position c = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
+					Position p = positions.get(0);
 					Position pScreen = null;
 					Position p2 = null;
 					Position p2Screen = null;
 					e.gc.setAntialias(SWT.ON);
-					for (int i = 0 ; i < visSteps ; i++) {
-						org.eclipse.swt.graphics.Color c = new org.eclipse.swt.graphics.Color(display, new RGB((i*360f/visSteps)*0.6666f+0.0f*360, 0.5f, 1f));
-						p2 = p.complexSquared();
-						p2.setX(p2.getX()+pStart.getX());
-						p2.setY(p2.getY()+pStart.getY());
+					for (int i = 1 ; i < visSteps ; i++) {
+						org.eclipse.swt.graphics.Color color = new org.eclipse.swt.graphics.Color(display, new RGB((i*360f/visSteps)*0.6666f+0.0f*360, 0.5f, 1f));
+//						p2 = p.complexSquared();
+//						p2.setX(p2.getX()+p.getX());
+//						p2.setY(p2.getY()+p.getY());
+						p2 = positions.get(i);
 						p2Screen = p2.planeToScreen(dataDescriptor);
 						pScreen = p.planeToScreen(dataDescriptor);
 	//					if (i != 0) {
 //						System.out.println((((float)i*10)/visSteps));
-						e.gc.setForeground(c);
+						e.gc.setForeground(color);
 						e.gc.setAlpha((int)(Math.pow(i, -0.5)*(255-16)+16));
 							e.gc.drawLine((int)(pScreen.getX()), (int)(pScreen.getY()), (int)(p2Screen.getX()), (int)(p2Screen.getY()));
 	//					}
@@ -102,8 +111,9 @@ public class FractalRendererSWT extends FractalRenderer {
 						
 						p = p2;
 						pScreen = p2Screen;
-						c.dispose();
+						color.dispose();
 					}
+					allowRedraw = true;
 				}
 			}
 		} catch (Exception ex) {
@@ -196,16 +206,16 @@ public class FractalRendererSWT extends FractalRenderer {
 					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
 //					float sat = (float) it;
 //					System.out.println(sat+" -> "+(float)Math.log(sat));
-					sat /= 1000;
-					sat = (float) Math.log(sat);
-//					if (sat%2 <= 1)
-//						sat = sat%1;
-//					else
-//						sat = 1- (sat%1);
-					sat = sat % 2;
-					if (sat > 1)
-						sat = 2-sat;
-					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat*0.2f), 0.6f,1f));
+					float sat2 = sat;
+//					sat2 /= 1;
+					sat2 = (float) Math.log(sat);
+					sat %= 2;
+					if (sat2%2 <= 1)
+						sat2 = sat2%1;
+					else
+						sat2 = 1- (sat2%1);
+					sat = sat % 1;
+					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset), 0.6f,sat2));
 //					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+Math.atan2(imag, real)), 0.6f,1f));
 				} else {
 					if (it == -2)
