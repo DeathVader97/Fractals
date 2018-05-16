@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Display;
 
 import de.felixperko.fractals.Tasks.IterationPositionThread;
 import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 public class FractalRendererSWT extends FractalRenderer {
@@ -83,7 +84,11 @@ public class FractalRendererSWT extends FractalRenderer {
 				int maxDrawY = (int) (disp_h < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
 				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawX+","+maxDrawY);
 				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawX, maxDrawY);
-				if (visSteps > 0) {
+				
+				int calculatedIterations = ipt.getIterations();
+				if (calculatedIterations < visSteps)
+					visSteps = ipt.getIterations();
+				if (visSteps > 0 && calculatedIterations > 0) {
 					allowRedraw = false;
 					ArrayList<Position> positions = ipt.getPositions();
 //					Position c = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
@@ -91,7 +96,8 @@ public class FractalRendererSWT extends FractalRenderer {
 					Position pScreen = null;
 					Position p2 = null;
 					Position p2Screen = null;
-					e.gc.setAntialias(SWT.ON);
+//					e.gc.setAntialias(SWT.ON);
+					long t1 = System.nanoTime();
 					for (int i = 1 ; i < visSteps ; i++) {
 						org.eclipse.swt.graphics.Color color = new org.eclipse.swt.graphics.Color(display, new RGB((i*360f/visSteps)*0.6666f+0.0f*360, 0.5f, 1f));
 //						p2 = p.complexSquared();
@@ -104,8 +110,7 @@ public class FractalRendererSWT extends FractalRenderer {
 //						System.out.println((((float)i*10)/visSteps));
 						e.gc.setForeground(color);
 						e.gc.setAlpha((int)(Math.pow(i, -0.5)*(255-16)+16));
-							e.gc.drawLine((int)(pScreen.getX()), (int)(pScreen.getY()), (int)(p2Screen.getX()), (int)(p2Screen.getY()));
-	//					}
+						e.gc.drawLine((int)(pScreen.getX()), (int)(pScreen.getY()), (int)(p2Screen.getX()), (int)(p2Screen.getY()));
 						e.gc.setAlpha(255);
 						e.gc.drawOval((int)(pScreen.getX()-2), (int)(pScreen.getY()-2), 4, 4);
 						
@@ -113,6 +118,8 @@ public class FractalRendererSWT extends FractalRenderer {
 						pScreen = p2Screen;
 						color.dispose();
 					}
+					long t2 = System.nanoTime();
+					System.out.println("drawing "+visSteps+" took "+(int)((t2-t1)*NumberUtil.NS_TO_MS)+"ms.");
 					allowRedraw = true;
 				}
 			}
