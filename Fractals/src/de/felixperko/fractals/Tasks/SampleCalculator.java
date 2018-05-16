@@ -88,38 +88,35 @@ public class SampleCalculator {
 		}
 	}
 	
-	public ArrayList<Position> getIterationsForPosition(Position startPos, int maxIterations){
-		
-		ArrayList<Position> positions = new ArrayList<>();
+	public Position getIterationForPosition(Position startPos, Position currentPos){
 		
 		int pow = powState.getValue();
 		
-		double real = (double) biasReal.getOutput();
-		double imag = (double) biasImag.getOutput();
+		double real = currentPos != null ? currentPos.getX() : (double) biasReal.getOutput();
+		double imag = currentPos != null ? currentPos.getY() : (double) biasImag.getOutput();
 		
-		double creal = startPos.getX();
-		double cimag = startPos.getY();
+		run_iterations++;
 		
-		for (int j = 0 ; j < maxIterations ; j++) {
-			positions.add(new Position(real, imag));
-			run_iterations++;
-			double new_real = 1;
-			double new_imag = 1;
-			for (int k = 1 ; k < pow ; k++){
-				new_real = (real*real - (imag*imag));
-				new_imag = (real*imag + (imag*real));
-				real = new_real;
-				imag = new_imag;
-			}
-			real += creal;
-			imag += cimag;
-			
-			if (real*real + imag*imag > 4) {//outside -> done
-				break;
-			}
+		double new_real = 1;
+		double new_imag = 1;
+		
+		for (int k = 1 ; k < pow ; k++){
+			new_real = (real*real - (imag*imag));
+			new_imag = (real*imag + (imag*real));
+			real = new_real;
+			imag = new_imag;
 		}
-		if (maxIterations != 0)
-			positions.add(new Position(real, imag));
-		return positions;
+		real += startPos.getX();
+		imag += startPos.getY();
+		
+		return new Position(real, imag);
+	}
+
+	public DataDescriptor getDescriptor() {
+		return descriptor;
+	}
+
+	public void setDescriptor(DataDescriptor descriptor) {
+		this.descriptor = descriptor;
 	}
 }

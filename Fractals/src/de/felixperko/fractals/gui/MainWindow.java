@@ -51,6 +51,7 @@ import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
+import de.felixperko.fractals.Tasks.IterationPositionThread;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
@@ -58,6 +59,7 @@ import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 import org.eclipse.swt.widgets.ProgressBar;
@@ -107,6 +109,9 @@ public class MainWindow {
 
 	private ArrayList<StateChangeListener<?>> stateChangeListeners = new ArrayList<>();
 
+	int visMouseMoveCouter = 0;
+	long visRefreshTime = 0;
+	boolean visRedraw = true;
 //	/**
 //	 * Launch the application.
 //	 * @param args
@@ -149,8 +154,19 @@ public class MainWindow {
 		}
 	}
 	
+	int lastVisIterations = 0;
+	int lastVisJobID = -1;
+	
 	private void tick() {
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
+		
+		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
+		int it = ips.getIterations();
+		if (it > lastVisIterations || (lastVisJobID != ips.getJobID() && it > 0)){
+			lastVisJobID = ips.getJobID();
+			lastVisIterations = it;
+			canvas.redraw();
+		}
 		
 		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
@@ -170,6 +186,8 @@ public class MainWindow {
 			label.setForeground(newColor);
 		setText(label, text);
 	}
+	
+	int finishedDrawingTimer = 0;
 
 	/**
 	 * Create contents of the window.
@@ -194,45 +212,6 @@ public class MainWindow {
 		shell.setMaximized(true);
 		shell.setText("SWT Application");
 		shell.setLayout(new FillLayout(SWT.HORIZONTAL));
-		
-		Menu menu = new Menu(shell, SWT.BAR);
-		shell.setMenuBar(menu);
-		
-		MenuItem mntmDatei = new MenuItem(menu, SWT.CASCADE);
-		mntmDatei.setText("Datei");
-		
-		Menu menu_1 = new Menu(mntmDatei);
-		mntmDatei.setMenu(menu_1);
-		
-		MenuItem mntmNeuZeichnen = new MenuItem(menu_1, SWT.NONE);
-		mntmNeuZeichnen.setText("Neu zeichnen");
-		
-		MenuItem mntmBeenden = new MenuItem(menu_1, SWT.NONE);
-		mntmBeenden.setText("Beenden");
-		
-		MenuItem mntmNetzwerk = new MenuItem(menu, SWT.CASCADE);
-		mntmNetzwerk.setText("Netzwerk");
-		
-		Menu menuNetzwerk = new Menu(mntmNetzwerk);
-		mntmNetzwerk.setMenu(menuNetzwerk);
-		
-		MenuItem mntmHost = new MenuItem(menuNetzwerk, SWT.NONE);
-		mntmHost.setText("Host");
-		mntmHost.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FractalsMain.threadManager.startServer();
-			}
-		});
-		
-		MenuItem mntmClient = new MenuItem(menuNetzwerk, SWT.NONE);
-		mntmClient.setText("Client");
-		mntmClient.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FractalsMain.threadManager.startClient();
-			}
-		});
 		
 		Composite composite_6 = new Composite(shell, SWT.NO_REDRAW_RESIZE);
 		composite_6.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -265,10 +244,32 @@ public class MainWindow {
 		canvas.addMouseMoveListener(new MouseMoveListener() {
 			@Override
 			public void mouseMove(MouseEvent e) {
+				
+				//Mouse moved on canvas of MainRenderer
 				DataDescriptor dd = FractalsMain.taskManager.getDataContainer().getDescriptor();
 				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
-				FractalsMain.mainStateHolder.getState("cursor image position", Position.class).setValue(new Position(dd.getStart_x()+e.x*dd.getSpacing(), dd.getStart_y()+e.y*dd.getSpacing()));
-				canvas.redraw();
+				
+				//timing of visualization refreshs
+				//TODO shedule redraw, probably though main loop execution of redraw
+				long t = System.nanoTime();
+				IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
+				if (ips.getIterations() == ips.getMaxIterations())
+					finishedDrawingTimer++;
+				if (finishedDrawingTimer >= 1){
+//				if (mainRenderer.allowRedraw){
+					visRefreshTime = t;
+					visRedraw = true;
+				}
+				visMouseMoveCouter++;
+				
+				//visualization refresh
+				if (visRedraw){
+					visRedraw = false;
+					finishedDrawingTimer = 0;
+					State<Position> stateCursorImagePosition = FractalsMain.mainStateHolder.getState("cursor image position", Position.class);
+					stateCursorImagePosition.setValue(new Position(dd.getStart_x()+e.x*dd.getSpacing(), dd.getStart_y()+e.y*dd.getSpacing()));
+					ips.setParameters(stateCursorImagePosition.getValue(), dd, FractalsMain.mainStateHolder.getState("visulization steps", Integer.class).getValue());
+				}
 			}
 		});
 		
@@ -513,6 +514,45 @@ public class MainWindow {
 		ScrolledComposite scrolledComposite_1 = new ScrolledComposite(tabFolder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		scrolledComposite_1.setExpandHorizontal(true);
 		scrolledComposite_1.setExpandVertical(true);
+		
+		Menu menu_2 = new Menu(tabFolder);
+		tabFolder.setMenu(menu_2);
+		
+		MenuItem mntmDatei = new MenuItem(menu_2, SWT.CASCADE);
+		mntmDatei.setText("Datei");
+		
+		Menu menu_1 = new Menu(mntmDatei);
+		mntmDatei.setMenu(menu_1);
+		
+		MenuItem mntmNeuZeichnen = new MenuItem(menu_1, SWT.NONE);
+		mntmNeuZeichnen.setText("Neu zeichnen");
+		
+		MenuItem mntmBeenden = new MenuItem(menu_1, SWT.NONE);
+		mntmBeenden.setText("Beenden");
+		
+		MenuItem mntmNetzwerk = new MenuItem(menu_2, SWT.CASCADE);
+		mntmNetzwerk.setText("Netzwerk");
+		
+		Menu menuNetzwerk = new Menu(mntmNetzwerk);
+		mntmNetzwerk.setMenu(menuNetzwerk);
+		
+		MenuItem mntmHost = new MenuItem(menuNetzwerk, SWT.NONE);
+		mntmHost.setText("Host");
+		mntmHost.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FractalsMain.threadManager.startServer();
+			}
+		});
+		
+		MenuItem mntmClient = new MenuItem(menuNetzwerk, SWT.NONE);
+		mntmClient.setText("Client");
+		mntmClient.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FractalsMain.threadManager.startClient();
+			}
+		});
 		sashForm.setWeights(new int[] {1, 1});
 
 	}
