@@ -33,16 +33,19 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	public Image disp_img;
 	Rectangle lastBounds = new Rectangle(0,0,0,0);
-	public Image draw_img;
+//	public Image draw_img;
 	
 	State<Integer> stateVisulizationSteps;
 	
 	IterationPositionThread ipt = FractalsMain.threadManager.getIterationWorkerThread();
 	
+	org.eclipse.swt.graphics.Color black;
+	
 	public FractalRendererSWT(Display display) {
 		super();
 		this.display = display;
-		draw_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y));
+		this.black = new org.eclipse.swt.graphics.Color(display, new RGB(0,0,0));
+//		draw_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y));
 		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_goal_x, dataDescriptor.dim_goal_y));
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
@@ -70,20 +73,80 @@ public class FractalRendererSWT extends FractalRenderer {
 			disp_changed = true; //TODO Testcode
 			if (disp_changed) {
 				disp_changed = false;
-				int disp_w = disp_x2-disp_x;
-				int disp_h = disp_y2-disp_y;
+
 				int imgW = disp_img.getBounds().width;
 				int imgH = disp_img.getBounds().height;
-				int minDispX = disp_x >= 0 ? disp_x : 0;
-				int minDispY = disp_y >= 0 ? disp_y : 0;
-				int adjDispW = (disp_w >= imgW) ? ((int)((disp_x2*((double)imgW/disp_w)))-minDispX) : (disp_x2-minDispX);
-				int adjDispH = (disp_h >= imgH) ? ((int)((disp_y2*((double)imgH/disp_h)))-minDispY) : (disp_y2-minDispY);
-				int minDrawX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
-				int minDrawY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
-				int maxDrawX = (int) (disp_w < imgW ? bounds.width : bounds.width*(((double)adjDispW)/imgW));
-				int maxDrawY = (int) (disp_h < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
-				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawX+","+maxDrawY);
-				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawX, maxDrawY);
+				
+				int sourceMaxX = disp_x2 <= imgW ? disp_x2 : imgW;
+				int sourceMaxY = disp_y2 <= imgH ? disp_y2 : imgH;
+				int sourceX = disp_x;
+				int sourceY = disp_y;
+				int sourceW = disp_x2-disp_x;
+				int sourceH = disp_y2-disp_y;
+				int destX = 0;
+				int destY = 0;
+				int destW = imgW;
+				int destH = imgH;
+				
+				float scaleX = ((float)destW)/sourceW;
+				float scaleY = ((float)destH)/sourceH;
+				
+				if (sourceX < 0) {
+					destX += -sourceX*scaleX;
+					sourceX = 0;
+				}
+				if (sourceY < 0) {
+					destY += -sourceY*scaleY;
+					sourceY = 0;
+				}
+				if (disp_x2 > imgW) {
+					int d = disp_x2 - imgW;
+					destW -= d*scaleX;
+					sourceW -= d;
+				}
+				if (disp_y2 > imgH) {
+					int d = disp_y2 - imgH;
+					destH -= d*scaleY;
+					sourceH -= d;
+				}
+				if (sourceX+sourceW > imgW) {
+					sourceW = imgW-sourceX;
+				}
+				if (sourceY+sourceH > imgH) {
+					sourceH = imgH-sourceY;
+				}
+				
+				try {
+					e.gc.setForeground(black);
+					e.gc.fillRectangle(0, 0, e.width, e.height);
+					e.gc.drawImage(disp_img, sourceX, sourceY, sourceW, sourceH, destX, destY, destW, destH);
+				} catch (IllegalArgumentException ex) {
+					System.err.println("Illegal argument at scaling");
+					System.err.println(imgW+","+imgH+" -> "+e.width+","+e.height);
+					System.err.println(sourceX+","+sourceY+" "+sourceW+","+sourceH+" -> "+destX+","+destY+" "+destW+","+destH);
+					ex.printStackTrace();
+				}
+				
+//				int disp_w = disp_x2-disp_x;
+//				int disp_h = disp_y2-disp_y;
+//				int imgW = disp_img.getBounds().width;
+//				int imgH = disp_img.getBounds().height;
+//				int minDispX = disp_x >= 0 ? disp_x : 0;
+//				int minDispY = disp_y >= 0 ? disp_y : 0;
+////				int adjDispW = (disp_x2 >= imgW) ? ((int)((disp_x2*((double)imgW/disp_w)))-minDispX) : (disp_x2-disp_x);
+//				int adjDispW = disp_w;
+//				if (disp_x2 >= imgW) {
+//					adjDispW = (disp_w - (disp_x2-imgW));
+//					disp_w -= (disp_x2-imgW);
+//				}
+//				int adjDispH = (disp_y2 >= imgH) ? ((int)((disp_y2*((double)imgH/disp_h)))-minDispY) : (disp_y2-disp_y);
+//				int minDrawX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
+//				int minDrawY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
+////				int maxDrawX = (int) (adjDispW >= disp_w ? bounds.width : bounds.width*(((double)adjDispW)/imgW));
+//				int maxDrawW = (int) (adjDispW >= disp_w ? bounds.width : bounds.width - (adjDispW - disp_w));
+//				int maxDrawH = (int) (adjDispH < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
+//				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawW+","+maxDrawH);
+//				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawW, maxDrawH);
 				
 				int calculatedIterations = ipt.getIterations();
 				if (calculatedIterations < visSteps)
@@ -236,7 +299,7 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	private void exportImage() {
 		ImageLoader loader = new ImageLoader();
-		loader.data = new ImageData[]{draw_img.getImageData()};
+		loader.data = new ImageData[]{disp_img.getImageData()};
 		try {
 			File f = new File("swtimg.png");
 			int c = 1;
@@ -258,13 +321,13 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	public void resized() {
 		Rectangle disp_bounds = FractalsMain.mainWindow.canvas.getBounds();
-		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_bounds.width*q), (int)Math.round(disp_bounds.height*q));
+		Rectangle calc_bounds = new Rectangle(0, 0, (int)Math.round(disp_bounds.width*q), (int)Math.round(disp_bounds.height*q));
 		disp_img.dispose();
 		disp_img = new Image(display, new Rectangle(0, 0, disp_bounds.width, disp_bounds.height));
-		draw_img.dispose();
-		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
-		dataDescriptor.dim_sampled_x = draw_bounds.width;
-		dataDescriptor.dim_sampled_y = draw_bounds.height;
+//		draw_img.dispose();
+//		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
+		dataDescriptor.dim_sampled_x = calc_bounds.width;
+		dataDescriptor.dim_sampled_y = calc_bounds.height;
 		dataDescriptor.dim_goal_x = disp_bounds.width;
 		dataDescriptor.dim_goal_y = disp_bounds.height;
 		reset();
@@ -278,8 +341,8 @@ public class FractalRendererSWT extends FractalRenderer {
 		this.q = quality;
 		dataDescriptor.dim_sampled_x = (int)Math.round(dataDescriptor.dim_goal_x*q);
 		dataDescriptor.dim_sampled_y = (int)Math.round(dataDescriptor.dim_goal_y*q);
-		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_img.getBounds().width*q), (int)Math.round(disp_img.getBounds().height*q));
-		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
+//		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_img.getBounds().width*q), (int)Math.round(disp_img.getBounds().height*q));
+//		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
 		reset();
 	}
 

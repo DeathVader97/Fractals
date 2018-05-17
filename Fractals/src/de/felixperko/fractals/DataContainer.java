@@ -31,7 +31,7 @@ public class DataContainer {
 	}
 
 	public double[][] downsample(int qualityScaling){
-		if (qualityScaling < 0 || (Math.log(qualityScaling) / Math.log(2)) %1 != 0) //scalefactor is not a natural power of 2
+		if (qualityScaling < 0 || (Math.log(qualityScaling)/Math.log(2)) % 1 != 0) //scalefactor is not a natural power of 2
 			return null;
 		int newDimX = descriptor.dim_sampled_x / qualityScaling;
 		int newDimY = descriptor.dim_sampled_y / qualityScaling;

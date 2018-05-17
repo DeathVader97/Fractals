@@ -143,68 +143,73 @@ public class TaskManager {
 		long t1 = System.nanoTime();
 		if (task.jobId != jobId)
 			return;
-
-		workingTasks.remove(task);
-		int size = task.endSample - task.startSample;
-		
-		if (task.changedIndices.isEmpty()) {
-			boolean done = true;
-			for (int i = 0 ; i < size ; i++) {
-				if (task.results[i] <= 0) {
-					done = false;
-					break;
+		try {
+			workingTasks.remove(task);
+			int size = task.endSample - task.startSample;
+			
+			if (task.changedIndices.isEmpty()) {
+				boolean done = true;
+				for (int i = 0 ; i < size ; i++) {
+					if (task.results[i] <= 0) {
+						done = false;
+						break;
+					}
 				}
+				if (done) {
+					int depth = task.getMaxIterations();
+					int prev_depth = task.getPreviousMaxIterations();
+					int closedIterations = 0;
+					for (Integer i : task.changedIndices) {
+						if (task.currentIterations[i] > prev_depth && task.currentIterations[i] != depth)
+							closedIterations++;
+					}
+	//				System.out.println("task is done... "+depth);
+					int depth_index = depth_to_index.get(depth);
+					int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
+					int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
+					for (int i = depth_index+1 ; i < depth_unfinishedTaskCount.size() ; i++) {
+						depth_unfinishedTaskCount.get(i).decrementAndGet();
+					}
+					if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
+						cumulativeClosedIterations += totalClosedAtCurrentDepth;
+						double rel = totalClosedAtCurrentDepth/(double)cumulativeClosedIterations;
+						System.out.println("closed "+totalClosedAtCurrentDepth+" (total "+cumulativeClosedIterations+") iterations at depth "+depth+" "+rel);
+						finishedDepth = depth;
+						if (rel != Double.NaN) {
+							last_step_closed_relative = rel;
+							last_step_closed_total = cumulativeClosedIterations;
+						}
+						if (cumulativeClosedIterations > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality much...
+							finish("reached quality goal");
+						}
+					}
+					return;
+				}
+	//			depth_unfinishedTaskCount.get(depth_to_index.get(task.getMaxIterations())).decrementAndGet();
+			} else {
+				long startCopy = System.nanoTime();
+				System.arraycopy(task.results, 0, dc.samples, task.startSample, size);
+				long startCulling = System.nanoTime();
+				if (fastApproximation && cumulativeClosedIterations > minimum_skip_finish)
+					updateCulling(task);
+				long endCulling = System.nanoTime();
+				System.arraycopy(task.currentIterations, 0, dc.currentSampleIterations, task.startSample, size);
+				System.arraycopy(task.currentpos_real, 0, dc.currentSamplePos_real, task.startSample, size);
+				System.arraycopy(task.currentpos_imag, 0, dc.currentSamplePos_imag, task.startSample, size);
+				long endCopy = System.nanoTime();
+				cullingTime = endCulling-startCulling;
+				copyTime = endCopy-startCopy - cullingTime;
 			}
-			if (done) {
-				int depth = task.getMaxIterations();
-				int prev_depth = task.getPreviousMaxIterations();
-				int closedIterations = 0;
-				for (Integer i : task.changedIndices) {
-					if (task.currentIterations[i] > prev_depth && task.currentIterations[i] != depth)
-						closedIterations++;
-				}
-//				System.out.println("task is done... "+depth);
-				int depth_index = depth_to_index.get(depth);
-				int unfinishedTasks = depth_unfinishedTaskCount.get(depth_index).decrementAndGet();
-				int totalClosedAtCurrentDepth = depth_closedIterations.get(depth_index).addAndGet(closedIterations);
-				for (int i = depth_index+1 ; i < depth_unfinishedTaskCount.size() ; i++) {
-					depth_unfinishedTaskCount.get(i).decrementAndGet();
-				}
-				if (unfinishedTasks == 0) { //Tasks at iteration depth done -> save cumulative and check if result good enough
-					cumulativeClosedIterations += totalClosedAtCurrentDepth;
-					double rel = totalClosedAtCurrentDepth/(double)cumulativeClosedIterations;
-					System.out.println("closed "+totalClosedAtCurrentDepth+" (total "+cumulativeClosedIterations+") iterations at depth "+depth+" "+rel);
-					finishedDepth = depth;
-					if (rel != Double.NaN) {
-						last_step_closed_relative = rel;
-						last_step_closed_total = cumulativeClosedIterations;
-					}
-					if (cumulativeClosedIterations > minimum_skip_finish && rel < skip_max_closed_relative) { //further iterations probably wont improve quality much...
-						finish("reached quality goal");
-					}
-				}
+			long postStart = System.nanoTime();
+			postTaskFinish(task);
+			long t2 = System.nanoTime();
+			postTime = t2-postStart;
+			double totalTime = t2-t1;
+		} catch (Exception e) {
+			if (task.jobId != jobId)
 				return;
-			}
-//			depth_unfinishedTaskCount.get(depth_to_index.get(task.getMaxIterations())).decrementAndGet();
-		} else {
-			long startCopy = System.nanoTime();
-			System.arraycopy(task.results, 0, dc.samples, task.startSample, size);
-			long startCulling = System.nanoTime();
-			if (fastApproximation && cumulativeClosedIterations > minimum_skip_finish)
-				updateCulling(task);
-			long endCulling = System.nanoTime();
-			System.arraycopy(task.currentIterations, 0, dc.currentSampleIterations, task.startSample, size);
-			System.arraycopy(task.currentpos_real, 0, dc.currentSamplePos_real, task.startSample, size);
-			System.arraycopy(task.currentpos_imag, 0, dc.currentSamplePos_imag, task.startSample, size);
-			long endCopy = System.nanoTime();
-			cullingTime = endCulling-startCulling;
-			copyTime = endCopy-startCopy - cullingTime;
+			e.printStackTrace();
 		}
-		long postStart = System.nanoTime();
-		postTaskFinish(task);
-		long t2 = System.nanoTime();
-		postTime = t2-postStart;
-		double totalTime = t2-t1;
 //		System.out.println("total save time: "+totalTime/1000000+"ms copy="+percent(totalTime,copyTime)+"% culling="+percent(totalTime,cullingTime)+"% post="+percent(totalTime,postTime)+"%");
 	}
 	

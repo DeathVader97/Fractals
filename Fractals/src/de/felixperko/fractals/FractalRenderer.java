@@ -196,8 +196,8 @@ public class FractalRenderer {
 		try {
 			double relX = mouse_x/(double)dataDescriptor.dim_goal_x;
 			double relY = mouse_y/(double)dataDescriptor.dim_goal_y;
-			double midX = relX*(disp_x2-disp_x)+disp_x;
-			double midY = relY*(disp_y2-disp_y)+disp_y;
+			double midX = relX*(disp_x2)+disp_x;
+			double midY = relY*(disp_y2)+disp_y;
 			dataDescriptor.spacing *= spacing_factor;
 			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(midX*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
 			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(midY*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;

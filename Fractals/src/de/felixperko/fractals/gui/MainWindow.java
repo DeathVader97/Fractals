@@ -16,6 +16,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.custom.SashForm;
 import swing2swt.layout.BoxLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -169,7 +170,7 @@ public class MainWindow {
 		}
 		
 		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
-		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
+//		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
 	}
 
@@ -195,7 +196,13 @@ public class MainWindow {
 	 */
 	protected void createContents() {
 		shell = new Shell();
-		shell.setSize(497, 405);
+		shell.setSize(800, 500);
+		if (display.getMonitors().length > 1) {
+			Rectangle monitorBounds = display.getMonitors()[1].getBounds();
+			Rectangle shellBounds = shell.getBounds();
+			shell.setLocation(monitorBounds.x+monitorBounds.width-shellBounds.width, monitorBounds.y+monitorBounds.height-shellBounds.height);
+		}
+//		shell.setSize(497, 405);
 		shell.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
 				FractalsMain.shutdown();
@@ -208,8 +215,7 @@ public class MainWindow {
 //				mainRenderer.resized();
 			}
 		});
-//		shell.setSize(718, 400);
-		shell.setMaximized(true);
+//		shell.setMaximized(true);
 		shell.setText("SWT Application");
 		shell.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
