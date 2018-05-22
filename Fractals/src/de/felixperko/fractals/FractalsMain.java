@@ -7,6 +7,7 @@ import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.ThreadManager;
 import de.felixperko.fractals.gui.MainWindow;
 import de.felixperko.fractals.state.MainStateHolder;
+import de.felixperko.fractals.util.Logger;
 
 public class FractalsMain{
 	

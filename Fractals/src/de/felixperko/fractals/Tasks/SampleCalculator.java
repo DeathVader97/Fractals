@@ -23,7 +23,7 @@ public class SampleCalculator {
 	
 	long run_iterations = 0;
 	
-	public void calculate_samples(int start, int end, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
+	public void calculate_samples(int[] sampleIndices, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
 
 		int dim_x = descriptor.getDim_sampled_x();
 //		int dim_y = descriptor.getDim_sampled_y();
@@ -33,22 +33,35 @@ public class SampleCalculator {
 		double startImag = (double) biasImag.getOutput();
 		//TODO bias zu DataDescriptor
 		
+		int globalMaxIterations = descriptor.getMaxIterations();
+		double[] xCoords;
+		double[] yCoords;
+		try {
+			xCoords = descriptor.getXcoords();
+			yCoords = descriptor.getYcoords();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+		
 		mainLoop : 
-		for (int i = 0 ; i < end-start ; i++) {
+		for (int i = 0 ; i < sampleIndices.length ; i++) {
+			
+			int index = sampleIndices[i];
 			
 			if (results[i] != 0)
 				continue;
 			
 			task.changedIndices.add(i);
 			
-			int x = (i+start) % dim_x;
-			int y = (i+start) / dim_x;
+			int x = index % dim_x;
+			int y = index / dim_x;
 			
 			int j = currentIterations[i];
-			double real = (j == 0) ? startReal : descriptor.xcoords[x];
-			double imag = (j == 0) ? startImag : descriptor.ycoords[y];
-			double creal = descriptor.xcoords[x];
-			double cimag = descriptor.ycoords[y];
+			double real = (j == 0) ? startReal : xCoords[x];
+			double imag = (j == 0) ? startImag : yCoords[y];
+			double creal = xCoords[x];
+			double cimag = yCoords[y];
 //			double real = currentpos_real[i], imag = currentpos_imag[i];
 ////			int j = 0;
 ////			double real = 0, imag = 0;
@@ -84,7 +97,7 @@ public class SampleCalculator {
 			}
 			
 			//still not outside
-			if (maxIterations < descriptor.maxIterations) { //not done -> store temp result
+			if (maxIterations < globalMaxIterations) { //not done -> store temp result
 				currentIterations[i] = maxIterations;
 				currentpos_real[i] = real;
 				currentpos_imag[i] = imag;

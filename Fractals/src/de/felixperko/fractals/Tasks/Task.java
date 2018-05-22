@@ -6,7 +6,7 @@ import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
 
-public class Task {
+public abstract class Task {
 	
 	final static int STATE_NOT_ASSIGNED = 0,
 			STATE_ASSINGED = 1,
@@ -14,9 +14,7 @@ public class Task {
 
 	int state = 0;
 	
-	int startSample, endSample;
-	
-	private int maxIterations;
+	protected int maxIterations;
 	
 	double[] currentpos_real;
 	double[] currentpos_imag;
@@ -36,10 +34,7 @@ public class Task {
 
 	private int previousMaxIterations = -1;
 	
-	public Task(int startSample, int endSample, int maxIterations, int[] currentIterations, double[] currentpos_real,
-			double[] currentpos_imag, int[] results) {
-		this.startSample = startSample;
-		this.endSample = endSample;
+	public Task(int maxIterations, int[] currentIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
 		this.maxIterations = maxIterations;
 		this.currentIterations = currentIterations;
 		this.currentpos_real = currentpos_real;
@@ -47,36 +42,31 @@ public class Task {
 		this.results = results;
 	}
 	
-	public Task(int startSample, int endSample, int maxIterations, int jobId) {
-		this.startSample = startSample;
-		this.endSample = endSample;
-		this.maxIterations = maxIterations;
-		
-		this.jobId = jobId;
-		instantiateArrays();
+//	public Task(int maxIterations, int jobId) {
+//	}
+
+	public Task() {
+		// TODO testcode for task generalization
 	}
-	
-	public void instantiateArrays() {
-		this.results = new int[endSample-startSample];
-		this.currentIterations = new int[endSample-startSample];
-		this.currentpos_real = new double[endSample-startSample];
-		this.currentpos_imag = new double[endSample-startSample];
-	}
-	
+
 	public void run(DataDescriptor dataDescriptor) {
 		this.start_time = System.nanoTime();
 		changedIndices.clear();
 		sampleCalculator.descriptor = dataDescriptor;
 		sampleCalculator.run_iterations = 0;
-		sampleCalculator.calculate_samples(startSample, endSample, currentIterations, maxIterations, currentpos_real, currentpos_imag, results);
+		calculate();
 		this.end_time = System.nanoTime();
 		this.end_sample_count = sampleCalculator.run_iterations;
 		this.samplesPerMs = (int)((double)end_sample_count/((end_time-start_time)/1000000.));
 	}
 	
-	public Task successor(int depth) {
-		return new Task(startSample, endSample, depth, currentIterations, currentpos_real, currentpos_imag, results);
+	protected void instantiateArrays(int size) {
+		this.currentIterations = new int[size];
+		this.currentpos_real = new double[size];
+		this.currentpos_imag = new double[size];
 	}
+	
+	protected abstract void calculate();
 
 	public void setState(int state) {
 		this.state = state;

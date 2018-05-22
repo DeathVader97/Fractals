@@ -15,6 +15,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.custom.SashForm;
@@ -60,6 +61,7 @@ import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.util.Logger;
 import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
@@ -305,6 +307,14 @@ public class MainWindow {
 		});
 		
 		Button btnPositionen = new Button(composite_2, SWT.NONE);
+		btnPositionen.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				Point sl = shell.getLocation();
+				Point location = new Point(sl.x+shell.getBounds().width/2, sl.y+shell.getBounds().height/2);
+				new PositionsShell(display, location);
+			}
+		});
 		btnPositionen.setText("Positionen...");
 		
 		Button btnBildSpeichern = new Button(composite_2, SWT.NONE);
@@ -511,9 +521,22 @@ public class MainWindow {
 		Composite composite_1 = new Composite(scrolledComposite_2, SWT.NONE);
 		composite_1.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
-		StyledText styledText = new StyledText(composite_1, SWT.NONE);
+		final StyledText styledText = new StyledText(composite_1, SWT.H_SCROLL | SWT.V_SCROLL);
+		styledText.setAlwaysShowScrollBars(false);
 		styledText.setEditable(false);
-		styledText.setText("Drawing Image...\r\nDepth: 500\r\nDepth: 1000\r\nDepth: 1500\r\nFinished Render (2.3s)");
+		StateChangeListener<Integer> scl = new StateChangeListener<Integer>(Logger.state);
+		scl.addStateChangeAction(new StateChangeAction() {
+			@Override
+			public void update() {
+				StringBuilder text = new StringBuilder();
+				for (String str : Logger.getLog())
+					text.append(str).append("\r\n");
+				styledText.setText(text.toString());
+			}
+		});
+		Logger.state.addStateListener(scl);
+		stateChangeListeners.add(scl);
+		
 		scrolledComposite_2.setContent(composite_1);
 		scrolledComposite_2.setMinSize(composite_1.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
@@ -559,7 +582,7 @@ public class MainWindow {
 				FractalsMain.threadManager.startClient();
 			}
 		});
-		sashForm.setWeights(new int[] {1, 1});
+		sashForm.setWeights(new int[] {2, 1});
 
 	}
 

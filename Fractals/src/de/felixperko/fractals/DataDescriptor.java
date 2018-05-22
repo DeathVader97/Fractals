@@ -2,20 +2,20 @@ package de.felixperko.fractals;
 
 public class DataDescriptor {
 	
-	double start_x, start_y;
-	double end_x, end_y;
-	double delta_x, delta_y;
-	double spacing;
+	private double start_x, start_y;
+	private double end_x, end_y;
+	private double delta_x, delta_y;
+	private double spacing;
 	
-	public int dim_sampled_x;
-	public int dim_sampled_y;
-	int dim_goal_x, dim_goal_y;
+	private int dim_sampled_x;
+	private int dim_sampled_y;
+	private int dim_goal_x, dim_goal_y;
 	
-	public int maxIterations;
+	private int maxIterations;
 	
-	public double[] xcoords;
-	public double[] ycoords;
-	boolean calculatedCoords = false;
+	private double[] xcoords;
+	private double[] ycoords;
+	private boolean calculatedCoords = false;
 	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,
 			int dim_goal_x, int dim_goal_y, int maxIterations) {
@@ -42,7 +42,6 @@ public class DataDescriptor {
 		double samples_y = getDim_sampled_y();
 		double start_x = getStart_x();
 		double start_y = getStart_y();
-		double spacing = getSpacing();
 		for (int i = 0 ; i < samples_x ; i++) {
 			xcoords[i] = start_x + delta_x * i/samples_x;
 		}
@@ -109,5 +108,41 @@ public class DataDescriptor {
 		this.end_x = start_x + delta_x;
 		this.dim_goal_x = width;
 		this.dim_goal_y = height;
+	}
+
+	public void setDim_sampled_x(int dim_sampled_x) {
+		this.dim_sampled_x = dim_sampled_x;
+	}
+
+	public void setDim_sampled_y(int dim_sampled_y) {
+		this.dim_sampled_y = dim_sampled_y;
+	}
+
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
+
+	public double getDelta_x() {
+		return delta_x;
+	}
+
+	public double getDelta_y() {
+		return delta_y;
+	}
+
+	public void setStart_x(double start_x) {
+		this.start_x = start_x;
+	}
+
+	public void setStart_y(double start_y) {
+		this.start_y = start_y;
+	}
+
+	public void setEnd_x(double end_x) {
+		this.end_x = end_x;
+	}
+
+	public void setSpacing(double spacing) {
+		this.spacing = spacing;
 	}
 }

@@ -64,4 +64,8 @@ public class LocationHolder{
 		locations.add(location);
 		save();
 	}
+
+	public ArrayList<Location> getLocations() {
+		return locations;
+	}
 }

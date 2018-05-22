@@ -45,8 +45,8 @@ public class FractalRenderer {
 		dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, (int)Math.round(w*q), (int)Math.round(h*q), w, h, maxIterations);
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
-		draw_img = new BufferedImage(dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y, BufferedImage.TYPE_INT_RGB);
-		disp_img = new BufferedImage(dataDescriptor.dim_goal_x, dataDescriptor.dim_goal_y, BufferedImage.TYPE_INT_RGB);
+		draw_img = new BufferedImage(dataDescriptor.getDim_sampled_x(), dataDescriptor.getDim_sampled_y(), BufferedImage.TYPE_INT_RGB);
+		disp_img = new BufferedImage(dataDescriptor.getDim_goal_x(), dataDescriptor.getDim_goal_y(), BufferedImage.TYPE_INT_RGB);
 		disp_x2 = disp_img.getWidth();
 		disp_y2 = disp_img.getHeight();
 	}
@@ -175,11 +175,11 @@ public class FractalRenderer {
 	}
 
 	public int getMaxIterations() {
-		return dataDescriptor.maxIterations;
+		return dataDescriptor.getMaxIterations();
 	}
 	
 	public void setMaxIterations(int maxIterations) {
-		dataDescriptor.maxIterations = maxIterations;
+		dataDescriptor.setMaxIterations(maxIterations);
 		reset();
 	}
 	
@@ -188,26 +188,26 @@ public class FractalRenderer {
 			return;
 		dataDescriptor.scaleBy((double)quality/q);
 		this.q = quality;
-		dataDescriptor.dim_sampled_x = (int)Math.round(dataDescriptor.dim_goal_x*q);
-		dataDescriptor.dim_sampled_y = (int)Math.round(dataDescriptor.dim_goal_y*q);
-		draw_img = new BufferedImage(dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y, BufferedImage.TYPE_INT_RGB);
+		dataDescriptor.setDim_sampled_x((int)Math.round(dataDescriptor.getDim_goal_x()*q));
+		dataDescriptor.setDim_sampled_y((int)Math.round(dataDescriptor.getDim_goal_y()*q));
+		draw_img = new BufferedImage(dataDescriptor.getDim_sampled_x(), dataDescriptor.getDim_sampled_y(), BufferedImage.TYPE_INT_RGB);
 		reset();
 	}
 	
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
 		try {
-			double relX = mouse_x/(double)dataDescriptor.dim_goal_x;
-			double relY = mouse_y/(double)dataDescriptor.dim_goal_y;
+			double relX = mouse_x/(double)dataDescriptor.getDim_goal_x();
+			double relY = mouse_y/(double)dataDescriptor.getDim_goal_y();
 			double midX = relX*(disp_x2)-disp_x;
 			double midY = relY*(disp_y2)-disp_y;
 //			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(midX*q)] - dataDescriptor.delta_x/2.;
 //			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(midY*q)] - dataDescriptor.delta_y/2.;
 			dataDescriptor.scaleBy(spacing_factor);
 			
-			double midCoordsX = dataDescriptor.getXcoords()[(int)Math.round(midX*q)];
-			double midCoordsY = dataDescriptor.getYcoords()[(int)Math.round(midY*q)];
-			dataDescriptor.start_x = midCoordsX - dataDescriptor.delta_x/2;
-			dataDescriptor.start_y = midCoordsY - dataDescriptor.delta_y/2;
+			double midCoordsX = dataDescriptor.getXcoords()[(int)(midX*q)];
+			double midCoordsY = dataDescriptor.getYcoords()[(int)(midY*q)];
+			dataDescriptor.setStart_x(midCoordsX - dataDescriptor.getDelta_x()/2);
+			dataDescriptor.setStart_y(midCoordsY - dataDescriptor.getDelta_y()/2);
 			
 			cul_spacing_factor *= spacing_factor;
 			double rangeX = (disp_x2-disp_x)*spacing_factor;
@@ -239,9 +239,10 @@ public class FractalRenderer {
 	}
 
 	public void setLocation(Location location) {
-		dataDescriptor.spacing = location.spacing;
-		dataDescriptor.start_x = location.getX1();
-		dataDescriptor.start_y = location.getY1(((double)dataDescriptor.dim_sampled_x)/dataDescriptor.dim_sampled_y);
+		//TODO swap spacing for end coordinates for locations
+		dataDescriptor.setSpacing(location.spacing);
+		dataDescriptor.setStart_x(location.getX1());
+		dataDescriptor.setStart_y(location.getY1(((double)dataDescriptor.getDim_sampled_x())/dataDescriptor.getDim_sampled_y()));
 		disp_x = 0;
 		disp_y = 0;
 		disp_x2 = disp_img.getWidth();

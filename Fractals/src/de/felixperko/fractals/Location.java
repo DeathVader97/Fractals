@@ -2,13 +2,17 @@ package de.felixperko.fractals;
 
 public class Location {
 	
+	static int COUNTER = 0;
+	
 	double midX, midY, spacing;
+	String name;
 	
 	public Location(String serialized) {
 		String[] s = serialized.split(",");
-		midX = Double.parseDouble(s[0]);
-		midY = Double.parseDouble(s[1]);
-		spacing = Double.parseDouble(s[2]);
+		name = s[0];
+		midX = Double.parseDouble(s[1]);
+		midY = Double.parseDouble(s[2]);
+		spacing = Double.parseDouble(s[3]);
 	}
 	
 	public Location(double midX, double midY, double spacing) {
@@ -18,13 +22,14 @@ public class Location {
 	}
 
 	public Location(DataDescriptor dataDescriptor) {
-		midX = dataDescriptor.start_x + dataDescriptor.dim_sampled_x*dataDescriptor.spacing/2;
-		midY = dataDescriptor.start_y + dataDescriptor.dim_sampled_y*dataDescriptor.spacing/2;
-		spacing = dataDescriptor.dim_sampled_x*dataDescriptor.spacing/2;
+		midX = dataDescriptor.getStart_x() + dataDescriptor.getDim_sampled_x()*dataDescriptor.getSpacing()/2;
+		midY = dataDescriptor.getStart_y() + dataDescriptor.getDim_sampled_y()*dataDescriptor.getSpacing()/2;
+		spacing = dataDescriptor.getDim_sampled_x()*dataDescriptor.getSpacing()/2;
 	}
 
 	public String serialize() {
 		StringBuilder builder = new StringBuilder(100);
+		builder.append(name).append(", ");
 		builder.append(midX).append(", ");
 		builder.append(midY).append(", ");
 		builder.append(spacing);
@@ -45,5 +50,9 @@ public class Location {
 
 	public double getY2(double ratio) {
 		return midY + spacing/ratio;
+	}
+
+	public String getName() {
+		return name;
 	}
 }

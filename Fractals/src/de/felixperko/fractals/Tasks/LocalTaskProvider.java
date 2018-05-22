@@ -21,6 +21,7 @@ public class LocalTaskProvider extends TaskProvider {
 
 	@Override
 	public void taskFinished(Task task) {
-		taskManager.taskFinished(task);
+		taskManager.taskFinished((SequentialTask)task);
+		//TODO generalize for all tasks
 	}
 }

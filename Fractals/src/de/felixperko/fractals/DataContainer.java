@@ -33,8 +33,12 @@ public class DataContainer {
 	public double[][] downsample(int qualityScaling){
 		if (qualityScaling < 0 || (Math.log(qualityScaling)/Math.log(2)) % 1 != 0) //scalefactor is not a natural power of 2
 			return null;
-		int newDimX = descriptor.dim_sampled_x / qualityScaling;
-		int newDimY = descriptor.dim_sampled_y / qualityScaling;
+		
+		int dim_sampled_x = descriptor.getDim_sampled_x();
+		int dim_sampled_y = descriptor.getDim_sampled_y();
+		int newDimX = dim_sampled_x / qualityScaling;
+		int newDimY = dim_sampled_y / qualityScaling;
+		
 		double[][] newSamples = new double[newDimX][newDimY];
 		for (int x = 0 ; x < newDimX ; x++){
 			nextSample:
@@ -44,7 +48,7 @@ public class DataContainer {
 				double summedValue = 0;
 				for (int x2 = startX2 ; x2 < startX2+qualityScaling ; x2++){
 					for (int y2 = startY2 ; y2 < startY2+qualityScaling ; y2++){
-						int index = y2*descriptor.dim_sampled_x + x2;
+						int index = y2*dim_sampled_x + x2;
 						int sample = samples[index];
 						if (sample < 0){
 							newSamples[x][y] = 0;

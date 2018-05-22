@@ -30,11 +30,11 @@ public class TaskManager {
 	Map<Integer, Integer> depth_to_index = Collections.synchronizedMap(new HashMap<>());
 	Map<Integer, Integer> index_to_depth = Collections.synchronizedMap(new HashMap<>());
 	
-	HashMap<Integer, Task> tasks_by_start_index = new HashMap<>();
+	HashMap<Integer, SequentialTask> tasks_by_start_index = new HashMap<>();
 	
 	long generation_time = 0;
 	
-	List<Task> openTasks = Collections.synchronizedList(new ArrayList<>());
+	List<SequentialTask> openTasks = Collections.synchronizedList(new ArrayList<>());
 	
 	Random random = new Random(42);
 	int jobId = 0;
@@ -54,7 +54,7 @@ public class TaskManager {
 	HashSet<Integer> denyApproximationSamples = new HashSet<>();
 //	ArrayList<Task> activeTasks = new ArrayList<>();
 	
-	ArrayList<Task> workingTasks = new ArrayList<>();
+	ArrayList<SequentialTask> workingTasks = new ArrayList<>();
 		
 	public TaskManager(DataDescriptor dd, DataContainer dc) {
 		this.dd = dd;
@@ -63,14 +63,14 @@ public class TaskManager {
 	
 	public synchronized void generateTasks() {
 		FractalsMain.performanceMonitor.startPhase();
-		int total_samples = dd.dim_sampled_x*dd.dim_sampled_y;
+		int total_samples = dd.getDim_sampled_x()*dd.getDim_sampled_y();
 		for (int i = 0 ; i < total_samples*denyApproximationSamplesChance ; i++) {
 			denyApproximationSamples.add((int)(Math.random()*total_samples));
 		}
 		
 		jobId = random.nextInt();
 		generation_time = System.nanoTime();
-		int maxIterations = dd.maxIterations;
+		int maxIterations = dd.getMaxIterations();
 		
 		int step = iteration_step_size;
 		
@@ -103,15 +103,15 @@ public class TaskManager {
 	}
 	
 	private void generateTasks(int depth) {
-		int samples_total = dd.dim_sampled_x*dd.dim_sampled_y;
+		int samples_total = dd.getDim_sampled_x()*dd.getDim_sampled_y();
 		System.out.println("generating "+samples_total+" samples");
 		int start = 0;
 		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
-			generateTask(depth, end, start);
+			generateTask(depth, start, end);
 			start = end;
 		}
 		if (start < samples_total)
-			generateTask(depth, samples_total, start);
+			generateTask(depth, start, samples_total);
 		int count = openTasks.size();
 		unfinishedTasksCount.addAndGet(count);
 		for (AtomicInteger i : depth_unfinishedTaskCount) {
@@ -120,23 +120,23 @@ public class TaskManager {
 		System.out.println("generated "+count+" tasks");
 	}
 
-	private void generateTask(int depth, int samples_total, int start) {
-		Task t = new Task(start, samples_total, depth, jobId);
+	private void generateTask(int depth, int start, int end) {
+		SequentialTask t = new SequentialTask(start, end, depth, jobId);
 		tasks_by_start_index.put(t.startSample, t);
 		openTasks.add(t);
 	}
 	
-	public synchronized Task getTask() {
+	public synchronized SequentialTask getTask() {
 		if (openTasks.size() <= 0)
 			return null;
-		Task task = openTasks.get(openTasks.size()-1);
+		SequentialTask task = openTasks.get(openTasks.size()-1);
 		openTasks.remove(task);
 		workingTasks.add(task);
-		task.setState(Task.STATE_ASSINGED);
+		task.setState(SequentialTask.STATE_ASSINGED);
 		return task;
 	}
 	
-	public synchronized void taskFinished(Task task) {
+	public synchronized void taskFinished(SequentialTask task) {
 		long copyTime = 0;
 		long cullingTime = 0;
 		long postTime = 0;
@@ -217,11 +217,11 @@ public class TaskManager {
 		return ((double)Math.round(time*1000/totalTime))/10;
 	}
 
-	private void updateCulling(Task task) {
+	private void updateCulling(SequentialTask task) {
 		if (task.jobId != jobId)
 			return;
-		int dimx = dd.dim_sampled_x;
-		int dimy = dd.dim_sampled_y;
+		int dimx = dd.getDim_sampled_x();
+		int dimy = dd.getDim_sampled_y();
 		for (Integer c : task.changedIndices) {
 			int s = c+task.startSample;
 			int y = s/dimx;
@@ -279,7 +279,7 @@ public class TaskManager {
 	
 	int cumulativeClosedIterations = 0;
 
-	private synchronized void postTaskFinish(Task task) {
+	private synchronized void postTaskFinish(SequentialTask task) {
 		if (finished)
 			return;
 		Integer depth = task.getMaxIterations();
@@ -316,7 +316,7 @@ public class TaskManager {
 				}
 			}
 			if (task.getMaxIterations() < dd.getMaxIterations()) {
-				task.setState(Task.STATE_NOT_ASSIGNED);
+				task.setState(SequentialTask.STATE_NOT_ASSIGNED);
 				int newMaxIterations = index_to_depth.get(depth_index+1);
 				if (newMaxIterations > dd.getMaxIterations())
 					newMaxIterations = dd.getMaxIterations();

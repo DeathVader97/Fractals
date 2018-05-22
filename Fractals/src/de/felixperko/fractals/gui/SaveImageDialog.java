@@ -15,6 +15,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.GridData;
 
 public class SaveImageDialog extends Dialog {
 
@@ -52,7 +54,7 @@ public class SaveImageDialog extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		shell = new Shell(getParent(), getStyle());
+		shell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.RESIZE);
 		shell.setSize(450, 300);
 		shell.setText(getText());
 		shell.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -61,12 +63,10 @@ public class SaveImageDialog extends Dialog {
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
 		Composite composite_1 = new Composite(composite, SWT.NONE);
-		RowLayout rl_composite_1 = new RowLayout(SWT.VERTICAL);
-		rl_composite_1.center = true;
-		rl_composite_1.fill = true;
-		composite_1.setLayout(rl_composite_1);
+		composite_1.setLayout(new GridLayout(1, false));
 		
 		Composite composite_2 = new Composite(composite_1, SWT.NONE);
+		composite_2.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
 		composite_2.setLayout(new FillLayout(SWT.VERTICAL));
 		
 		Button btnNewButton = new Button(composite_2, SWT.NONE);

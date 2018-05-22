@@ -46,7 +46,7 @@ public class FractalRendererSWT extends FractalRenderer {
 		this.display = display;
 		this.black = new org.eclipse.swt.graphics.Color(display, new RGB(0,0,0));
 //		draw_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y));
-		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_goal_x, dataDescriptor.dim_goal_y));
+		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.getDim_goal_x(), dataDescriptor.getDim_goal_y()));
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
 	
@@ -243,7 +243,7 @@ public class FractalRendererSWT extends FractalRenderer {
 	}
 
 	private void putOnImageData(int width, int height, ImageData draw_data) {
-		int qualityScaling = dataDescriptor.dim_sampled_x/dataDescriptor.dim_goal_x;
+		int qualityScaling = dataDescriptor.getDim_sampled_x()/dataDescriptor.getDim_goal_x();
 		double[][] goalSamples = dataContainer.downsample(qualityScaling);
 		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
 		draw_data.palette = palette;
@@ -256,8 +256,10 @@ public class FractalRendererSWT extends FractalRenderer {
 					firstFinished = v;
 			}
 		}
-		int scalefactor = dataDescriptor.dim_sampled_x / dataDescriptor.dim_goal_x;
+		int scalefactor = dataDescriptor.getDim_sampled_x() / dataDescriptor.getDim_goal_x();
 		int scalefactorSq = scalefactor*scalefactor;
+		int dim_sampled_x = dataDescriptor.getDim_sampled_x();
+		double lastIt = 0;
 		//TODO scalefactor for upsampling
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
@@ -265,7 +267,7 @@ public class FractalRendererSWT extends FractalRenderer {
 				double absoluteSquared = 0;
 				for (int x = imgx ; x < imgx+scalefactor ; x++){
 					for (int y = imgy ; y < imgy+scalefactor ; y++){
-						int i = (imgx*qualityScaling+(x-imgx))+(imgy*qualityScaling+(y-imgy))*dataDescriptor.dim_sampled_x;
+						int i = (imgx*qualityScaling+(x-imgx))+(imgy*qualityScaling+(y-imgy))*dim_sampled_x;
 						double real = dataContainer.currentSamplePos_real[i];
 						double imag = dataContainer.currentSamplePos_imag[i];
 						absoluteSquared += real*real+imag*imag;
@@ -275,17 +277,24 @@ public class FractalRendererSWT extends FractalRenderer {
 				if (it > 0) {
 					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
 //					float sat = (float) it;
+//					float sat = (float) it;
 //					System.out.println(sat+" -> "+(float)Math.log(sat));
 					float sat2 = sat;
 //					sat2 /= 1;
 					sat2 = (float) Math.log(sat);
-					sat %= 2;
-					if (sat2%2 <= 1)
-						sat2 = sat2%1;
-					else
-						sat2 = 1- (sat2%1);
-					sat = sat % 1;
-					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset), 0.6f,sat2));
+//					sat2 %= 1;
+//					if (sat2%2 <= 1)
+//						sat2 = sat2%1;
+//					else
+//						sat2 = 1- (sat2%1);
+//					sat = sat % 1;
+					float b = (float)Math.pow(Math.abs((sat-lastIt)),0.1);
+					if (b > 1)
+						b = 1;
+//					else if (b < 0.5)
+//						b = 0.5f;
+					lastIt = sat;
+					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset)+sat2, 0.4f, b));
 //					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+Math.atan2(imag, real)), 0.6f,1f));
 				} else {
 					if (it == -2)
@@ -326,13 +335,13 @@ public class FractalRendererSWT extends FractalRenderer {
 		disp_img = new Image(display, new Rectangle(0, 0, disp_bounds.width, disp_bounds.height));
 //		draw_img.dispose();
 //		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
-		dataDescriptor.dim_sampled_x = calc_bounds.width;
-		dataDescriptor.dim_sampled_y = calc_bounds.height;
-		double oldDeltaX = dataDescriptor.delta_x;
+		dataDescriptor.setDim_sampled_x(calc_bounds.width);
+		dataDescriptor.setDim_sampled_y(calc_bounds.height);
+		double oldDeltaX = dataDescriptor.getDelta_x();
 		dataDescriptor.setGoalDimensions(disp_bounds.width, disp_bounds.height);
-		double changeInDeltaX = dataDescriptor.delta_x-oldDeltaX;
-		dataDescriptor.start_x -= changeInDeltaX/2;
-		dataDescriptor.end_x = dataDescriptor.start_x + dataDescriptor.delta_x;
+		double changeInDeltaX = dataDescriptor.getDelta_x()-oldDeltaX;
+		dataDescriptor.setStart_x(dataDescriptor.getStart_x() - changeInDeltaX/2);
+		dataDescriptor.setEnd_x(dataDescriptor.getStart_x() + dataDescriptor.getDelta_x());
 		reset();
 	}
 	
@@ -340,10 +349,10 @@ public class FractalRendererSWT extends FractalRenderer {
 	public synchronized void setQuality(double quality) {
 		if (quality == q)
 			return;
-		dataDescriptor.spacing /= (double)quality/q;
+		dataDescriptor.setSpacing(dataDescriptor.getSpacing() / (double)quality/q);
 		this.q = quality;
-		dataDescriptor.dim_sampled_x = (int)Math.round(dataDescriptor.dim_goal_x*q);
-		dataDescriptor.dim_sampled_y = (int)Math.round(dataDescriptor.dim_goal_y*q);
+		dataDescriptor.setDim_sampled_x((int)Math.round(dataDescriptor.getDim_goal_x()*q));
+		dataDescriptor.setDim_sampled_y((int)Math.round(dataDescriptor.getDim_goal_y()*q));
 //		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_img.getBounds().width*q), (int)Math.round(disp_img.getBounds().height*q));
 //		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
 		reset();

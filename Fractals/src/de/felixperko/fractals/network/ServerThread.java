@@ -7,16 +7,21 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import de.felixperko.fractals.util.CategoryLogger;
+
 public class ServerThread extends Thread {
+	
+	CategoryLogger log = new CategoryLogger("com/server");
+	
 	@Override
 	public void run() {
 		try {
 			ServerSocket server = new ServerSocket(3141);
 			
 			while (true) {
-				System.out.println("server: waiting for connection...");
+				log.log("waiting for connection...");
 				Socket client = server.accept();
-				System.out.println("server: connected.");
+				log.log("connected.");
 				Scanner in = new Scanner(client.getInputStream());
 				PrintWriter out = new PrintWriter(client.getOutputStream());
 				String input;
@@ -28,17 +33,17 @@ public class ServerThread extends Thread {
 						long sendTime = Long.parseLong(input);
 						double latency = (System.nanoTime()-sendTime)/1000000.;
 						System.out.println(input2);
-						System.out.println("server: latency: "+latency+" ms");
+						log.log("latency: "+latency+" ms");
 	//					break;
 						out.println(System.nanoTime());
 						out.flush();
 					} catch (NoSuchElementException e) {
-						System.out.println("server: lost connection to client.");
+						log.log("server: lost connection to client.");
 						connection_lost = true;
 						break;
 					}
 				}
-				System.out.println("server: closing connection...");
+				log.log("closing connection...");
 				out.println("close");
 				out.flush();
 				
@@ -46,12 +51,12 @@ public class ServerThread extends Thread {
 				while (!connection_lost) {
 					try {
 						input = in.nextLine();
-						System.out.println(input);
+						log.log("recieved: "+input);
 						if (input.equals("client: close ack")) {
 							break;
 						}
 					} catch (NoSuchElementException e) {
-						System.out.println("server: lost connection to client.");
+						log.log("lost connection to client.");
 						connection_lost = true;
 					}
 				}
@@ -60,7 +65,7 @@ public class ServerThread extends Thread {
 				in.close();
 				client.close();
 				
-				System.out.println("server: connection closed.");
+				log.log("connection closed.");
 				break;
 			}
 			
