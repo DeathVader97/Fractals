@@ -328,8 +328,11 @@ public class FractalRendererSWT extends FractalRenderer {
 //		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
 		dataDescriptor.dim_sampled_x = calc_bounds.width;
 		dataDescriptor.dim_sampled_y = calc_bounds.height;
-		dataDescriptor.dim_goal_x = disp_bounds.width;
-		dataDescriptor.dim_goal_y = disp_bounds.height;
+		double oldDeltaX = dataDescriptor.delta_x;
+		dataDescriptor.setGoalDimensions(disp_bounds.width, disp_bounds.height);
+		double changeInDeltaX = dataDescriptor.delta_x-oldDeltaX;
+		dataDescriptor.start_x -= changeInDeltaX/2;
+		dataDescriptor.end_x = dataDescriptor.start_x + dataDescriptor.delta_x;
 		reset();
 	}
 	

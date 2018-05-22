@@ -13,6 +13,8 @@ import javax.imageio.ImageIO;
 
 import de.felixperko.fractals.Tasks.TaskManager;
 
+import static de.felixperko.fractals.WindowHandler.*;
+
 public class FractalRenderer {
 	
 	BufferedImage disp_img;
@@ -35,12 +37,12 @@ public class FractalRenderer {
 	protected int disp_y2 = 0;
 	protected boolean disp_changed = false;
 	
-	float colorOffset = 0.0f;
+	float colorOffset = 0.7f;
 	
 	int maxIterations = 1000000;
 	
 	public FractalRenderer() {
-		dataDescriptor = new DataDescriptor(-2, -2, 4./(WindowHandler.h*q), (int)Math.round(WindowHandler.w*q), (int)Math.round(WindowHandler.h*q), WindowHandler.w, WindowHandler.h, maxIterations);
+		dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, (int)Math.round(w*q), (int)Math.round(h*q), w, h, maxIterations);
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
 		draw_img = new BufferedImage(dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y, BufferedImage.TYPE_INT_RGB);
@@ -184,7 +186,7 @@ public class FractalRenderer {
 	public synchronized void setQuality(double quality) {
 		if (quality == q)
 			return;
-		dataDescriptor.spacing /= (double)quality/q;
+		dataDescriptor.scaleBy((double)quality/q);
 		this.q = quality;
 		dataDescriptor.dim_sampled_x = (int)Math.round(dataDescriptor.dim_goal_x*q);
 		dataDescriptor.dim_sampled_y = (int)Math.round(dataDescriptor.dim_goal_y*q);
@@ -196,11 +198,17 @@ public class FractalRenderer {
 		try {
 			double relX = mouse_x/(double)dataDescriptor.dim_goal_x;
 			double relY = mouse_y/(double)dataDescriptor.dim_goal_y;
-			double midX = relX*(disp_x2)+disp_x;
-			double midY = relY*(disp_y2)+disp_y;
-			dataDescriptor.spacing *= spacing_factor;
-			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(midX*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_x/2.;
-			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(midY*q)] - dataDescriptor.spacing*dataDescriptor.dim_sampled_y/2.;
+			double midX = relX*(disp_x2)-disp_x;
+			double midY = relY*(disp_y2)-disp_y;
+//			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(midX*q)] - dataDescriptor.delta_x/2.;
+//			dataDescriptor.start_y = dataDescriptor.getYcoords()[(int)Math.round(midY*q)] - dataDescriptor.delta_y/2.;
+			dataDescriptor.scaleBy(spacing_factor);
+			
+			double midCoordsX = dataDescriptor.getXcoords()[(int)Math.round(midX*q)];
+			double midCoordsY = dataDescriptor.getYcoords()[(int)Math.round(midY*q)];
+			dataDescriptor.start_x = midCoordsX - dataDescriptor.delta_x/2;
+			dataDescriptor.start_y = midCoordsY - dataDescriptor.delta_y/2;
+			
 			cul_spacing_factor *= spacing_factor;
 			double rangeX = (disp_x2-disp_x)*spacing_factor;
 			double rangeY = (disp_y2-disp_y)*spacing_factor;

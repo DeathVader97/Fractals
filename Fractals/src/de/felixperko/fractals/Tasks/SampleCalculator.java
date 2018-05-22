@@ -59,16 +59,22 @@ public class SampleCalculator {
 				run_iterations++;
 				double new_real = 1;
 				double new_imag = 1;
+				double realSq = 0;
+				double imagSq = 0;
 				for (int k = 1 ; k < pow ; k++){
-					new_real = (real*real - (imag*imag));
-					new_imag = (real*imag + (imag*real));
+//					real = Math.abs(real);
+//					imag = Math.abs(imag);
+					realSq = real*real;
+					imagSq = imag*imag;
+					new_real = realSq - imagSq;
+					new_imag = 2*real*imag;
 					real = new_real;
 					imag = new_imag;
 				}
 				real += creal;
 				imag += cimag;
 				
-				if (real*real + imag*imag > 4) {//outside -> done
+				if (realSq + imagSq > 4) {//outside -> done
 					results[i] = j;
 					currentIterations[i] = j;
 					currentpos_real[i] = real;
@@ -101,8 +107,10 @@ public class SampleCalculator {
 		double new_imag = 1;
 		
 		for (int k = 1 ; k < pow ; k++){
+//			real = Math.abs(real);
+//			imag = Math.abs(imag);
 			new_real = (real*real - (imag*imag));
-			new_imag = (real*imag + (imag*real));
+			new_imag = 2*(real*imag);
 			real = new_real;
 			imag = new_imag;
 		}
