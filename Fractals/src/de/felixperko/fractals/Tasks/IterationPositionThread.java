@@ -16,13 +16,15 @@ public class IterationPositionThread extends Thread {
 	int iterations = 0;
 	SampleCalculator sampleCalculator = new SampleCalculator(null, null);
 	int jobId;
+	int jobIdDone;
 	
 	@Override
 	public void run() {
 		while (!Thread.interrupted()){
-			while (iterations >= maxIterations){
+			System.out.println(jobId);
+			while (jobIdDone == jobId || iterations >= maxIterations){
 				try {
-					Thread.sleep(10);
+					Thread.sleep(1);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -35,8 +37,15 @@ public class IterationPositionThread extends Thread {
 						sampleCalculator.setDescriptor(dataDescriptor);
 					
 					currentPos = sampleCalculator.getIterationForPosition(startPos, currentPos);
+					
 					positions.add(currentPos);
 					iterations++;
+
+					if (currentPos.lengthSq() > 4) {//outside -> done
+						System.out.println(iterations);
+						jobIdDone = jobId;
+						break;
+					}
 				}
 			}
 		}

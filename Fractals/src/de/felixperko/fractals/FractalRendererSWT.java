@@ -50,7 +50,7 @@ public class FractalRendererSWT extends FractalRenderer {
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
 	
-	public boolean allowRedraw = true;
+//	public boolean allowRedraw = true;
 	
 	public void render(PaintEvent e, boolean save) {
 		try {
@@ -150,9 +150,9 @@ public class FractalRendererSWT extends FractalRenderer {
 				
 				int calculatedIterations = ipt.getIterations();
 				if (calculatedIterations < visSteps)
-					visSteps = ipt.getIterations();
-				if (visSteps > 0 && calculatedIterations > 0) {
-					allowRedraw = false;
+					visSteps = calculatedIterations;
+				if (visSteps > 0) {
+//					allowRedraw = false;
 					ArrayList<Position> positions = ipt.getPositions();
 //					Position c = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
 					Position p = positions.get(0);
@@ -183,7 +183,7 @@ public class FractalRendererSWT extends FractalRenderer {
 					}
 					long t2 = System.nanoTime();
 					System.out.println("drawing "+visSteps+" took "+(int)((t2-t1)*NumberUtil.NS_TO_MS)+"ms.");
-					allowRedraw = true;
+//					allowRedraw = true;
 				}
 			}
 		} catch (Exception ex) {
@@ -244,7 +244,7 @@ public class FractalRendererSWT extends FractalRenderer {
 
 	private void putOnImageData(int width, int height, ImageData draw_data) {
 		int qualityScaling = dataDescriptor.getDim_sampled_x()/dataDescriptor.getDim_goal_x();
-		double[][] goalSamples = dataContainer.downsample(qualityScaling);
+		SampledDataContainer sdc = new SampledDataContainer(dataContainer, qualityScaling);
 		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
 		draw_data.palette = palette;
 		int firstFinished = -1;
@@ -256,46 +256,29 @@ public class FractalRendererSWT extends FractalRenderer {
 					firstFinished = v;
 			}
 		}
-		int scalefactor = dataDescriptor.getDim_sampled_x() / dataDescriptor.getDim_goal_x();
-		int scalefactorSq = scalefactor*scalefactor;
-		int dim_sampled_x = dataDescriptor.getDim_sampled_x();
-		double lastIt = 0;
-		//TODO scalefactor for upsampling
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
-				double it = goalSamples[imgx][imgy];
-				double absoluteSquared = 0;
-				for (int x = imgx ; x < imgx+scalefactor ; x++){
-					for (int y = imgy ; y < imgy+scalefactor ; y++){
-						int i = (imgx*qualityScaling+(x-imgx))+(imgy*qualityScaling+(y-imgy))*dim_sampled_x;
-						double real = dataContainer.currentSamplePos_real[i];
-						double imag = dataContainer.currentSamplePos_imag[i];
-						absoluteSquared += real*real+imag*imag;
-					}
-				}
-				absoluteSquared /= scalefactorSq;
+				double it = sdc.samples[imgx][imgy];
+				double absoluteSquared = sdc.absSq[imgx][imgy];
 				if (it > 0) {
-					float sat = (float)(it+1-Math.log(Math.log(Math.sqrt(absoluteSquared))/Math.log(2)));
-//					float sat = (float) it;
-//					float sat = (float) it;
-//					System.out.println(sat+" -> "+(float)Math.log(sat));
-					float sat2 = sat;
-//					sat2 /= 1;
-					sat2 = (float) Math.log(sat);
-//					sat2 %= 1;
-//					if (sat2%2 <= 1)
-//						sat2 = sat2%1;
-//					else
-//						sat2 = 1- (sat2%1);
-//					sat = sat % 1;
-					float b = (float)Math.pow(Math.abs((sat-lastIt)),0.1);
+					float sat = (float)(it+3-Math.log(Math.log(absoluteSquared)*0.5/Math.log(2))/Math.log(2));
+//					float sat = (float)(it);
+					
+					float sat2 = (float) Math.sqrt(sat);
+
+					float b = (float)Math.pow(sdc.fluctuance[imgx][imgy],0.2);
 					if (b > 1)
-						b = 1;
-//					else if (b < 0.5)
-//						b = 0.5f;
-					lastIt = sat;
-					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset)+sat2, 0.4f, b));
-//					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+Math.atan2(imag, real)), 0.6f,1f));
+						b = 1f;
+					else if (b < 0.5 || b == Float.NaN)
+						b = 0.5f;
+					
+					float notFinishedFraction = sdc.notFinishedFraction[imgx][imgy];
+//					b *= (1-notFinishedFraction);
+//					b = 1;
+					
+//					sat2 %= 0.5;
+					
+					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
 				} else {
 					if (it == -2)
 						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());

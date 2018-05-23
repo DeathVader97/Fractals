@@ -1,6 +1,7 @@
 package de.felixperko.fractals.util;
 
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.util.Position.SingleOperation;
 
 public class Position {
 	
@@ -68,6 +69,10 @@ public class Position {
 	
 	public Position performOperation(SingleOperation operation) {
 		return operation.operation(this);
+	}
+	
+	public double lengthSq() {
+		return x*x + y*y;
 	}
 	
 	@Override
