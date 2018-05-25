@@ -18,6 +18,8 @@ import de.felixperko.fractals.Location;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
@@ -55,6 +57,10 @@ public class PositionsShell extends Shell {
 		lblChoosePosition.setText("Choose Position:");
 		
 		CCombo combo = new CCombo(this, SWT.BORDER);
+		
+		Composite compositeGoTo = new Composite(this, SWT.NONE);
+		Button btnGoTo = new Button(compositeGoTo, SWT.NONE);
+		
 		GridData gd_combo = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_combo.widthHint = 221;
 		combo.setLayoutData(gd_combo);
@@ -63,8 +69,29 @@ public class PositionsShell extends Shell {
 			locs.forEach(l -> combo.add(l.getName()));
 			combo.setText(locs.get(0).getName());
 		}
-		
-		Button btnGoTo = new Button(this, SWT.NONE);
+		combo.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				boolean validSelection = combo.getSelectionIndex() != -1;
+				if (validSelection) {
+					compositeGoTo.setToolTipText(null);
+					btnGoTo.setEnabled(true);
+				} else {
+					compositeGoTo.setToolTipText("No position selected");
+					btnGoTo.setEnabled(false);
+				}
+			}
+		});
+
+		boolean validSelection = combo.getSelectionIndex() != -1;
+		if (validSelection) {
+			compositeGoTo.setToolTipText(null);
+			btnGoTo.setEnabled(true);
+		} else {
+			compositeGoTo.setToolTipText("No position selected");
+			btnGoTo.setEnabled(false);
+		}
+		btnGoTo.setSize(41, 25);
 		btnGoTo.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -78,13 +105,50 @@ public class PositionsShell extends Shell {
 		lblSaveCurrentPosition.setText("Save current Position:");
 		
 		txtName = new Text(this, SWT.BORDER);
+		
+		Composite compositeSave = new Composite(this, SWT.NONE);
+		Button btnSave = new Button(compositeSave, SWT.NONE);
+		
 		GridData gd_txtName = new GridData(SWT.LEFT, SWT.CENTER, true, false, 1, 1);
 		gd_txtName.widthHint = 218;
 		txtName.setLayoutData(gd_txtName);
 		txtName.setMessage("Name");
+		txtName.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				boolean empty = txtName.getText().length() == 0;
+				boolean nameExists = FractalsMain.locationHolder.getLocations().stream().anyMatch(l -> l.getName().equals(txtName.getText()));
+				if (empty) {
+					compositeSave.setToolTipText("Please a name first.");
+					btnSave.setEnabled(false);
+				} else if (nameExists) {
+					compositeSave.setToolTipText("Name is already in use.");
+					btnSave.setEnabled(false);
+				} else {
+					compositeSave.setToolTipText(null);
+					btnSave.setEnabled(true);
+				}
+			}
+		});
+		btnSave.setSize(36, 25);
 		
-		Button btnSave = new Button(this, SWT.NONE);
 		btnSave.setText("Save");
+		compositeSave.setToolTipText("Please a name first.");
+		btnSave.setEnabled(false);
+		btnSave.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				FractalsMain.locationHolder.addLocation(FractalsMain.mainWindow.mainRenderer.getLocation(txtName.getText()));
+
+				combo.removeAll();
+				ArrayList<Location> locs = FractalsMain.locationHolder.getLocations();
+				if (!locs.isEmpty()) {
+					locs.forEach(l -> combo.add(l.getName()));
+					combo.setText(locs.get(0).getName());
+				}
+				btnGoTo.setEnabled(combo.getSelectionIndex() != -1);
+			}
+		});
 		createContents(location);
 		open();
 		layout();
@@ -95,7 +159,7 @@ public class PositionsShell extends Shell {
 	 */
 	protected void createContents(Point location) {
 		setText("Positions");
-		setSize(411, 108);
+		setSize(402, 101);
 		setLocation(location.x - getBounds().width/2, location.y - getBounds().height/2);
 
 	}

@@ -19,7 +19,7 @@ public class WorkerThread extends Thread {
 	static WorkerPhase DEFAULT_PHASE = PHASE_IDLE;
 	
 	TaskProvider taskProvider;
-	public String name;
+//	public String name;
 	
 	Task task;
 	
@@ -34,7 +34,7 @@ public class WorkerThread extends Thread {
 	
 	public WorkerThread(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
-		this.name = "WorkerThread "+ID_COUNTER++;
+		setName("WorkerThread "+ID_COUNTER++);
 		setPriority(3);
 	}
 	
@@ -43,7 +43,7 @@ public class WorkerThread extends Thread {
 	
 	@Override
 	public void run() {
-		System.out.println("starting worker thread: "+name);
+		System.out.println("starting worker thread: "+getName());
 		
 		workLoop :
 		while (!end && (continueWorking || !Thread.interrupted())) {
@@ -116,6 +116,7 @@ public class WorkerThread extends Thread {
 		monitor = performanceMonitor;
 		phaseChanges.clear();
 		iterations = 0;
+		phaseChanges.add(new WorkerPhaseChange(phase));
 	}
 	
 	public ArrayList<WorkerPhaseChange> getPerformanceData(){

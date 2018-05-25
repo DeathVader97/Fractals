@@ -138,8 +138,20 @@ public class DataDescriptor {
 		this.start_y = start_y;
 	}
 
+	public double getEnd_x() {
+		return end_x;
+	}
+
 	public void setEnd_x(double end_x) {
 		this.end_x = end_x;
+	}
+
+	public double getEnd_y() {
+		return end_y;
+	}
+
+	public void setEnd_y(double end_y) {
+		this.end_y = end_y;
 	}
 
 	public void setSpacing(double spacing) {
