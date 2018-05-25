@@ -86,12 +86,12 @@ public class SampledDataContainer {
 				int i = 0;
 				for (int x2 = min_x ; x2 <= max_x ; x2++) {
 					for (int y2 = min_y ; y2 <= max_y ; y2++) {
-						if (notFinishedFraction[x2][y2] > 0) {
+						double sample = samples[x2][y2];
+						if (sample < 0) {
 							n--;
 							continue;
 						}
-						double sample = samples[x2][y2];
-						sample = Math.sqrt(sample+1-Math.log(Math.log(absSq[x2][y2])*0.5/Math.log(2))/Math.log(2));
+						sample = Math.sqrt( sample -  Math.log( Math.log(absSq[x2][y2])*0.5/Math.log(2) ) / Math.log(2)  );
 						buff_samples[i] = sample;
 						avg += sample;
 						i++;
@@ -100,9 +100,13 @@ public class SampledDataContainer {
 				avg /= n;
 				double val = 0;
 				for (int j = 0 ; j < n ; j++) {
-					val += Math.abs(buff_samples[j]-avg);
+					double a = Math.abs(buff_samples[j]-avg);
+					if (a >= 0)
+						val += a;
 				}
-				fluctuance[x][y] = val;
+				val -= 1;
+				if (val > 0)
+					fluctuance[x][y] = val;
 //				System.out.print(n+" ");
 			}
 		}

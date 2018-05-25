@@ -264,7 +264,7 @@ public class FractalRendererSWT extends FractalRenderer {
 					float sat = (float)(it+3-Math.log(Math.log(absoluteSquared)*0.5/Math.log(2))/Math.log(2));
 //					float sat = (float)(it);
 					
-					float sat2 = (float) Math.sqrt(sat);
+					float sat2 = (float) Math.log10(sat);
 
 					float b = (float)Math.pow(sdc.fluctuance[imgx][imgy],0.2);
 					if (b > 1)
