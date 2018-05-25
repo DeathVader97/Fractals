@@ -239,10 +239,15 @@ public class FractalRenderer {
 	}
 
 	public void setLocation(Location location) {
-		//TODO swap spacing for end coordinates for locations
-		dataDescriptor.setSpacing(location.spacing);
+		double desiredRatio = ((double)dataDescriptor.getDim_sampled_x())/dataDescriptor.getDim_sampled_y();
+		double deltaX = location.getX2()-location.getX1();
+		double deltaY = location.getY2()-location.getY1();
+		double adjustedDeltaY = deltaX/desiredRatio;
+		double shiftY = 0.5*(adjustedDeltaY-deltaY);
 		dataDescriptor.setStart_x(location.getX1());
-		dataDescriptor.setStart_y(location.getY1(((double)dataDescriptor.getDim_sampled_x())/dataDescriptor.getDim_sampled_y()));
+		dataDescriptor.setStart_y(location.getY1()-shiftY);
+		dataDescriptor.setEnd_x(location.getX2());
+		dataDescriptor.setEnd_y(location.getY2()+shiftY);
 		disp_x = 0;
 		disp_y = 0;
 		disp_x2 = disp_img.getWidth();
@@ -250,7 +255,7 @@ public class FractalRenderer {
 		reset();
 	}
 
-	public Location getLocation() {
-		return new Location(dataDescriptor);
+	public Location getLocation(String name) {
+		return new Location(dataDescriptor, name);
 	}
 }

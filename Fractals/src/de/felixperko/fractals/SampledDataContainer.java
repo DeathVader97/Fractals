@@ -15,16 +15,18 @@ public class SampledDataContainer {
 		this.container = source;
 		this.descriptor = source.getDescriptor();
 		
-		downsample(qualityScaling);
+		boolean valid = downsample(qualityScaling);
+		if (!valid)
+			return;
 		if (samples != null)
 			postprocess();
 		
 		done = true;
 	}
 
-	private void downsample(int qualityScaling){
+	private boolean downsample(int qualityScaling){
 		if (qualityScaling < 0 || (Math.log(qualityScaling)/Math.log(2)) % 1 != 0) //scalefactor is not a natural power of 2
-			return;
+			return false;
 		
 		int dim_sampled_x = descriptor.getDim_sampled_x();
 		int dim_sampled_y = descriptor.getDim_sampled_y();
@@ -64,6 +66,7 @@ public class SampledDataContainer {
 				notFinishedFraction[x][y] = notFinished/(qualityScaling*qualityScaling);
 			}
 		}
+		return true;
 	}
 	
 	private void postprocess() {

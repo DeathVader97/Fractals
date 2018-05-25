@@ -171,9 +171,19 @@ public class MainWindow {
 			canvas.redraw();
 		}
 		
+		testProgressBar(progressBar);
+		testProgressBar(progressBar_1);
+		
 		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
+	}
+
+	private void testProgressBar(ProgressBar pb) {
+		int s = pb.getSelection()+ ((Math.random() > 0.5) ? 1 : -1);
+		if (s < pb.getMinimum() || s > pb.getMaximum())
+			return;
+		pb.setSelection(s);
 	}
 
 	public void setText(Label label, String text) {
@@ -191,6 +201,10 @@ public class MainWindow {
 	}
 	
 	int finishedDrawingTimer = 0;
+
+	private ProgressBar progressBar;
+
+	private ProgressBar progressBar_1;
 
 	/**
 	 * Create contents of the window.
@@ -501,12 +515,12 @@ public class MainWindow {
 		Label lblNewLabel = new Label(composite_3, SWT.NONE);
 		lblNewLabel.setText("New Label");
 		
-		ProgressBar progressBar = new ProgressBar(composite_3, SWT.NONE);
+		progressBar = new ProgressBar(composite_3, SWT.SMOOTH);
 		
 		Label lblNewLabel_1 = new Label(composite_3, SWT.NONE);
 		lblNewLabel_1.setText("New Label");
 		
-		ProgressBar progressBar_1 = new ProgressBar(composite_3, SWT.NONE);
+		progressBar_1 = new ProgressBar(composite_3, SWT.SMOOTH);
 		scrolledComposite_3.setContent(composite_3);
 		scrolledComposite_3.setMinSize(composite_3.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
@@ -529,9 +543,10 @@ public class MainWindow {
 			@Override
 			public void update() {
 				StringBuilder text = new StringBuilder();
-				for (String str : Logger.getLog())
+				for (String str : new ArrayList<>(Logger.getLog()))
 					text.append(str).append("\r\n");
 				styledText.setText(text.toString());
+				styledText.setTopIndex(styledText.getLineCount()-1);
 			}
 		});
 		Logger.state.addStateListener(scl);
@@ -616,10 +631,6 @@ public class MainWindow {
 
 	public void jumpToSavedLocation(boolean backwards) {
 		mainRenderer.setLocation(backwards ? FractalsMain.locationHolder.getPreviousLocation() : FractalsMain.locationHolder.getNextLocation());
-	}
-
-	public void saveLocation() {
-		FractalsMain.locationHolder.addLocation(mainRenderer.getLocation());
 	}
 
 	public boolean isRedraw() {
