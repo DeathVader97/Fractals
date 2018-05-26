@@ -155,8 +155,4 @@ public class WindowHandler {
 	public void jumpToSavedLocation(boolean backwards) {
 		mainRenderer.setLocation(backwards ? FractalsMain.locationHolder.getPreviousLocation() : FractalsMain.locationHolder.getNextLocation());
 	}
-
-	public void saveLocation() {
-		FractalsMain.locationHolder.addLocation(mainRenderer.getLocation());
-	}
 }

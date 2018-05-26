@@ -119,7 +119,7 @@ public class PositionsShell extends Shell {
 				boolean empty = txtName.getText().length() == 0;
 				boolean nameExists = FractalsMain.locationHolder.getLocations().stream().anyMatch(l -> l.getName().equals(txtName.getText()));
 				if (empty) {
-					compositeSave.setToolTipText("Please a name first.");
+					compositeSave.setToolTipText("Please enter a name first.");
 					btnSave.setEnabled(false);
 				} else if (nameExists) {
 					compositeSave.setToolTipText("Name is already in use.");
@@ -133,7 +133,7 @@ public class PositionsShell extends Shell {
 		btnSave.setSize(36, 25);
 		
 		btnSave.setText("Save");
-		compositeSave.setToolTipText("Please a name first.");
+		compositeSave.setToolTipText("Please enter a name first.");
 		btnSave.setEnabled(false);
 		btnSave.addSelectionListener(new SelectionAdapter() {
 			@Override
