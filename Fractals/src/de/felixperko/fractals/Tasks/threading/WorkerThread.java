@@ -1,10 +1,15 @@
-package de.felixperko.fractals.Tasks;
+package de.felixperko.fractals.Tasks.threading;
 
 
 import java.awt.Color;
 import java.util.ArrayList;
 
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.Tasks.Task;
+import de.felixperko.fractals.Tasks.TaskProvider;
+import de.felixperko.fractals.Tasks.WorkerPhase;
+import de.felixperko.fractals.Tasks.WorkerPhaseChange;
+import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
 
 public class WorkerThread extends Thread {
 	
@@ -25,7 +30,7 @@ public class WorkerThread extends Thread {
 	
 	WorkerPhase phase = DEFAULT_PHASE;
 	ArrayList<WorkerPhaseChange> phaseChanges = new ArrayList<>();
-	long iterations = 0;
+	private long iterations = 0;
 	
 	PerformanceMonitor monitor;
 
@@ -34,7 +39,7 @@ public class WorkerThread extends Thread {
 	
 	public WorkerThread(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
-		setName("WorkerThread "+ID_COUNTER++);
+		setName("WT_"+ID_COUNTER++);
 		setPriority(3);
 	}
 	
@@ -68,19 +73,19 @@ public class WorkerThread extends Thread {
 //			else
 //				phase = "Working";
 			setPhase(PHASE_WORKING);
-			if (FractalsMain.taskManager.jobId != task.jobId)
+			if (FractalsMain.taskManager.getJobId() != task.getJobId())
 				continue;
 //			System.out.println(name+" task started ("+task.startSample+" "+task.getMaxIterations()+")");
 			TaskProvider tp = taskProvider;
 			try {
 				task.run(tp.dataDescriptor);
 				taskFinishedTime = System.nanoTime();
-				setLastIterationsPerMs(task.samplesPerMs);
-				iterations += task.end_sample_count;
+				setLastIterationsPerMs(task.getSamplesPerMs());
+				iterations = getIterations() + task.getEnd_Sample_Count();
 				setPhase(PHASE_SAVING);
 				tp.taskFinished(task);
 			} catch (Exception e) {
-				if (FractalsMain.taskManager.jobId != task.jobId)
+				if (FractalsMain.taskManager.getJobId() != task.getJobId())
 					continue;
 				e.printStackTrace();
 			}
@@ -125,5 +130,9 @@ public class WorkerThread extends Thread {
 
 	public void end() {
 		end = true;
+	}
+
+	public long getIterations() {
+		return iterations;
 	}
 }

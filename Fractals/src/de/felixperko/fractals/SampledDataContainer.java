@@ -91,10 +91,12 @@ public class SampledDataContainer {
 					for (int y2 = min_y ; y2 <= max_y ; y2++) {
 						double sample = samples[x2][y2];
 						if (sample < 0) {
-							n--;
-							continue;
+//							n--;
+//							continue;
+							sample = 0;
+						} else {
+							sample = Math.sqrt( sample -  Math.log( Math.log(absSq[x2][y2])*0.5/Math.log(2) ) / Math.log(2)  );
 						}
-						sample = Math.sqrt( sample -  Math.log( Math.log(absSq[x2][y2])*0.5/Math.log(2) ) / Math.log(2)  );
 						buff_samples[i] = sample;
 						avg += sample;
 						i++;
@@ -107,7 +109,7 @@ public class SampledDataContainer {
 					if (a >= 0)
 						val += a;
 				}
-				val -= 1;
+//				val -= 1;
 				if (val > 0)
 					fluctuance[x][y] = val;
 //				System.out.print(n+" ");

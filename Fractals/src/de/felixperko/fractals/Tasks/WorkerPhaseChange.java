@@ -9,4 +9,12 @@ public class WorkerPhaseChange {
 		this.phase = newPhase;
 		this.time = System.nanoTime();
 	}
+
+	public WorkerPhase getPhase() {
+		return phase;
+	}
+
+	public long getTime() {
+		return time;
+	}
 }

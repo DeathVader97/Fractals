@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks;
+package de.felixperko.fractals.Tasks.threading;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.network.ClientThread;
 import de.felixperko.fractals.network.ServerThread;
 

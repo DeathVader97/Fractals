@@ -22,7 +22,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
-import de.felixperko.fractals.Tasks.IterationPositionThread;
+import de.felixperko.fractals.Tasks.perf.PerfInstance;
+import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
@@ -53,6 +54,8 @@ public class FractalRendererSWT extends FractalRenderer {
 //	public boolean allowRedraw = true;
 	
 	public void render(PaintEvent e, boolean save) {
+		PerfInstance render = new PerfInstance("render");
+		render.start();
 		try {
 			save = FractalsMain.mainWindow.save;
 			int finishedDepth = checkDrawConditions();
@@ -189,6 +192,8 @@ public class FractalRendererSWT extends FractalRenderer {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		render.end();
+		render.printSecondsToLog(3);
 	}
 	
 	@Override

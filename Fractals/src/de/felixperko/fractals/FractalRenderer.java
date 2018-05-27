@@ -248,6 +248,7 @@ public class FractalRenderer {
 		dataDescriptor.setStart_y(location.getY1()-shiftY);
 		dataDescriptor.setEnd_x(location.getX2());
 		dataDescriptor.setEnd_y(location.getY2()+shiftY);
+		dataDescriptor.setSpacing(dataDescriptor.getDelta_x()/dataDescriptor.getDim_sampled_x());
 		disp_x = 0;
 		disp_y = 0;
 		disp_x2 = disp_img.getWidth();

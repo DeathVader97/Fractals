@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
 import de.felixperko.fractals.Controls.MouseWheelControls;
-import de.felixperko.fractals.Tasks.WorkerThread;
+import de.felixperko.fractals.Tasks.threading.WorkerThread;
 
 public class WindowHandler {
 	

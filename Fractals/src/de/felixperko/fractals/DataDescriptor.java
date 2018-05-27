@@ -144,6 +144,7 @@ public class DataDescriptor {
 
 	public void setEnd_x(double end_x) {
 		this.end_x = end_x;
+		this.delta_x = end_x - start_x;
 	}
 
 	public double getEnd_y() {
@@ -152,6 +153,7 @@ public class DataDescriptor {
 
 	public void setEnd_y(double end_y) {
 		this.end_y = end_y;
+		this.delta_y = end_y - start_y;
 	}
 
 	public void setSpacing(double spacing) {

@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormAttachment;
@@ -53,7 +54,7 @@ import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
-import de.felixperko.fractals.Tasks.IterationPositionThread;
+import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
@@ -61,7 +62,9 @@ import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
+import de.felixperko.fractals.util.Message;
 import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
@@ -86,8 +89,15 @@ import org.eclipse.swt.events.GestureListener;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.widgets.Slider;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.TraverseEvent;
 
 public class MainWindow {
+	
+	static CategoryLogger inputLogger = new CategoryLogger("command", Color.GREEN);
 
 	public Shell shell;
 	
@@ -205,6 +215,7 @@ public class MainWindow {
 	private ProgressBar progressBar;
 
 	private ProgressBar progressBar_1;
+	private Text text_1;
 
 	/**
 	 * Create contents of the window.
@@ -527,33 +538,70 @@ public class MainWindow {
 		TabItem tbtmLog = new TabItem(tabFolder, SWT.NONE);
 		tbtmLog.setText("Log");
 		
-		ScrolledComposite scrolledComposite_2 = new ScrolledComposite(tabFolder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+		ScrolledComposite scrolledComposite_2 = new ScrolledComposite(tabFolder, SWT.H_SCROLL | SWT.V_SCROLL);
 		tbtmLog.setControl(scrolledComposite_2);
 		scrolledComposite_2.setExpandHorizontal(true);
 		scrolledComposite_2.setExpandVertical(true);
 		
-		Composite composite_1 = new Composite(scrolledComposite_2, SWT.NONE);
-		composite_1.setLayout(new FillLayout(SWT.HORIZONTAL));
+		Composite composite_10 = new Composite(scrolledComposite_2, SWT.NONE);
+		GridLayout gl_composite_10 = new GridLayout(1, false);
+		gl_composite_10.verticalSpacing = 3;
+		gl_composite_10.marginHeight = 1;
+		gl_composite_10.marginWidth = 1;
+		composite_10.setLayout(gl_composite_10);
 		
-		final StyledText styledText = new StyledText(composite_1, SWT.H_SCROLL | SWT.V_SCROLL);
+		final StyledText styledText = new StyledText(composite_10, SWT.BORDER);
+		styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		styledText.setSize(65, 15);
 		styledText.setAlwaysShowScrollBars(false);
 		styledText.setEditable(false);
+		
+		text_1 = new Text(composite_10, SWT.BORDER);
+		text_1.addTraverseListener(new TraverseListener() {
+			public void keyTraversed(TraverseEvent e) {
+				inputLogger.log("Entered: "+text_1.getText());
+				text_1.setText("");
+			}
+		});
+		text_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		text_1.setSize(76, 21);
+		
+		scrolledComposite_2.setContent(composite_10);
+		scrolledComposite_2.setMinSize(composite_10.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		StateChangeListener<Integer> scl = new StateChangeListener<Integer>(Logger.state);
 		scl.addStateChangeAction(new StateChangeAction() {
 			@Override
 			public void update() {
-				StringBuilder text = new StringBuilder();
-				for (String str : new ArrayList<>(Logger.getLog()))
-					text.append(str).append("\r\n");
-				styledText.setText(text.toString());
-				styledText.setTopIndex(styledText.getLineCount()-1);
+				display.syncExec(new Runnable(){
+					@Override
+					public void run() {
+						StringBuilder text = new StringBuilder();
+						ArrayList<StyleRange> ranges = new ArrayList<>();
+						for (Message msg : new ArrayList<>(Logger.getLog())){
+							
+							StyleRange sr = new StyleRange();
+							sr.start = text.length();
+							
+							sr.length = msg.getCategory().getName().length()+3;
+							if (msg.getPrefix() != null)
+								sr.length += msg.getPrefix().length();
+							
+							text.append(msg.getLogString()).append("\r\n");
+							
+							sr.foreground = msg.getCategory().getColor();
+							ranges.add(sr);
+						}
+						styledText.setText(text.toString());
+						for (int i = 0  ; i < ranges.size() ; i++){
+							styledText.setStyleRange(ranges.get(i));
+						}
+						styledText.setTopIndex(styledText.getLineCount()-1);
+					}
+				});
 			}
 		});
 		Logger.state.addStateListener(scl);
 		stateChangeListeners.add(scl);
-		
-		scrolledComposite_2.setContent(composite_1);
-		scrolledComposite_2.setMinSize(composite_1.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
 		ScrolledComposite scrolledComposite_1 = new ScrolledComposite(tabFolder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		scrolledComposite_1.setExpandHorizontal(true);

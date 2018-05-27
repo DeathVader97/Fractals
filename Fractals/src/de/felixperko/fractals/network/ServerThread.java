@@ -1,5 +1,6 @@
 package de.felixperko.fractals.network;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -11,7 +12,7 @@ import de.felixperko.fractals.util.CategoryLogger;
 
 public class ServerThread extends Thread {
 	
-	CategoryLogger log = new CategoryLogger("com/server");
+	CategoryLogger log = new CategoryLogger("com/server", Color.MAGENTA);
 	
 	@Override
 	public void run() {

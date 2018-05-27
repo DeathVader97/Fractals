@@ -24,7 +24,7 @@ public abstract class Task {
 	long start_time;
 	long end_time;
 	long end_sample_count;
-	int samplesPerMs;
+	private int samplesPerMs;
 	
 	SampleCalculator sampleCalculator = new SampleCalculator(null, this);
 	
@@ -57,7 +57,7 @@ public abstract class Task {
 		calculate();
 		this.end_time = System.nanoTime();
 		this.end_sample_count = sampleCalculator.run_iterations;
-		this.samplesPerMs = (int)((double)end_sample_count/((end_time-start_time)/1000000.));
+		samplesPerMs = ((int)((double)end_sample_count/((end_time-start_time)/1000000.)));
 	}
 	
 	protected void instantiateArrays(int size) {
@@ -83,5 +83,17 @@ public abstract class Task {
 
 	public int getPreviousMaxIterations() {
 		return previousMaxIterations;
+	}
+
+	public int getJobId() {
+		return jobId;
+	}
+
+	public int getSamplesPerMs() {
+		return samplesPerMs;
+	}
+
+	public long getEnd_Sample_Count() {
+		return end_sample_count;
 	}
 }

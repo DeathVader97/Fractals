@@ -1,9 +1,10 @@
-package de.felixperko.fractals.Tasks;
+package de.felixperko.fractals.Tasks.threading;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.Tasks.SampleCalculator;
 import de.felixperko.fractals.util.Position;
 
 public class IterationPositionThread extends Thread {
