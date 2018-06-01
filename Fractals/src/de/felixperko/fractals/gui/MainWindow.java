@@ -1,60 +1,44 @@
 package de.felixperko.fractals.gui;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Button;
-import swing2swt.layout.BorderLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.ShellEvent;
-import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.custom.SashForm;
-import swing2swt.layout.BoxLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.custom.ViewForm;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.custom.CBanner;
-import org.eclipse.swt.custom.CCombo;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.ExpandBar;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.CoolBar;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.TableEditor;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.wb.swt.SWTResourceManager;
-
 import de.felixperko.fractals.DataDescriptor;
-import de.felixperko.fractals.FractalRenderer;
 import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
-import de.felixperko.fractals.Controls.MouseControls;
+import de.felixperko.fractals.Tasks.Task;
+import de.felixperko.fractals.Tasks.TaskManager;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
+import de.felixperko.fractals.Tasks.threading.ThreadManager;
+import de.felixperko.fractals.Tasks.threading.WorkerThread;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
@@ -65,33 +49,21 @@ import de.felixperko.fractals.state.SwitchState;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 import de.felixperko.fractals.util.Message;
-import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 import org.eclipse.swt.widgets.ProgressBar;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Scale;
-import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.widgets.Combo;
 import swing2swt.layout.FlowLayout;
-import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.swt.widgets.ExpandItem;
-import org.eclipse.swt.custom.TableTree;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.GestureEvent;
-import org.eclipse.swt.events.GestureListener;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.widgets.Slider;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.events.TraverseEvent;
 
@@ -125,33 +97,35 @@ public class MainWindow {
 	int visMouseMoveCouter = 0;
 	long visRefreshTime = 0;
 	boolean visRedraw = true;
-//	/**
-//	 * Launch the application.
-//	 * @param args
-//	 */
-//	public static void main(String[] args) {
-//		try {
-//			MainWindow window = new MainWindow();
-//			window.open();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	
+	List<ProgressBar> performanceBars = new ArrayList<>();
 
 	/**
 	 * Open the window.
+	 * @param renderer 
 	 */
-	public void open() {
+	public void open(FractalRendererSWT renderer) {
 		display = Display.getDefault();
 		createContents();
 		shell.open();
 		shell.layout();
-		int i = 0;
+		
+		setMainRenderer(renderer);
+		renderer.init();
+		FractalsMain.taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
+		FractalsMain.threadManager = new ThreadManager();
+		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
+		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
+		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
+		FractalsMain.taskManager.generateTasks();
+		FractalsMain.performanceMonitor.startPhase();
+		mainRenderer.startIterationPositionThread();
+		
 		while (!shell.isDisposed()) {
 			
 			tick();
 			
-			if (mainRenderer.isRedraw()) {
+			if (mainRenderer != null && mainRenderer.isRedraw()) {
 				redraw = false;
 				canvas.redraw();
 			}
@@ -180,21 +154,22 @@ public class MainWindow {
 			lastVisIterations = it;
 			canvas.redraw();
 		}
+
+		//TODO remove
+//		testProgressBar(progressBar);
+//		testProgressBar(progressBar_1);
 		
-		testProgressBar(progressBar);
-		testProgressBar(progressBar_1);
-		
-		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
+//		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
 	}
 
-	private void testProgressBar(ProgressBar pb) {
-		int s = pb.getSelection()+ ((Math.random() > 0.5) ? 1 : -1);
-		if (s < pb.getMinimum() || s > pb.getMaximum())
-			return;
-		pb.setSelection(s);
-	}
+//	private void testProgressBar(ProgressBar pb) {
+//		int s = pb.getSelection()+ ((Math.random() > 0.5) ? 1 : -1);
+//		if (s < pb.getMinimum() || s > pb.getMaximum())
+//			return;
+//		pb.setSelection(s);
+//	}
 
 	public void setText(Label label, String text) {
 		if (label.getText().equals(text))
@@ -215,20 +190,45 @@ public class MainWindow {
 	private ProgressBar progressBar;
 
 	private ProgressBar progressBar_1;
-	private Text text_1;
+	private Text text_commandline;
+	private Text text_filter;
+
+	private Composite composite_performance_bars;
 
 	/**
 	 * Create contents of the window.
 	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
+		setupShell();
+		
+		Composite composite_6 = new Composite(shell, SWT.NO_REDRAW_RESIZE);
+		composite_6.setLayout(new FillLayout(SWT.HORIZONTAL));
+		
+		SashForm sashForm = new SashForm(composite_6, SWT.NONE);
+		
+		setupMainRenderer(sashForm);
+		
+		TabFolder tabFolder = new TabFolder(sashForm, SWT.NONE);
+		
+		setupPropertyTab(tabFolder);
+		setupPerformanceTab(tabFolder);
+		setupLogTab(tabFolder);
+		
+		setupContextMenu(tabFolder);
+		
+		sashForm.setWeights(new int[] {2, 1});
+
+	}
+
+	private void setupShell() {
 		shell = new Shell();
-		shell.setSize(800, 500);
 		if (display.getMonitors().length > 1) {
 			Rectangle monitorBounds = display.getMonitors()[1].getBounds();
 			Rectangle shellBounds = shell.getBounds();
 			shell.setLocation(monitorBounds.x+monitorBounds.width-shellBounds.width, monitorBounds.y+monitorBounds.height-shellBounds.height);
 		}
+		shell.setMaximized(true);
 //		shell.setSize(497, 405);
 		shell.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
@@ -239,18 +239,14 @@ public class MainWindow {
 			@Override
 			public void handleEvent(Event event) {
 				System.out.println("shell resized");
-//				mainRenderer.resized();
 			}
 		});
 //		shell.setMaximized(true);
 		shell.setText("SWT Application");
 		shell.setLayout(new FillLayout(SWT.HORIZONTAL));
-		
-		Composite composite_6 = new Composite(shell, SWT.NO_REDRAW_RESIZE);
-		composite_6.setLayout(new FillLayout(SWT.HORIZONTAL));
-		
-		SashForm sashForm = new SashForm(composite_6, SWT.NONE);
-		
+	}
+
+	private void setupMainRenderer(SashForm sashForm) {
 		Composite composite_5 = new Composite(sashForm, SWT.NONE);
 		composite_5.setLayout(new FillLayout(SWT.HORIZONTAL));
 		
@@ -259,6 +255,8 @@ public class MainWindow {
 		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
+				if (mainRenderer == null)
+					return;
 				double factor = e.button == 1 ? 0.5 : (e.button == 3 ? 2 : 1);
 				if (factor != 0) {
 					mainRenderer.updateLocation(e.x, e.y, factor);
@@ -266,17 +264,25 @@ public class MainWindow {
 				}
 			}
 		});
-		canvas.addPaintListener(e -> {mainRenderer.render(e, save);});
+		canvas.addPaintListener(e -> {
+			if (mainRenderer != null)
+				mainRenderer.render(e, save);
+			}
+		);
 		canvas.addListener(SWT.Resize, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				System.out.println("resize canvas");
-				mainRenderer.resized();
+				if (mainRenderer != null)
+					mainRenderer.resized();
 			}
 		});
 		canvas.addMouseMoveListener(new MouseMoveListener() {
 			@Override
 			public void mouseMove(MouseEvent e) {
+				
+				if (FractalsMain.mainWindow.mainRenderer == null)
+					return;
 				
 				//Mouse moved on canvas of MainRenderer
 				DataDescriptor dd = FractalsMain.taskManager.getDataContainer().getDescriptor();
@@ -286,28 +292,29 @@ public class MainWindow {
 				//TODO schedule redraw, probably though main loop execution of redraw
 				long t = System.nanoTime();
 				IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
-				if (ips.getIterations() == ips.getMaxIterations())
-					finishedDrawingTimer++;
-				if (finishedDrawingTimer == 1){
-//				if (mainRenderer.allowRedraw){
-					visRefreshTime = t;
-					visRedraw = true;
-				}
-				visMouseMoveCouter++;
+//				if (ips.getIterations() == ips.getMaxIterations())
+//					finishedDrawingTimer++;
+//				if (finishedDrawingTimer == 1){
+////				if (mainRenderer.allowRedraw){
+//					visRefreshTime = t;
+//					visRedraw = true;
+//				}
+//				visMouseMoveCouter++;
 				
+				visRedraw = true;
 				//visualization refresh
 				if (visRedraw){
-					visRedraw = false;
+//					visRedraw = false;
 					finishedDrawingTimer = 0;
 					State<Position> stateCursorImagePosition = FractalsMain.mainStateHolder.getState("cursor image position", Position.class);
-					stateCursorImagePosition.setValue(new Position(dd.getStart_x()+e.x*dd.getSpacing(), dd.getStart_y()+e.y*dd.getSpacing()));
+					stateCursorImagePosition.setValue(new Position(dd.getStart_x()+(e.x/(double)dd.getDim_goal_x())*dd.getDelta_x(), dd.getStart_y()+(e.y/(double)dd.getDim_goal_y())*dd.getDelta_y()));
 					ips.setParameters(stateCursorImagePosition.getValue(), dd, FractalsMain.mainStateHolder.getState("visulization steps", Integer.class).getValue());
 				}
 			}
 		});
-		
-		TabFolder tabFolder = new TabFolder(sashForm, SWT.NONE);
-		
+	}
+
+	private void setupPropertyTab(TabFolder tabFolder) {
 		TabItem tbtmStatus = new TabItem(tabFolder, SWT.NONE);
 		tbtmStatus.setText("Eigenschaften");
 		
@@ -346,9 +353,10 @@ public class MainWindow {
 		btnBildSpeichern.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
-				save = true;
-				System.out.println("save -> true");
-				canvas.redraw();
+//				save = true;
+//				System.out.println("save -> true");
+//				canvas.redraw();
+				new SaveImageDialog(shell, SWT.NONE);
 			}
 		});
 		btnBildSpeichern.setText("Bild speichern...");
@@ -415,12 +423,18 @@ public class MainWindow {
 		});
 		button_3.setText("-");
 		
-		
 		scrolledComposite.setContent(composite);
 		scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
+		setupStateTable(composite_7);
+	}
+
+	private void setupStateTable(Composite composite_7) {
 		
-		for (State<?> state : FractalsMain.mainStateHolder.getStates()) {
+		ArrayList<State<?>> applicableStates = new ArrayList<>();
+		applicableStates.addAll(FractalsMain.mainStateHolder.getStates());
+		
+		for (State<?> state : applicableStates) {
 			
 			if (!state.isVisible())
 				continue;
@@ -510,8 +524,39 @@ public class MainWindow {
 				}
 			}
 		}
+	}
+	
+	public void resetPerformanceBars() {
+		//TODO dispose StateChangeListeners?! extend ProgressBar?
+		for (ProgressBar pb : performanceBars) {
+			pb.dispose();
+		}
+		performanceBars.clear();
 		
-		
+		ThreadManager threadManager = FractalsMain.threadManager;
+		for (WorkerThread thread : threadManager.getThreads()) {
+			
+			ProgressBar bar = new ProgressBar(composite_performance_bars, SWT.SMOOTH);
+			performanceBars.add(bar);
+			State<Integer> state = thread.getStateHolder().getStateIterationsPerSecond();
+			StateChangeListener<Integer> stateChangeListener = new StateChangeListener<Integer>(state).addStateChangeAction(new StateChangeAction() {
+				@Override
+				public void update() {
+					int val = (Integer)getState().getValue();
+					for (ProgressBar pb : performanceBars) {
+						if (pb.getMaximum() < val) {
+							pb.setMaximum(val);
+						}
+					}
+					bar.setSelection(val);
+				}
+			});
+			state.addStateListener(stateChangeListener);
+			addStateChangeListener(stateChangeListener);
+		}
+	}
+
+	private void setupPerformanceTab(TabFolder tabFolder) {
 		TabItem tbtmPerformance = new TabItem(tabFolder, SWT.NONE);
 		tbtmPerformance.setText("Performance");
 		
@@ -520,21 +565,20 @@ public class MainWindow {
 		scrolledComposite_3.setExpandHorizontal(true);
 		scrolledComposite_3.setExpandVertical(true);
 		
-		Composite composite_3 = new Composite(scrolledComposite_3, SWT.NONE);
-		composite_3.setLayout(new GridLayout(2, false));
+		composite_performance_bars = new Composite(scrolledComposite_3, SWT.NONE);
+		composite_performance_bars.setLayout(new GridLayout(2, false));
 		
-		Label lblNewLabel = new Label(composite_3, SWT.NONE);
+		Label lblNewLabel = new Label(composite_performance_bars, SWT.NONE);
 		lblNewLabel.setText("New Label");
 		
-		progressBar = new ProgressBar(composite_3, SWT.SMOOTH);
-		
-		Label lblNewLabel_1 = new Label(composite_3, SWT.NONE);
+		Label lblNewLabel_1 = new Label(composite_performance_bars, SWT.NONE);
 		lblNewLabel_1.setText("New Label");
 		
-		progressBar_1 = new ProgressBar(composite_3, SWT.SMOOTH);
-		scrolledComposite_3.setContent(composite_3);
-		scrolledComposite_3.setMinSize(composite_3.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-		
+		scrolledComposite_3.setContent(composite_performance_bars);
+		scrolledComposite_3.setMinSize(composite_performance_bars.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	}
+
+	private void setupLogTab(TabFolder tabFolder) {
 		TabItem tbtmLog = new TabItem(tabFolder, SWT.NONE);
 		tbtmLog.setText("Log");
 		
@@ -550,21 +594,32 @@ public class MainWindow {
 		gl_composite_10.marginWidth = 1;
 		composite_10.setLayout(gl_composite_10);
 		
-		final StyledText styledText = new StyledText(composite_10, SWT.BORDER);
-		styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-		styledText.setSize(65, 15);
-		styledText.setAlwaysShowScrollBars(false);
-		styledText.setEditable(false);
-		
-		text_1 = new Text(composite_10, SWT.BORDER);
-		text_1.addTraverseListener(new TraverseListener() {
-			public void keyTraversed(TraverseEvent e) {
-				inputLogger.log("Entered: "+text_1.getText());
-				text_1.setText("");
+		text_filter = new Text(composite_10, SWT.BORDER);
+		final StyledText styledText_log = new StyledText(composite_10, SWT.BORDER);
+		text_filter.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		text_filter.setMessage("Filter");
+		text_filter.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				updateLog(styledText_log, text_filter.getText());
 			}
 		});
-		text_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
-		text_1.setSize(76, 21);
+		
+		styledText_log.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		styledText_log.setSize(65, 15);
+		styledText_log.setEditable(false);
+		styledText_log.setFont(new org.eclipse.swt.graphics.Font(display, "Lucida Sans Typewriter", 10, SWT.NONE));
+		
+		text_commandline = new Text(composite_10, SWT.BORDER);
+		text_commandline.addTraverseListener(new TraverseListener() {
+			public void keyTraversed(TraverseEvent e) {
+				inputLogger.log("Entered: "+text_commandline.getText());
+				text_commandline.setText("");
+			}
+		});
+		text_commandline.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		text_commandline.setSize(76, 21);
+		text_commandline.setMessage("Enter commands here");
 		
 		scrolledComposite_2.setContent(composite_10);
 		scrolledComposite_2.setMinSize(composite_10.computeSize(SWT.DEFAULT, SWT.DEFAULT));
@@ -572,32 +627,7 @@ public class MainWindow {
 		scl.addStateChangeAction(new StateChangeAction() {
 			@Override
 			public void update() {
-				display.syncExec(new Runnable(){
-					@Override
-					public void run() {
-						StringBuilder text = new StringBuilder();
-						ArrayList<StyleRange> ranges = new ArrayList<>();
-						for (Message msg : new ArrayList<>(Logger.getLog())){
-							
-							StyleRange sr = new StyleRange();
-							sr.start = text.length();
-							
-							sr.length = msg.getCategory().getName().length()+3;
-							if (msg.getPrefix() != null)
-								sr.length += msg.getPrefix().length();
-							
-							text.append(msg.getLogString()).append("\r\n");
-							
-							sr.foreground = msg.getCategory().getColor();
-							ranges.add(sr);
-						}
-						styledText.setText(text.toString());
-						for (int i = 0  ; i < ranges.size() ; i++){
-							styledText.setStyleRange(ranges.get(i));
-						}
-						styledText.setTopIndex(styledText.getLineCount()-1);
-					}
-				});
+				updateLog(styledText_log, text_filter.getText());
 			}
 		});
 		Logger.state.addStateListener(scl);
@@ -606,7 +636,9 @@ public class MainWindow {
 		ScrolledComposite scrolledComposite_1 = new ScrolledComposite(tabFolder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		scrolledComposite_1.setExpandHorizontal(true);
 		scrolledComposite_1.setExpandVertical(true);
-		
+	}
+
+	private void setupContextMenu(TabFolder tabFolder) {
 		Menu menu_2 = new Menu(tabFolder);
 		tabFolder.setMenu(menu_2);
 		
@@ -645,8 +677,6 @@ public class MainWindow {
 				FractalsMain.threadManager.startClient();
 			}
 		});
-		sashForm.setWeights(new int[] {2, 1});
-
 	}
 
 	private <T> StateListener<T> addStateChangeListener(StateChangeListener<T> stateChangeListener) {
@@ -670,6 +700,8 @@ public class MainWindow {
 
 	public void setMainRenderer(FractalRendererSWT renderer) {
 		mainRenderer = renderer;
+		renderer.init();
+		CategoryLogger.INFO.log("mainwindow", "set main renderer");
 	}
 
 
@@ -691,5 +723,39 @@ public class MainWindow {
 
 	public FractalRendererSWT getMainRenderer() {
 		return mainRenderer;
+	}
+
+	private void updateLog(final StyledText styledText_log, String filter) {
+		display.syncExec(new Runnable(){
+			@Override
+			public void run() {
+				StringBuilder text = new StringBuilder();
+				ArrayList<StyleRange> ranges = new ArrayList<>();
+				for (Message msg : new ArrayList<>(Logger.getLog())){
+					
+					if (filter != null && filter.length() > 0) {
+						if (!msg.getCategoryPrefix().contains(filter))
+							continue;
+					}
+					
+					StyleRange sr = new StyleRange();
+					sr.start = text.length();
+					
+					sr.length = msg.getCategory().getName().length()+3;
+					if (msg.getPrefix() != null)
+						sr.length += msg.getPrefix().length();
+					
+					text.append(msg.getLogString()).append("\r\n");
+					
+					sr.foreground = msg.getCategory().getColor();
+					ranges.add(sr);
+				}
+				styledText_log.setText(text.toString());
+				for (int i = 0  ; i < ranges.size() ; i++){
+					styledText_log.setStyleRange(ranges.get(i));
+				}
+				styledText_log.setTopIndex(styledText_log.getLineCount()-1);
+			}
+		});
 	}
 }

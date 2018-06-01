@@ -1,18 +1,40 @@
 package de.felixperko.fractals.Tasks.perf;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.NumberUtil;
 
-public class PerfInstance {
+public class PerfInstance implements Comparable<PerfInstance>{
 	
+	private static final Comparator<PerfInstance> COMPARATOR_REVERSED = new Comparator<PerfInstance>() {
+
+		@Override
+		public int compare(PerfInstance o1, PerfInstance o2) {
+			return o2.compareTo(o1);
+		}
+	};
 	static CategoryLogger warningLogger = CategoryLogger.WARNING_SERIOUS;
 	static CategoryLogger perf = PerformanceMonitor.logger;
 	
-	public static PerfInstance begin(String name){
-		return new PerfInstance(name);
+	public static PerfInstance createNewAndBegin(String name){
+		PerfInstance inst = new PerfInstance(name);
+		inst.start();
+		return inst;
+	}
+	
+	public static PerfInstance createNewSubInstanceAndBegin(String name, PerfInstance parent) {
+		PerfInstance inst = new PerfInstance(name);
+		parent.addChild(inst);
+		inst.start();
+		return inst;
 	}
 	
 	String name;
@@ -24,6 +46,8 @@ public class PerfInstance {
 	boolean ended;
 	boolean logging;
 	boolean refreshWarning = true;
+	
+	Map<String, PerfInstance> childInstances = new HashMap<>();
 	
 	List<Runnable> runWhenEnded = new ArrayList<>();
 	
@@ -121,5 +145,64 @@ public class PerfInstance {
 
 	public void printSecondsToLog(int precision) {
 		perf.log("instance/"+name, "Finished after "+getDeltaInS(precision)+"s");
+	}
+	
+	public PerfInstance addChild(PerfInstance child) {
+		childInstances.put(child.getName(), child);
+		return child; //for chaining
+	}
+	
+	public PerfInstance getChild(String childName) {
+		return childInstances.get(childName);
+	}
+	
+	public Map<String, PerfInstance> getAllChilds(){
+		return childInstances;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void printChildSecondsToLog(int precision) {
+		Map<String, String> messages = new LinkedHashMap<>();
+		String parentPrefix = "instance/"+name;
+		messages.put(parentPrefix, "Finished after "+getDeltaInS(precision)+"s");
+		int maxPrefixLength = parentPrefix.length();
+		int maxMessageLength = messages.get(parentPrefix).length();
+		for (PerfInstance child : childInstances.values().stream().sorted(COMPARATOR_REVERSED).collect(Collectors.toList())) {
+			String childPrefix = getChildLogPrefix(child);
+			String childMessage = getPercentageOfParent(child, precision)+"% ("+child.getDeltaInS(precision)+"s)";
+			messages.put(childPrefix, childMessage);
+			if (childPrefix.length() > maxPrefixLength)
+				maxPrefixLength = childPrefix.length();
+			if (childMessage.length() > maxMessageLength)
+				maxMessageLength = childMessage.length();
+		}
+		StringBuilder separator = new StringBuilder();
+		for (int i = 0 ; i < maxPrefixLength-parentPrefix.length()+maxMessageLength ; i++)
+			separator.append("-");
+		perf.log(parentPrefix, separator.toString());
+		for (Entry<String, String> e : messages.entrySet()) {
+			StringBuilder message = new StringBuilder();
+			int whitespaces = maxPrefixLength - e.getKey().length();
+			for (int i = 0 ; i < whitespaces ; i++)
+				message.append(" ");
+			message.append(e.getValue());
+			perf.log(e.getKey(), message.toString());
+		}
+	}
+	
+	private String getChildLogPrefix(PerfInstance child) {
+		return "instance/"+name+"/"+child.getName();
+	}
+
+	private double getPercentageOfParent(PerfInstance child, int precision) {
+		return NumberUtil.getRoundedPercentage((((double)child.getFinalDelta())/getFinalDelta()), precision);
+	}
+
+	@Override
+	public int compareTo(PerfInstance o) {
+		return Long.compare(getCurrentOrFinalDelta(), o.getCurrentOrFinalDelta());
 	}
 }

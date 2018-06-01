@@ -38,19 +38,18 @@ public class Message {
 		return this;
 	}
 	
-	public String getLogString() {
-		
+	public String getCategoryPrefix() {
 		StringBuilder sb = new StringBuilder();
-		
 		sb.append("[").append(category.category);
-		
 		if (prefix != null){
 			sb.append("/").append(prefix);
 		}
-		
-		sb.append("] ").append(message);
-		
+		sb.append("]");
 		return sb.toString();
+	}
+	
+	public String getLogString() {
+		return getCategoryPrefix()+" "+message;
 	}
 	
 	

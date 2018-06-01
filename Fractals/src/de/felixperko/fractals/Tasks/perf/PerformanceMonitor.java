@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.WorkerPhase;
 import de.felixperko.fractals.Tasks.WorkerPhaseChange;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
@@ -27,11 +28,14 @@ public class PerformanceMonitor {
 	
 	long startTime = 0;
 	
-	public PerformanceMonitor(ThreadManager threadManager) {
-		this.threadManager = threadManager;
+	public PerformanceMonitor() {
 	}
 	
-	public void startPhase() {
+	public void startPhase() throws IllegalStateException{
+		if (threadManager == null)
+			threadManager = FractalsMain.threadManager;
+		if (threadManager == null)
+			throw new IllegalStateException("PerformanceMonitor can't start: ThreadManager not set.");
 		for (WorkerThread thread : threadManager.getThreads()) {
 			thread.resetPerformanceMonitor(this);
 		}

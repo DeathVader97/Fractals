@@ -37,7 +37,9 @@ public class StateChangeListener<T> extends StateListener<T> {
 		actions.forEach(a -> a.update());
 	}
 	
-	public void addStateChangeAction(StateChangeAction action) {
-		actions.add(action);
+	public StateChangeListener<T> addStateChangeAction(StateChangeAction stateChangeAction) {
+		stateChangeAction.setState(state);
+		actions.add(stateChangeAction);
+		return this;
 	}
 }

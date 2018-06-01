@@ -12,6 +12,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.perf.PerfInstance;
 
 import static de.felixperko.fractals.WindowHandler.*;
 
@@ -42,6 +43,11 @@ public class FractalRenderer {
 	int maxIterations = 1000000;
 	
 	public FractalRenderer() {
+	}
+	
+	public void init() {
+		int w = FractalsMain.mainWindow.canvas.getSize().x;
+		int h = FractalsMain.mainWindow.canvas.getSize().y;
 		dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, (int)Math.round(w*q), (int)Math.round(h*q), w, h, maxIterations);
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
@@ -60,7 +66,7 @@ public class FractalRenderer {
 	public synchronized void render(Graphics g, boolean save) {
 		int finishedDepth = checkDrawConditions();
 		if (redraw || save)
-			redraw(save, finishedDepth);
+			redraw(save, finishedDepth, null);
 		g.drawImage(disp_img, 0, 0, WindowHandler.w, WindowHandler.h, disp_x, disp_y, disp_x2, disp_y2, null);
 	}
 	
@@ -69,7 +75,7 @@ public class FractalRenderer {
 		TaskManager tm = FractalsMain.taskManager;
 		if (tm.getJobId() != currentGoalJob) {
 			currentGoalJob = tm.getJobId();
-			nextGoal = 0.2;
+			nextGoal = 0.2;//TODO testcode, normally 0.2
 			currentDrawDepth = 0;
 			newFinish = true;
 			newPartFinish = true;
@@ -86,7 +92,8 @@ public class FractalRenderer {
 		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
 			if (newPartFinish) {
 				redraw = true;
-				nextGoal = tm.last_step_closed_relative/2;
+				nextGoal = tm.last_step_closed_relative/2;//TODO testcode, normally /2
+				newPartFinish = false;
 				currentDrawDepth = finishedDepth;
 				System.out.println("redraw temp");
 			}
@@ -96,7 +103,7 @@ public class FractalRenderer {
 		return finishedDepth;
 	}
 
-	protected void redraw(boolean save, int finishedDepth) {
+	protected void redraw(boolean save, int finishedDepth, PerfInstance parentPerfInstance) {
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
@@ -196,8 +203,8 @@ public class FractalRenderer {
 	
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
 		try {
-			double relX = mouse_x/(double)dataDescriptor.getDim_goal_x();
-			double relY = mouse_y/(double)dataDescriptor.getDim_goal_y();
+			double relX = spacing_factor < 1 ? mouse_x/(double)dataDescriptor.getDim_goal_x() : 0.5;
+			double relY = spacing_factor < 1 ? mouse_y/(double)dataDescriptor.getDim_goal_y() : 0.5;
 			double midX = relX*(disp_x2)-disp_x;
 			double midY = relY*(disp_y2)-disp_y;
 //			dataDescriptor.start_x = dataDescriptor.getXcoords()[(int)Math.round(midX*q)] - dataDescriptor.delta_x/2.;
@@ -240,9 +247,10 @@ public class FractalRenderer {
 
 	public void setLocation(Location location) {
 		double desiredRatio = ((double)dataDescriptor.getDim_sampled_x())/dataDescriptor.getDim_sampled_y();
-		double deltaX = location.getX2()-location.getX1();
-		double deltaY = location.getY2()-location.getY1();
+		double deltaX = (location.getX2()-location.getX1());
+		double deltaY = (location.getY2()-location.getY1());
 		double adjustedDeltaY = deltaX/desiredRatio;
+		System.out.println("deltaY: "+deltaY+" adjusted: "+adjustedDeltaY);
 		double shiftY = 0.5*(adjustedDeltaY-deltaY);
 		dataDescriptor.setStart_x(location.getX1());
 		dataDescriptor.setStart_y(location.getY1()-shiftY);

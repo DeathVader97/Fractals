@@ -3,19 +3,29 @@ package de.felixperko.fractals.Tasks;
 import java.util.ArrayList;
 
 import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.util.CategoryLogger;
 
 public class LocalTaskProvider extends TaskProvider {
 	
 	TaskManager taskManager;
 	
-	public LocalTaskProvider(TaskManager taskManager, DataDescriptor dataDescriptor) {
-		super(dataDescriptor);
+	public LocalTaskProvider() {
+		super();
 		this.pref_bufferSize = 0;
-		this.taskManager = taskManager;
 	}
 
 	@Override
-	public Task getTask() {
+	public Task getTask() throws IllegalStateException{
+		if (taskManager == null) {
+			taskManager = FractalsMain.taskManager;
+			if (taskManager == null)
+				throw new IllegalStateException("LocalTaskProvider can't provide tasks: TaskManager not set.");
+		}
+		if (dataDescriptor == null) {
+			CategoryLogger.WARNING.log("localtaskprovider", "dataDescriptor isn't set: returned no task");
+			return null;
+		}
 		return taskManager.getTask();
 	}
 

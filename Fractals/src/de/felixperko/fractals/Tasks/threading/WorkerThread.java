@@ -26,6 +26,8 @@ public class WorkerThread extends Thread {
 	TaskProvider taskProvider;
 //	public String name;
 	
+	WorkerThreadStateHolder stateHolder = new WorkerThreadStateHolder(this);
+	
 	Task task;
 	
 	WorkerPhase phase = DEFAULT_PHASE;
@@ -44,6 +46,8 @@ public class WorkerThread extends Thread {
 	}
 	
 	double lastIterationsPerMs = 0;
+	double[] last10IterationsPerS = new double[10];
+	int last10IterationsIndex = 0;
 	long taskFinishedTime = 0;
 	
 	@Override
@@ -115,6 +119,13 @@ public class WorkerThread extends Thread {
 	
 	private void setLastIterationsPerMs(double iterationsPerMs) {
 		this.lastIterationsPerMs = iterationsPerMs;
+		last10IterationsPerS[last10IterationsIndex] = (int)(lastIterationsPerMs*1000);
+		last10IterationsIndex++;
+		last10IterationsIndex %= last10IterationsPerS.length;
+		double v = 0;
+		for (double itps : last10IterationsPerS)
+			v += itps;
+		stateHolder.stateIterationsPerSecond.setValue((int)v);
 	}
 
 	public void resetPerformanceMonitor(PerformanceMonitor performanceMonitor) {
@@ -134,5 +145,9 @@ public class WorkerThread extends Thread {
 
 	public long getIterations() {
 		return iterations;
+	}
+
+	public WorkerThreadStateHolder getStateHolder() {
+		return stateHolder;
 	}
 }

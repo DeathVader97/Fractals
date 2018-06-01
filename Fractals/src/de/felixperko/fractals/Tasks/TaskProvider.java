@@ -10,7 +10,10 @@ public abstract class TaskProvider {
 	ArrayList<Task> buffer;
 	public DataDescriptor dataDescriptor;
 	
-	public TaskProvider(DataDescriptor dataDescriptor) {
+	public TaskProvider() {
+	}
+	
+	public void setDataDescriptor(DataDescriptor dataDescriptor) {
 		this.dataDescriptor = dataDescriptor;
 	}
 	

@@ -1,6 +1,8 @@
 package de.felixperko.fractals;
 
-public class DataDescriptor {
+import de.felixperko.fractals.util.CategoryLogger;
+
+public class DataDescriptor{
 	
 	private double start_x, start_y;
 	private double end_x, end_y;
@@ -49,6 +51,7 @@ public class DataDescriptor {
 			ycoords[i] = start_y + delta_y * i/samples_y;
 		}
 		calculatedCoords = true;
+		CategoryLogger.INFO.log("datadescriptor", "Calculated coordinates.");
 	}
 
 	public double[] getXcoords() throws Exception{
@@ -104,8 +107,6 @@ public class DataDescriptor {
 	}
 
 	public void setGoalDimensions(int width, int height) {
-		this.delta_x = this.delta_y*width/height;
-		this.end_x = start_x + delta_x;
 		this.dim_goal_x = width;
 		this.dim_goal_y = height;
 	}
@@ -116,6 +117,15 @@ public class DataDescriptor {
 
 	public void setDim_sampled_y(int dim_sampled_y) {
 		this.dim_sampled_y = dim_sampled_y;
+	}
+	
+	public void setSampleDimensions(int x, int y) {
+		this.dim_sampled_x = x;
+		this.dim_sampled_y = y;
+		this.spacing = delta_x/x;
+		if (spacing != delta_y/y) {
+			CategoryLogger.WARNING.log("datadescriptor", "Horizontal spacing doesn't align with vertical dimensions (spacingX="+spacing+" spacingY="+(delta_y/y));
+		}
 	}
 
 	public void setMaxIterations(int maxIterations) {
@@ -132,10 +142,12 @@ public class DataDescriptor {
 
 	public void setStart_x(double start_x) {
 		this.start_x = start_x;
+		this.end_x = start_x + delta_x;
 	}
 
 	public void setStart_y(double start_y) {
 		this.start_y = start_y;
+		this.end_y = start_y + delta_y;
 	}
 
 	public double getEnd_x() {
@@ -158,5 +170,9 @@ public class DataDescriptor {
 
 	public void setSpacing(double spacing) {
 		this.spacing = spacing;
+		this.delta_x = dim_sampled_x*spacing;
+		this.delta_y = dim_sampled_y*spacing;
+		this.end_x = start_x + delta_x;
+		this.end_y = start_y + delta_y;
 	}
 }

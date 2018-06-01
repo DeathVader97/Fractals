@@ -18,7 +18,7 @@ public class TaskManager {
 	DataDescriptor dd;
 	DataContainer dc;
 	
-	int sample_size = 100000;
+	int sample_size = 1000;
 	int iteration_step_size = 50;
 	int iteration_step_size_incr = 100;
 	int iteration_step_size_incr_incr = 500;
@@ -62,7 +62,6 @@ public class TaskManager {
 	}
 	
 	public synchronized void generateTasks() {
-		FractalsMain.performanceMonitor.startPhase();
 		int total_samples = dd.getDim_sampled_x()*dd.getDim_sampled_y();
 		for (int i = 0 ; i < total_samples*denyApproximationSamplesChance ; i++) {
 			denyApproximationSamples.add((int)(Math.random()*total_samples));

@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Display;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
@@ -38,7 +39,7 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	State<Integer> stateVisulizationSteps;
 	
-	IterationPositionThread ipt = FractalsMain.threadManager.getIterationWorkerThread();
+	IterationPositionThread ipt;
 	
 	org.eclipse.swt.graphics.Color black;
 	
@@ -47,41 +48,57 @@ public class FractalRendererSWT extends FractalRenderer {
 		this.display = display;
 		this.black = new org.eclipse.swt.graphics.Color(display, new RGB(0,0,0));
 //		draw_img = new Image(display, new Rectangle(0, 0, dataDescriptor.dim_sampled_x, dataDescriptor.dim_sampled_y));
+	}
+	
+	@Override
+	public void init() {
+		super.init();
 		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.getDim_goal_x(), dataDescriptor.getDim_goal_y()));
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
+	}
+	
+	public void startIterationPositionThread() {
+		ipt = FractalsMain.threadManager.getIterationWorkerThread();
 	}
 	
 //	public boolean allowRedraw = true;
 	
 	public void render(PaintEvent e, boolean save) {
-		PerfInstance render = new PerfInstance("render");
-		render.start();
+		PerfInstance renderPerf = PerfInstance.createNewAndBegin("render");
 		try {
+			PerfInstance checkConditionsPerf = PerfInstance.createNewSubInstanceAndBegin("check_conditions", renderPerf);
+			
 			save = FractalsMain.mainWindow.save;
 			int finishedDepth = checkDrawConditions();
+			
+			checkConditionsPerf.end();
+			
 			System.out.println("render redraw="+redraw+" save="+save);
 			Rectangle bounds = FractalsMain.mainWindow.canvas.getBounds();
 			if (redraw || save) {
 				if (!bounds.equals(lastBounds)) {
+					PerfInstance resizeResetPerf = PerfInstance.createNewSubInstanceAndBegin("resize_reset", renderPerf);
 					lastBounds = bounds;
 					resized();
+					resizeResetPerf.end();
 				}
-				redraw(save, finishedDepth);
+				redraw(save, finishedDepth, renderPerf);
 				System.out.println("draw with "+disp_x+","+disp_y+" - "+disp_x2+","+disp_y2);
+				PerfInstance drawImagePerf = PerfInstance.createNewSubInstanceAndBegin("draw_image", renderPerf);
 				e.gc.drawImage(disp_img, disp_x, disp_y, disp_x2-disp_x, disp_y2-disp_y, 0, 0, bounds.width, bounds.height);
+				drawImagePerf.end();
 				if (save)
 					FractalsMain.mainWindow.save = false;
 			}
 			int visSteps = stateVisulizationSteps.getValue();
 			disp_changed = true; //TODO Testcode
 			if (disp_changed) {
+				PerfInstance drawPathPerf = PerfInstance.createNewSubInstanceAndBegin("draw_path", renderPerf);
 				disp_changed = false;
 
 				int imgW = disp_img.getBounds().width;
 				int imgH = disp_img.getBounds().height;
 				
-				int sourceMaxX = disp_x2 <= imgW ? disp_x2 : imgW;
-				int sourceMaxY = disp_y2 <= imgH ? disp_y2 : imgH;
 				int sourceX = disp_x;
 				int sourceY = disp_y;
 				int sourceW = disp_x2-disp_x;
@@ -130,50 +147,23 @@ public class FractalRendererSWT extends FractalRenderer {
 					ex.printStackTrace();
 				}
 				
-//				int disp_w = disp_x2-disp_x;
-//				int disp_h = disp_y2-disp_y;
-//				int imgW = disp_img.getBounds().width;
-//				int imgH = disp_img.getBounds().height;
-//				int minDispX = disp_x >= 0 ? disp_x : 0;
-//				int minDispY = disp_y >= 0 ? disp_y : 0;
-////				int adjDispW = (disp_x2 >= imgW) ? ((int)((disp_x2*((double)imgW/disp_w)))-minDispX) : (disp_x2-disp_x);
-//				int adjDispW = disp_w;
-//				if (disp_x2 >= imgW) {
-//					adjDispW = (disp_w - (disp_x2-imgW));
-//					disp_w -= (disp_x2-imgW);
-//				}
-//				int adjDispH = (disp_y2 >= imgH) ? ((int)((disp_y2*((double)imgH/disp_h)))-minDispY) : (disp_y2-disp_y);
-//				int minDrawX = (int) (disp_x >= 0 ? 0 : bounds.width*((double)-disp_x)/disp_w);
-//				int minDrawY = (int) (disp_y >= 0 ? 0 : bounds.width*((double)-disp_y)/disp_h);
-////				int maxDrawX = (int) (adjDispW >= disp_w ? bounds.width : bounds.width*(((double)adjDispW)/imgW));
-//				int maxDrawW = (int) (adjDispW >= disp_w ? bounds.width : bounds.width - (adjDispW - disp_w));
-//				int maxDrawH = (int) (adjDispH < imgH ? bounds.height : bounds.height*(((double)adjDispH)/imgH));
-//				System.out.println(minDrawX+","+minDrawY+" - "+maxDrawW+","+maxDrawH);
-//				e.gc.drawImage(disp_img, minDispX, minDispY, adjDispW, adjDispH, minDrawX, minDrawY, maxDrawW, maxDrawH);
-				
+				System.out.println(visSteps+", "+ipt.getIterations());
 				int calculatedIterations = ipt.getIterations();
 				if (calculatedIterations < visSteps)
 					visSteps = calculatedIterations;
 				if (visSteps > 0) {
-//					allowRedraw = false;
 					ArrayList<Position> positions = ipt.getPositions();
-//					Position c = ((Position) FractalsMain.mainStateHolder.getState("cursor image position", Position.class).getOutput());
 					Position p = positions.get(0);
 					Position pScreen = null;
 					Position p2 = null;
 					Position p2Screen = null;
-//					e.gc.setAntialias(SWT.ON);
+					e.gc.setAntialias(SWT.ON);
 					long t1 = System.nanoTime();
 					for (int i = 1 ; i < visSteps ; i++) {
 						org.eclipse.swt.graphics.Color color = new org.eclipse.swt.graphics.Color(display, new RGB((i*360f/visSteps)*0.6666f+0.0f*360, 0.5f, 1f));
-//						p2 = p.complexSquared();
-//						p2.setX(p2.getX()+p.getX());
-//						p2.setY(p2.getY()+p.getY());
 						p2 = positions.get(i);
 						p2Screen = p2.planeToScreen(dataDescriptor);
 						pScreen = p.planeToScreen(dataDescriptor);
-	//					if (i != 0) {
-//						System.out.println((((float)i*10)/visSteps));
 						e.gc.setForeground(color);
 						e.gc.setAlpha((int)(Math.pow(i, -0.5)*(255-16)+16));
 						e.gc.drawLine((int)(pScreen.getX()), (int)(pScreen.getY()), (int)(p2Screen.getX()), (int)(p2Screen.getY()));
@@ -186,38 +176,25 @@ public class FractalRendererSWT extends FractalRenderer {
 					}
 					long t2 = System.nanoTime();
 					System.out.println("drawing "+visSteps+" took "+(int)((t2-t1)*NumberUtil.NS_TO_MS)+"ms.");
-//					allowRedraw = true;
 				}
+				drawPathPerf.end();
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		render.end();
-		render.printSecondsToLog(3);
+		renderPerf.end();
+		renderPerf.printChildSecondsToLog(3);
 	}
 	
 	@Override
-	protected void redraw(boolean save, int finishedDepth) {
-		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-//		int width = ;
-//		int height = ;
-//		ImageData draw_data = draw_img.getImageData();
-//		draw_img.dispose();
-//		draw_img = new Image(display, draw_data);
+	protected void redraw(boolean save, int finishedDepth, PerfInstance parentPerfInstance) {
 		lastDrawn = System.nanoTime();
-		
-//		GC gc = new GC(disp_img);
-//		gc.setAntialias(SWT.ON);
 		
 		if (redraw || drawn_depth != finishedDepth) {
 			ImageData data = disp_img.getImageData();
 			while (true){
 				try {
-					putOnImageData(disp_img.getBounds().width, disp_img.getBounds().height, data);
+					putOnImageData(disp_img.getBounds().width, disp_img.getBounds().height, data, parentPerfInstance);
 					break;
 				} catch (ArrayIndexOutOfBoundsException e){
 					e.printStackTrace();
@@ -225,13 +202,7 @@ public class FractalRendererSWT extends FractalRenderer {
 			}
 			disp_img.dispose();
 			disp_img = new Image(display, data);
-//			try {
-//				gc.drawImage(draw_img, 0, 0, draw_img.getBounds().width, draw_img.getBounds().height, 0, 0, disp_img.getBounds().width, disp_img.getBounds().height);
-				System.out.println("disp_img updated");
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				System.out.println(FractalsMain.mainWindow.canvas.getBounds().toString());
-//			}
+			CategoryLogger.INFO.log("renderer", "drew image");
 		}
 		if (save) {
 			exportImage();
@@ -247,31 +218,32 @@ public class FractalRendererSWT extends FractalRenderer {
 		drawn_depth = finishedDepth;
 	}
 
-	private void putOnImageData(int width, int height, ImageData draw_data) {
+	private void putOnImageData(int width, int height, ImageData draw_data, PerfInstance parentPerfInstance) {
 		int qualityScaling = dataDescriptor.getDim_sampled_x()/dataDescriptor.getDim_goal_x();
-		SampledDataContainer sdc = new SampledDataContainer(dataContainer, qualityScaling);
+		SampledDataContainer sdc = new SampledDataContainer(dataContainer, qualityScaling, parentPerfInstance);
 		PaletteData palette = new PaletteData(0xFF , 0xFF00 , 0xFF0000);
 		draw_data.palette = palette;
-		int firstFinished = -1;
-		for (int imgx = 0; imgx < width; imgx++) {
-			for (int imgy = 0; imgy < height; imgy++) {
-				int i = imgx+imgy*width;
-				int v = dataContainer.samples[i];
-				if (v > 0 && (firstFinished == -1 || v < firstFinished))
-					firstFinished = v;
-			}
-		}
+//		int firstFinished = -1;
+//		for (int imgx = 0; imgx < width; imgx++) {
+//			for (int imgy = 0; imgy < height; imgy++) {
+//				int i = imgx+imgy*width;
+//				int v = dataContainer.samples[i];
+//				if (v > 0 && (firstFinished == -1 || v < firstFinished))
+//					firstFinished = v;
+//			}
+//		}
+		PerfInstance setPixelPerf = PerfInstance.createNewSubInstanceAndBegin("set_pixel", parentPerfInstance);
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
 				double it = sdc.samples[imgx][imgy];
 				double absoluteSquared = sdc.absSq[imgx][imgy];
 				if (it > 0) {
-					float sat = (float)(it+3-Math.log(Math.log(absoluteSquared)*0.5/Math.log(2))/Math.log(2));
+					float sat = (float)(it+1-Math.log(Math.log(absoluteSquared)*0.5)/Math.log(2));
 //					float sat = (float)(it);
 					
 					float sat2 = (float) Math.log10(sat);
 
-					float b = (float)Math.pow(sdc.fluctuance[imgx][imgy],0.2);
+					float b = sdc.fluctuance == null ? 1 : (float)Math.pow(sdc.fluctuance[imgx][imgy],0.2);
 					if (b > 1)
 						b = 1f;
 					else if (b < 0.5 || b == Float.NaN)
@@ -292,6 +264,7 @@ public class FractalRendererSWT extends FractalRenderer {
 				}
 			}
 		}
+		setPixelPerf.end();
 	}
 	
 	private void exportImage() {
@@ -318,6 +291,7 @@ public class FractalRendererSWT extends FractalRenderer {
 	
 	public void resized() {
 		Rectangle disp_bounds = FractalsMain.mainWindow.canvas.getBounds();
+		CategoryLogger.INFO.log("resizing "+dataDescriptor.getDim_goal_x()+","+dataDescriptor.getDim_goal_y()+" to "+disp_bounds.width+","+disp_bounds.height);
 		Rectangle calc_bounds = new Rectangle(0, 0, (int)Math.round(disp_bounds.width*q), (int)Math.round(disp_bounds.height*q));
 		disp_img.dispose();
 		disp_img = new Image(display, new Rectangle(0, 0, disp_bounds.width, disp_bounds.height));
@@ -337,10 +311,13 @@ public class FractalRendererSWT extends FractalRenderer {
 	public synchronized void setQuality(double quality) {
 		if (quality == q)
 			return;
-		dataDescriptor.setSpacing(dataDescriptor.getSpacing() / (double)quality/q);
 		this.q = quality;
+		double end_x = dataDescriptor.getEnd_x();
+		double end_y = dataDescriptor.getEnd_y();
 		dataDescriptor.setDim_sampled_x((int)Math.round(dataDescriptor.getDim_goal_x()*q));
 		dataDescriptor.setDim_sampled_y((int)Math.round(dataDescriptor.getDim_goal_y()*q));
+		dataDescriptor.setEnd_x(end_x);
+		dataDescriptor.setEnd_y(end_y);
 //		Rectangle draw_bounds = new Rectangle(0, 0, (int)Math.round(disp_img.getBounds().width*q), (int)Math.round(disp_img.getBounds().height*q));
 //		draw_img = new Image(display, new Rectangle(0, 0, draw_bounds.width, draw_bounds.height));
 		reset();

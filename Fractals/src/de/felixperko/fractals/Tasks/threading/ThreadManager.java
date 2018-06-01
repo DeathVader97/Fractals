@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.network.ClientThread;
 import de.felixperko.fractals.network.ServerThread;
@@ -15,6 +16,7 @@ public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
 	IterationPositionThread iterationWorkerThread;
+	
 	TaskProvider taskProvider;
 	
 	List<TaskProvider> providers = new ArrayList<>();
@@ -22,15 +24,19 @@ public class ThreadManager {
 	ServerThread serverThread = null;
 	ClientThread clientThread = null;
 	
-	public ThreadManager(int threads, TaskProvider taskProvider) {
-		startThreads(threads);
+	public ThreadManager() {
 	}
 	
 	public void setThreadCount(int threadCount) {
-		if (workerThreads.length > threadCount)
-			endThreads(workerThreads.length - threadCount);
-		else if (workerThreads.length < threadCount)
-			startThreads(threadCount - workerThreads.length);
+		if (workerThreads == null) {
+			startThreads(threadCount);
+		} else {
+			if (workerThreads.length > threadCount)
+				endThreads(workerThreads.length - threadCount);
+			else if (workerThreads.length < threadCount)
+				startThreads(threadCount - workerThreads.length);
+		}
+		FractalsMain.mainWindow.resetPerformanceBars();
 	}
 
 	private void endThreads(int count) {

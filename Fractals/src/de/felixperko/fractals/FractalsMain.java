@@ -13,7 +13,7 @@ public class FractalsMain{
 	
 	public static FractalsMain main;
 	
-	final static int HELPER_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+	public final static int HELPER_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 //	final static int HELPER_THREAD_COUNT = 1;
 	
 	public static WindowHandler windowHandler;
@@ -44,22 +44,16 @@ public class FractalsMain{
 			e.printStackTrace();
 		}
 		
-		threadManager = new ThreadManager(HELPER_THREAD_COUNT, null);
-		performanceMonitor = new PerformanceMonitor(threadManager);
+		performanceMonitor = new PerformanceMonitor();
 		
 //		FractalRenderer renderer = new FractalRenderer();
 		FractalRendererSWT renderer = new FractalRendererSWT(mainWindow.getDisplay());
 		
 //		windowHandler.getMainRenderer().setDataContainer(dataContainer);
 		
-		taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
-		taskManager.generateTasks();
-		
-		taskProvider = new LocalTaskProvider(taskManager, renderer.getDataDescriptor());
-		threadManager.addTaskProvider(taskProvider);
-		
-		mainWindow.setMainRenderer(renderer);
-		mainWindow.open();
+		taskProvider = new LocalTaskProvider();
+
+		mainWindow.open(renderer);
 		
 //		startRendering();
 	}
