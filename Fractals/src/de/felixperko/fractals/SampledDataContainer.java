@@ -48,7 +48,6 @@ public class SampledDataContainer {
 
 		
 		for (int x = 0 ; x < newDimX ; x++){
-			nextSample:
 			for (int y = 0 ; y < newDimY ; y++){
 				int startX2 = x*qualityScaling;
 				int startY2 = y*qualityScaling;
@@ -59,7 +58,7 @@ public class SampledDataContainer {
 					for (int y2 = startY2 ; y2 < startY2+qualityScaling ; y2++){
 						int index = y2*dim_sampled_x + x2;
 						int sample = container.samples[index];
-						if (sample < 0){
+						if (sample <= 0){
 							notFinished++;
 							continue;
 						}
@@ -72,7 +71,7 @@ public class SampledDataContainer {
 				double weight = 1d/(qualityScaling*qualityScaling - notFinished);
 				samples[x][y] = summedValue*weight;
 				absSq[x][y] = summedAbsSq*weight;
-				notFinishedFraction[x][y] = notFinished/(qualityScaling*qualityScaling);
+				notFinishedFraction[x][y] = notFinished/((float)qualityScaling*qualityScaling);
 			}
 		}
 		return true;
@@ -100,7 +99,7 @@ public class SampledDataContainer {
 		for (int x = 0 ; x < samples.length ; x++) {
 			for (int y = 0 ; y < samples[x].length ; y++) {
 				double s = samples[x][y];
-				adjSamples[x][y] = s < 0 ? 0 : Math.sqrt( s + 1 -  Math.log( Math.log(absSq[x][y])*0.5 ) / Math.log(2)  );
+				adjSamples[x][y] = s < 0 ? s : Math.sqrt( s + 1 -  Math.log( Math.log(absSq[x][y])*0.5 ) / Math.log(2)  );
 			}
 		}
 
@@ -123,6 +122,8 @@ public class SampledDataContainer {
 						iterationCount++;
 						double weight = weights[x2-min_x][y2-min_y];
 						double sample = adjSamples[x2][y2];
+						if (sample < 0)
+							continue;
 						buff_samples[i] = sample;
 						buff_weights[i] = weight;
 						avg += sample;
@@ -132,10 +133,15 @@ public class SampledDataContainer {
 				}
 				avg /= n;
 				double val = 0;
+				double notFinishedFactor = 0;
 				for (int j = 0 ; j < n ; j++) {
-					double a = buff_weights[j]*Math.abs(buff_samples[j]-avg);
-					if (a >= 0)
+					double a = buff_weights[j]*buff_weights[j]*Math.abs(buff_samples[j]-avg);
+					if (a > 0)
 						val += a;
+					else{
+						val = 10000;
+						break;
+					}
 				}
 //				val -= 1;
 //				fluctuance[x][y] = val >= 2 ? val : 2;
