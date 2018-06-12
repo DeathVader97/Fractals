@@ -79,7 +79,7 @@ public class SampledDataContainer {
 	
 	private void postprocess() {
 		
-		int rad = 2;
+		int rad = 1;
 		int radDim = rad*2+1;
 		
 		int dim_x = samples.length;
