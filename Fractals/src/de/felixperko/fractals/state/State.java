@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class State<T> {
+
+	//TODO introduce UI interfaces to separate state value restrictions from ui restrictions
 	
 	List<StateListener<T>> listeners = new ArrayList<>();
 	

@@ -46,7 +46,7 @@ public abstract class Task {
 //	}
 
 	public Task() {
-		// TODO testcode for task generalization
+		// TODO wip task generalization
 	}
 
 	public void run(DataDescriptor dataDescriptor) {

@@ -289,7 +289,7 @@ public class MainWindow {
 				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
 				
 				//timing of visualization refreshs
-				//TODO schedule redraw, probably though main loop execution of redraw
+				//TODO implement "buffered completion scheduling" (cooldown,...)
 				long t = System.nanoTime();
 				IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //				if (ips.getIterations() == ips.getMaxIterations())
@@ -430,7 +430,7 @@ public class MainWindow {
 	}
 
 	private void setupStateTable(Composite composite_7) {
-		
+		//TODO transfer hardcoded states to stateholder
 		ArrayList<State<?>> applicableStates = new ArrayList<>();
 		applicableStates.addAll(FractalsMain.mainStateHolder.getStates());
 		

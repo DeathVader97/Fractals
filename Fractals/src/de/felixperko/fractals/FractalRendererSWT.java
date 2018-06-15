@@ -91,7 +91,7 @@ public class FractalRendererSWT extends FractalRenderer {
 					FractalsMain.mainWindow.save = false;
 			}
 			int visSteps = stateVisulizationSteps.getValue();
-			disp_changed = true; //TODO Testcode
+			disp_changed = true; //TODO implement in "buffered completion scheduling"
 			if (disp_changed) {
 				PerfInstance drawPathPerf = PerfInstance.createNewSubInstanceAndBegin("draw_path", renderPerf);
 				disp_changed = false;

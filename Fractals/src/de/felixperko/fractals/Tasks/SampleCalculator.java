@@ -31,7 +31,7 @@ public class SampleCalculator {
 		int pow = powState.getValue();
 		double startReal = (double) biasReal.getOutput();
 		double startImag = (double) biasImag.getOutput();
-		//TODO bias zu DataDescriptor
+		//TODO state settings zu DataDescriptor
 		
 		int globalMaxIterations = descriptor.getMaxIterations();
 		double[] xCoords;

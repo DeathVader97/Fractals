@@ -75,7 +75,7 @@ public class FractalRenderer {
 		TaskManager tm = FractalsMain.taskManager;
 		if (tm.getJobId() != currentGoalJob) {
 			currentGoalJob = tm.getJobId();
-			nextGoal = 0.2;//TODO testcode, normally 0.2
+			nextGoal = 0.2;
 			currentDrawDepth = 0;
 			newFinish = true;
 			newPartFinish = true;
@@ -92,7 +92,7 @@ public class FractalRenderer {
 		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
 			if (newPartFinish) {
 				redraw = true;
-				nextGoal = tm.last_step_closed_relative/2;//TODO testcode, normally /2
+				nextGoal = tm.last_step_closed_relative/2;
 				newPartFinish = false;
 				currentDrawDepth = finishedDepth;
 				System.out.println("redraw temp");
