@@ -68,6 +68,7 @@ public class ServerThread extends Thread {
 				
 				log.log("connection closed.");
 				break;
+				
 			}
 			
 			server.close();
