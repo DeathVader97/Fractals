@@ -1,5 +1,6 @@
 package de.felixperko.fractals.Tasks.threading;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Map.Entry;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.network.ClientThread;
+import de.felixperko.fractals.network.ServerConnectThread;
 import de.felixperko.fractals.network.ServerThread;
 
 public class ThreadManager {
@@ -21,7 +23,8 @@ public class ThreadManager {
 	
 	List<TaskProvider> providers = new ArrayList<>();
 	
-	ServerThread serverThread = null;
+	ServerConnectThread serverConnectThread = null;
+	ArrayList<ServerThread> serverThreads = new ArrayList<>();
 	ClientThread clientThread = null;
 	
 	public ThreadManager() {
@@ -110,10 +113,16 @@ public class ThreadManager {
 	}
 	
 	public void startServer() {
-		if (serverThread != null)
+		if (serverConnectThread != null)
 			return;
-		serverThread = new ServerThread();
-		serverThread.start();
+		serverConnectThread = new ServerConnectThread();
+		serverConnectThread.start();
+	}
+	
+	public void startServerSocket(Socket socket) {
+		ServerThread thread = new ServerThread(socket);
+		serverThreads.add(thread);
+		thread.start();
 	}
 	
 	public void startClient() {
