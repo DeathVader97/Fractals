@@ -6,6 +6,8 @@ public class Message {
 	CategoryLogger category;
 	String prefix;
 	
+	String logString = null;
+	
 	public Message(CategoryLogger category, String message){
 		this.category = category;
 		this.message = message;
@@ -26,6 +28,7 @@ public class Message {
 	
 	public Message setCategory(CategoryLogger category) {
 		this.category = category;
+		resetLogString();
 		return this;
 	}
 	
@@ -35,6 +38,7 @@ public class Message {
 	
 	public Message setPrefix(String prefix) {
 		this.prefix = prefix;
+		resetLogString();
 		return this;
 	}
 	
@@ -49,8 +53,16 @@ public class Message {
 	}
 	
 	public String getLogString() {
-		return getCategoryPrefix()+" "+message;
+		return getLogString(false);
 	}
 	
+	public String getLogString(boolean reset) {
+		if (reset || logString == null)
+			logString = getCategoryPrefix()+" "+message;
+		return logString;
+	}
 	
+	public void resetLogString() {
+		logString = null;
+	}
 }

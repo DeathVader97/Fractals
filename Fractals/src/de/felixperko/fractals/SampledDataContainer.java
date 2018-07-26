@@ -10,7 +10,7 @@ public class SampledDataContainer {
 	
 	boolean done = false;
 	double[][] samples;
-	double[][] absSq;
+//	double[][] absSq;
 	double[][] fluctuance;
 	float[][] notFinishedFraction;
 	int[] fluctuanceDistribution = new int[100];
@@ -44,7 +44,7 @@ public class SampledDataContainer {
 		int newDimY = dim_sampled_y / qualityScaling;
 		
 		samples = new double[newDimX][newDimY];
-		absSq = new double[newDimX][newDimY];
+//		absSq = new double[newDimX][newDimY];
 		notFinishedFraction = new float[newDimX][newDimY];
 
 		
@@ -63,15 +63,16 @@ public class SampledDataContainer {
 							notFinished++;
 							continue;
 						}
-						summedValue += sample;
+//						summedValue += sample;
 						double real = container.currentSamplePos_real[index];
 						double imag = container.currentSamplePos_imag[index];
-						summedAbsSq += real*real+imag*imag;
+						summedValue += sample < 0 ? 0 : Math.sqrt( sample + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 ) / Math.log(2)  );
+//						summedAbsSq += real*real+imag*imag;
 					}
 				}
 				double weight = 1d/(qualityScaling*qualityScaling - notFinished);
 				samples[x][y] = summedValue*weight;
-				absSq[x][y] = summedAbsSq*weight;
+//				absSq[x][y] = summedAbsSq*weight;
 				notFinishedFraction[x][y] = notFinished/((float)qualityScaling*qualityScaling);
 			}
 		}
@@ -80,24 +81,25 @@ public class SampledDataContainer {
 	
 	private void postprocess() {
 		
-		int rad = 3;
+		int rad = 0;
+		int boxBlurIterations = 1;
 		int radDim = rad*2+1;
 		
 		int dim_x = samples.length;
 		int dim_y = samples[0].length;
 //		double[] buff_samples = new double[radDim*radDim];
-		double[] buff_samples = new double[radDim];
-		double[] buff_weights = new double[radDim*radDim];
-		double[][] weights = new double[radDim][radDim];
-		for (int x = 0 ; x < radDim ; x++) {
-			for (int y = 0 ; y < radDim ; y++) {
-				int dx = x-rad;
-				int dy = y-rad;
-				double distanceValue = 1./(1+dx*dx+dy*dy);
-				weights[x][y] = distanceValue;
-			}
-		}
-		weights[rad][rad] = 0;
+//		double[] buff_samples = new double[radDim*radDim];
+//		double[] buff_weights = new double[radDim*radDim];
+//		double[][] weights = new double[radDim][radDim];
+//		for (int x = 0 ; x < radDim ; x++) {
+//			for (int y = 0 ; y < radDim ; y++) {
+//				int dx = x-rad;
+//				int dy = y-rad;
+//				double distanceValue = 1./(1+dx*dx+dy*dy);
+//				weights[x][y] = distanceValue;
+//			}
+//		}
+//		weights[rad][rad] = 0;
 		
 //		System.out.println("WEIGHTS");
 //		for (int y = 0 ; y < weights[0].length ; y++) {
@@ -109,13 +111,17 @@ public class SampledDataContainer {
 //			System.out.println(sb.toString());
 //		}
 		
-		double[][] adjSamples = new double[samples.length][samples[0].length];
-		for (int x = 0 ; x < samples.length ; x++) {
-			for (int y = 0 ; y < samples[x].length ; y++) {
-				double s = samples[x][y];
-				adjSamples[x][y] = s < 0 ? s : Math.sqrt( s + 1 -  Math.log( Math.log(absSq[x][y])*0.5 ) / Math.log(2)  );
-			}
-		}
+//		double[][] adjSamples = new double[samples.length][samples[0].length];
+//		
+//		for (int x = 0 ; x < samples.length ; x++) {
+//			for (int y = 0 ; y < samples[x].length ; y++) {
+//				double s = samples[x][y];
+//				adjSamples[x][y] = s < 0 ? 0 : Math.sqrt( s + 1 -  Math.log( Math.log(absSq[x][y])*0.5 ) / Math.log(2)  );
+//			}
+//		}
+		
+		double[][] adjSamples = samples;
+		
 		double[][] pass1 = new double[samples.length][samples[0].length];
 		double[] pass_buffer = new double[radDim];
 		int pass_buffer_offset = 0;
@@ -126,118 +132,112 @@ public class SampledDataContainer {
 		
 		int kernelMid = rad;
 		
+		double[][] diff = new double[samples.length][samples[0].length];
 		for (int x = 0 ; x < samples.length ; x++) {
-			int buffered_value_count = rad;
-			for (int initY = 0 ; initY < buffered_value_count ; initY++) {
-				pass_buffer[initY] = adjSamples[x][initY];
-			}
-			pass_buffer_offset = buffered_value_count;
 			for (int y = 0 ; y < samples[x].length ; y++) {
-				int newSampleY = y+rad;
-				if (newSampleY < dim_y-1) {
-					pass_buffer[(pass_buffer_offset)%radDim] = adjSamples[x][newSampleY];
-					if (buffered_value_count < radDim)
-						buffered_value_count++;
+				double neighbour_avg = 0;
+				int c = 0;
+				if (x > 0) {
+					c++;
+					neighbour_avg += replaceNaN(adjSamples[x-1][y]);
 				}
-				int startOffset = (buffered_value_count < radDim) ? radDim-buffered_value_count : 0;
-				double avg = pass_buffer[(pass_buffer_offset-rad)%radDim];
-				pass_buffer_offset++;
-				double summedDelta = 0;
-				double totalWeight = 0;
-				for (int i = 0 ; i < buffered_value_count ; i++) {
-					int pass_buffer_index = (pass_buffer_offset+startOffset+i)%radDim;
-					double weight = weights[kernelMid][(i+startOffset)%radDim];
-					double value = pass_buffer[pass_buffer_index];
-					if (weight > 0 && value > 0) {
-						summedDelta += weight*Math.abs(value - avg);
-						totalWeight += weight;
-					}
+				if (y > 0) {
+					c++;
+					neighbour_avg += replaceNaN(adjSamples[x][y-1]);
 				}
-				fluctuance[x][y] = summedDelta/totalWeight;
+				if (x < samples.length - 1) {
+					c++;
+					neighbour_avg += replaceNaN(adjSamples[x+1][y]);
+				}
+				if (y < samples[0].length - 1) {
+					c++;
+					neighbour_avg += replaceNaN(adjSamples[x][y+1]);
+				}
+				diff[x][y] = Math.abs(replaceNaN(adjSamples[x][y]) - neighbour_avg/c);
+				iterationCount += c+1;
 			}
 		}
-
-//		for (int y = 0 ; y < samples[0].length ; y++) {
-//			int buffered_value_count = rad+1;
-//			for (int initX = 0 ; initX < buffered_value_count ; initX++) {
-//				pass_buffer[initX] = pass1[initX][y];
-//			}
-//			for (int x = 0 ; x < samples.length ; x++) {
-//				int newSampleX = x+rad;
-//				if (newSampleX < dim_x-1) {
-//					pass_buffer[(pass_buffer_offset)%radDim] = pass1[newSampleX][y];
-//					if (buffered_value_count < radDim)
-//						buffered_value_count++;
-//				}
-//				int startOffset = (buffered_value_count < radDim) ? radDim-buffered_value_count : 0;
-//				pass_buffer_offset++;
-//				double summedDelta = 0;
-//				double totalWeight = 0;
-//				for (int i = 0 ; i < buffered_value_count ; i++) {
-//					int pass_buffer_index = (startOffset+i)%radDim;
-//					double weight = weights[kernelMid][i];
-//					double value = pass_buffer[pass_buffer_index];
-//					summedDelta += value*weight;
-//					totalWeight += weight;
-//				}
-//				fluctuance[x][y] = summedDelta/totalWeight;
-//			}
-//			pass_buffer_offset = 0;
-//		}
 		
-//		for (int x = 0 ; x < samples.length ; x++) {
-//			for (int y = 0 ; y < samples[x].length ; y++) {
-//				double avg = 0;
-//				int min_x = (x-rad < 0) ? 0 : x-rad;
-//				int min_y = (y-rad < 0) ? 0 : y-rad;
-//				int max_x = (x+rad >= dim_x-1) ? dim_x-1 : x+rad;
-//				int max_y = (y+rad >= dim_y-1) ? dim_y-1 : y+rad;
-//				int n = (1+max_x-min_x)*(1+max_y-min_y);
-//				double totalWeight = 0;
-//				int i = 0;
-//				for (int x2 = min_x ; x2 <= max_x ; x2++) {
-//					for (int y2 = min_y ; y2 <= max_y ; y2++) {
-//						iterationCount++;
-//						double weight = weights[x2-min_x][y2-min_y];
-//						double sample = adjSamples[x2][y2];
-//						if (sample < 0)
-//							continue;
-//						buff_samples[i] = sample;
-//						buff_weights[i] = weight;
-//						avg += sample*weight;
-//						totalWeight += weight;
-//						i++;
-//					}
-//				}
-//				avg /= totalWeight;
-//				double val = 0;
-//				double notFinishedFactor = 0;
-//				for (int j = 0 ; j < n ; j++) {
-//					double a = buff_weights[j]*Math.abs(buff_samples[j]-avg);
-//					if (a > 0)
-//						val += a;
-//					else{
-////						val += buff_weights[j]*10000;
-//						continue;
-//					}
-//				}
-////				val -= 1;
-////				fluctuance[x][y] = val >= 2 ? val : 2;
-//				fluctuance[x][y] = val/totalWeight;
-//				int distributionIndex = (int)(val*10);
-//				if (distributionIndex >= fluctuanceDistribution.length-1)
-//					distributionIndex = fluctuanceDistribution.length-1;
-//				fluctuanceDistribution[distributionIndex]++;
-//				
-////				System.out.print(n+" ");
-//			}
-//		}
+		double[] buff = new double[radDim];
+		double addedValue = 0;
+		int buff_index = 0;
+		int buff_size = 0;
+		
+		for (int i = 0 ; i < boxBlurIterations ; i++) {
+			//vertical box blur
+			for (int x = 0 ; x < samples.length ; x++) {
+				//read first values
+				for (int y = 0 ; y < rad ; y++) {
+					double value = diff[x][y];
+					addedValue += value;
+					buff[buff_index] = value;
+					buff_index++;
+					buff_size++;
+				}
+				//actual loop
+				for (int y = 0 ; y < samples[0].length ; y++) {
+					if (y+rad >= radDim) {
+						addedValue -= buff[buff_index];
+						buff_size--;
+					}
+					if (y+rad <= samples[0].length-1) {
+						double value = diff[x][y+rad];
+						buff_size++;
+						addedValue += value;
+						buff[buff_index] = value;
+						buff_index = (buff_index+1) % radDim;
+					}
+					pass1[x][y] = addedValue/radDim;
+				}
+				buff_index = 0;
+				buff_size = 0;
+				addedValue = 0;
+			}
+			//horizontal box blur
+			for (int y = 0 ; y < samples[0].length ; y++) {
+				//read first values
+				for (int x = 0 ; x < rad ; x++) {
+					double value = pass1[x][y];
+					addedValue += value;
+					buff[buff_index] = value;
+					buff_index++;
+					buff_size++;
+				}
+				//actual loop
+				for (int x = 0 ; x < samples.length ; x++) {
+					if (x+rad >= radDim) {
+						addedValue -= buff[buff_index];
+						buff_size--;
+					}
+					if (x+rad <= samples.length-1) {
+						double value = pass1[x+rad][y];
+						buff_size++;
+						addedValue += value;
+						buff[buff_index] = value;
+						buff_index = (buff_index+1) % radDim;
+					}
+					if (i == boxBlurIterations-1)
+						fluctuance[x][y] = addedValue/buff_size;
+					else
+						diff[x][y] = addedValue/buff_size;
+				}
+				buff_index = 0;
+				buff_size = 0;
+				addedValue = 0;
+			}
+		}
 		
 //		CategoryLogger.INFO.log("fluctuance_distribution", Arrays.toString(fluctuanceDistribution));
 		
 		System.out.println("postprocess itertations: "+iterationCount);
 	}
 	
+	private double replaceNaN(double d) {
+		if (Double.isNaN(d))
+			return 0;
+		return d;
+	}
+
 	public boolean isDone() {
 		return done;
 	}

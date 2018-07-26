@@ -43,4 +43,16 @@ public class CategoryLogger {
 	public String getName() {
 		return category;
 	}
+	
+	public CategoryLogger createSubLogger(String subCategory) {
+		return new CategoryLogger(category+"/"+subCategory, color);
+	}
+	
+	public CategoryLogger createSubLogger(String subCategory, java.awt.Color color) {
+		return new CategoryLogger(category+"/"+subCategory, color);
+	}
+	
+	public CategoryLogger createSubLogger(String subCategory, Color color) {
+		return new CategoryLogger(category+"/"+subCategory, color);
+	}
 }

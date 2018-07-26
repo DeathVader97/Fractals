@@ -10,8 +10,11 @@ import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.WorkerPhase;
 import de.felixperko.fractals.Tasks.WorkerPhaseChange;
 import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
+import de.felixperko.fractals.util.CategoryLogger;
+import de.felixperko.fractals.util.Logger;
 
 public class WorkerThread extends Thread {
+	
 	
 	static int ID_COUNTER = 0;
 	
@@ -22,9 +25,10 @@ public class WorkerThread extends Thread {
 	static WorkerPhase PHASE_SAVING = new WorkerPhase("Saving", Color.CYAN);
 	static WorkerPhase PHASE_STOPPED = new WorkerPhase("Stopped", Color.RED);
 	static WorkerPhase DEFAULT_PHASE = PHASE_IDLE;
+
+	CategoryLogger log;
 	
 	TaskProvider taskProvider;
-//	public String name;
 	
 	WorkerThreadStateHolder stateHolder = new WorkerThreadStateHolder(this);
 	
@@ -43,6 +47,7 @@ public class WorkerThread extends Thread {
 		this.taskProvider = taskProvider;
 		setName("WT_"+ID_COUNTER++);
 		setPriority(3);
+		log = CategoryLogger.INFO.createSubLogger("threads/"+getName());
 	}
 	
 	double lastIterationsPerMs = 0;
@@ -52,7 +57,7 @@ public class WorkerThread extends Thread {
 	
 	@Override
 	public void run() {
-		System.out.println("starting worker thread: "+getName());
+		log.log("started");
 		
 		workLoop :
 		while (!end && (continueWorking || !Thread.interrupted())) {

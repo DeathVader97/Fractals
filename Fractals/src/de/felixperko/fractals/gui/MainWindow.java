@@ -3,6 +3,8 @@ package de.felixperko.fractals.gui;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -731,8 +733,22 @@ public class MainWindow {
 			public void run() {
 				StringBuilder text = new StringBuilder();
 				ArrayList<StyleRange> ranges = new ArrayList<>();
-				for (Message msg : new ArrayList<>(Logger.getLog())){
-					
+				Iterator<Message> it = Logger.getLog().iterator();
+				Message msg;
+				while (it.hasNext()){
+					while (true) {
+						try {
+							msg = it.next();
+							break;
+						} catch (ConcurrentModificationException e) {
+							CategoryLogger.ERROR.log("cmod exception in MainWindow Line 741");
+							try {
+								Thread.sleep(1);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
+						}
+					}
 					if (filter != null && filter.length() > 0) {
 						if (!msg.getCategoryPrefix().contains(filter))
 							continue;

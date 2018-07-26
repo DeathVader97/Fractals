@@ -236,10 +236,10 @@ public class FractalRendererSWT extends FractalRenderer {
 		for (int imgx = 0; imgx < width; imgx++) {
 			for (int imgy = 0; imgy < height; imgy++) {
 				double it = sdc.samples[imgx][imgy];
-				double absoluteSquared = sdc.absSq[imgx][imgy];
+//				double absoluteSquared = sdc.absSq[imgx][imgy];
 				if (it > 0) {
-					float sat = (float)(it+1-Math.log(Math.log(absoluteSquared)*0.5)/Math.log(2));
-//					float sat = (float)(it);
+//					float sat = (float)(it+1-Math.log(Math.log(absoluteSquared)*0.5)/Math.log(2));
+					float sat = (float)(it);
 					
 					float sat2 = (float) Math.log10(sat);
 
