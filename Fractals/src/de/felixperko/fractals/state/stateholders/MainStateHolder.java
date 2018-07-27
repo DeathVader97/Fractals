@@ -1,46 +1,38 @@
-package de.felixperko.fractals.state;
+package de.felixperko.fractals.state.stateholders;
 
 import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.util.NumberUtil;
+import de.felixperko.fractals.state.DiscreteState;
+import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.state.StateHolder;
+import de.felixperko.fractals.state.StateListener;
+import de.felixperko.fractals.state.SwitchState;
 import de.felixperko.fractals.util.Position;
 
 public class MainStateHolder extends StateHolder {
 	
-	FractalsMain main;
-	
 	DiscreteState<Integer> stateThreadCount;
-	DiscreteState<Integer> statePower;
-	RangeState stateBiasReal;
-	RangeState stateBiasImag;
 	State<Position> statecursorPosition;
 	State<Position> stateCursorImagePosition;
 	SwitchState stateFullscreen;
 	DiscreteState<Integer> stateVisualizationSteps;
 	
-	
 	public MainStateHolder(FractalsMain main) {
-		this.main = main;
-		stateSetup();
+		super();
 	}
-
-	private void stateSetup() {
+	
+	@Override
+	protected void stateSetup() {
 		
 		configureThreadCount();
 		configureFullscreen();
-		configurePower();
 		configureCursorPosition();
 		configureCursorImagePosition();
-		configureBiasReal();
-		configureBiasImag();
 		configureVisualizationSteps();
 		
 		addState(stateThreadCount);
 		addState(stateFullscreen);
-		addState(statePower);
 		addState(statecursorPosition);
 		addState(stateCursorImagePosition);
-		addState(stateBiasReal);
-		addState(stateBiasImag);
 		addState(stateVisualizationSteps);
 	}
 
@@ -68,38 +60,6 @@ public class MainStateHolder extends StateHolder {
 			}
 		};
 		stateVisualizationSteps.setIncrementable(true).setDecrementable(true);
-	}
-
-	private void configureBiasImag() {
-		stateBiasImag = new RangeState("bias imag", 2000){
-			@Override
-			public Double getOutput() {
-				return NumberUtil.getRoundedDouble(getValue()/1000.-2, 3);
-			}
-		};
-		stateBiasImag.addStateListener(new StateListener<Integer>() {
-			@Override
-			public void valueChanged(Integer oldValue, Integer newValue) {
-				FractalsMain.mainWindow.getMainRenderer().reset();
-			}
-		});
-		stateBiasImag.setProperties(0, 4000, 1);
-	}
-
-	private void configureBiasReal() {
-		stateBiasReal = new RangeState("bias real", 2000){
-			@Override
-			public Double getOutput() {
-				return NumberUtil.getRoundedDouble(getValue()/1000.-2, 3);
-			}
-		};
-		stateBiasReal.addStateListener(new StateListener<Integer>() {
-			@Override
-			public void valueChanged(Integer oldValue, Integer newValue) {
-				FractalsMain.mainWindow.getMainRenderer().reset();
-			}
-		});
-		stateBiasReal.setProperties(0, 4000, 1);
 	}
 
 	private void configureCursorImagePosition() {
@@ -152,28 +112,6 @@ public class MainStateHolder extends StateHolder {
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.threadManager.setThreadCount(newValue);
 			};
-		});
-	}
-
-	private void configurePower() {
-		statePower = new DiscreteState<Integer>("Mandelbrot Power", 2) {
-			@Override
-			public Integer getPrevious() {
-				if (getValue() <= 2)
-					return null;
-				return getValue()-1;
-			}
-			
-			@Override
-			public Integer getNext() {
-				return getValue()+1;
-			}
-		};
-		statePower.setIncrementable(true).setDecrementable(true).addStateListener(new StateListener<Integer>() {
-			@Override
-			public void valueChanged(Integer oldValue, Integer newValue) {
-				FractalsMain.mainWindow.getMainRenderer().reset();
-			}
 		});
 	}
 }

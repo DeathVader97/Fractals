@@ -135,25 +135,27 @@ public class SampledDataContainer {
 		double[][] diff = new double[samples.length][samples[0].length];
 		for (int x = 0 ; x < samples.length ; x++) {
 			for (int y = 0 ; y < samples[x].length ; y++) {
-				double neighbour_avg = 0;
+				double neighbour_sum = 0;
 				int c = 0;
 				if (x > 0) {
 					c++;
-					neighbour_avg += replaceNaN(adjSamples[x-1][y]);
+					neighbour_sum += replaceNaN(adjSamples[x-1][y]);
 				}
 				if (y > 0) {
 					c++;
-					neighbour_avg += replaceNaN(adjSamples[x][y-1]);
+					neighbour_sum += replaceNaN(adjSamples[x][y-1]);
 				}
 				if (x < samples.length - 1) {
 					c++;
-					neighbour_avg += replaceNaN(adjSamples[x+1][y]);
+					neighbour_sum += replaceNaN(adjSamples[x+1][y]);
 				}
 				if (y < samples[0].length - 1) {
 					c++;
-					neighbour_avg += replaceNaN(adjSamples[x][y+1]);
+					neighbour_sum += replaceNaN(adjSamples[x][y+1]);
 				}
-				diff[x][y] = Math.abs(replaceNaN(adjSamples[x][y]) - neighbour_avg/c);
+				double value = replaceNaN(adjSamples[x][y]);
+				double neighbour_avg = neighbour_sum/c;
+				diff[x][y] = Math.abs(value - neighbour_avg);
 				iterationCount += c+1;
 			}
 		}

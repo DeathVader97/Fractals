@@ -10,7 +10,12 @@ public class WorkerThreadStateHolder extends StateHolder {
 	State<Integer> stateIterationsPerSecond;
 
 	public WorkerThreadStateHolder(WorkerThread thread) {
+		super();
 		this.thread = thread;
+	}
+
+	@Override
+	protected void stateSetup() {
 		stateIterationsPerSecond = new State<Integer>("iterations_per_second", 0);
 		addState(stateIterationsPerSecond);
 	}
