@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
+import de.felixperko.fractals.Tasks.calculators.infra.SampleCalculator;
 
 public abstract class Task {
 	
@@ -26,7 +29,7 @@ public abstract class Task {
 	long end_sample_count;
 	private int samplesPerMs;
 	
-	SampleCalculator sampleCalculator = new SampleCalculator(null, this);
+	SampleCalculator sampleCalculator;
 	
 	int jobId;
 	
@@ -34,12 +37,13 @@ public abstract class Task {
 
 	private int previousMaxIterations = -1;
 	
-	public Task(int maxIterations, int[] currentIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
+	public Task(int maxIterations, int[] currentIterations, double[] currentpos_real, double[] currentpos_imag, int[] results, DataDescriptor dataDescriptor) {
 		this.maxIterations = maxIterations;
 		this.currentIterations = currentIterations;
 		this.currentpos_real = currentpos_real;
 		this.currentpos_imag = currentpos_imag;
 		this.results = results;
+		this.sampleCalculator = dataDescriptor.getCalculatorFactory().createCalculator(this);
 	}
 	
 //	public Task(int maxIterations, int jobId) {
@@ -52,11 +56,11 @@ public abstract class Task {
 	public void run(DataDescriptor dataDescriptor) {
 		this.start_time = System.nanoTime();
 		changedIndices.clear();
-		sampleCalculator.descriptor = dataDescriptor;
-		sampleCalculator.run_iterations = 0;
+		sampleCalculator.setDescriptor(dataDescriptor);
+		sampleCalculator.setRunIterations(0);
 		calculate();
 		this.end_time = System.nanoTime();
-		this.end_sample_count = sampleCalculator.run_iterations;
+		this.end_sample_count = sampleCalculator.getRunIterations();
 		samplesPerMs = ((int)((double)end_sample_count/((end_time-start_time)/1000000.)));
 	}
 	

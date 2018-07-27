@@ -1,10 +1,8 @@
 package de.felixperko.fractals.Tasks.threading;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import de.felixperko.fractals.DataDescriptor;
-import de.felixperko.fractals.Tasks.SampleCalculator;
+import de.felixperko.fractals.Tasks.calculators.infra.SampleCalculator;
 import de.felixperko.fractals.util.Position;
 
 public class IterationPositionThread extends Thread {
@@ -15,7 +13,7 @@ public class IterationPositionThread extends Thread {
 	Position currentPos = null;
 	int maxIterations = 0;
 	int iterations = 0;
-	SampleCalculator sampleCalculator = new SampleCalculator(null, null);
+	SampleCalculator sampleCalculator;
 	int jobId;
 	int jobIdDone;
 	
@@ -58,6 +56,7 @@ public class IterationPositionThread extends Thread {
 
 	public void setDataDescriptor(DataDescriptor dataDescriptor) {
 		this.dataDescriptor = dataDescriptor;
+		sampleCalculator = dataDescriptor.getCalculatorFactory().createCalculator(null);
 	}
 
 	public Position getStartPos() {
@@ -67,7 +66,7 @@ public class IterationPositionThread extends Thread {
 	public synchronized void setParameters(Position startPos, DataDescriptor dataDescriptor, int maxIterations) {
 		this.startPos = startPos;
 		this.currentPos = null;
-		this.dataDescriptor = dataDescriptor;
+		setDataDescriptor(dataDescriptor);
 		this.maxIterations = maxIterations;
 		this.positions.clear();
 		this.iterations = 0;

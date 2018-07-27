@@ -1,37 +1,25 @@
-package de.felixperko.fractals.Tasks;
-
-import java.util.ArrayList;
+package de.felixperko.fractals.Tasks.calculators;
 
 import de.felixperko.fractals.DataDescriptor;
-import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.Tasks.Task;
+import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
 import de.felixperko.fractals.util.Position;
 
-public class SampleCalculator {
+public class BurningShipCalculator extends AbstractCalculator{
 	
-	DataDescriptor descriptor;
-	Task task;
-	
-	State<Integer> powState = FractalsMain.mainStateHolder.getState("Mandelbrot Power", Integer.class);
-	State<Double> biasReal = FractalsMain.mainStateHolder.getState("bias real", Double.class);
-	State<Double> biasImag = FractalsMain.mainStateHolder.getState("bias imag", Double.class);
-	
-	public SampleCalculator(DataDescriptor dataDescriptor, Task task) {
-		this.descriptor = dataDescriptor;
-		this.task = task;
+	public BurningShipCalculator(DataDescriptor dataDescriptor, Task task) {
+		super(dataDescriptor, task);
 	}
 	
-	long run_iterations = 0;
-	
+	@Override
 	public void calculate_samples(int[] sampleIndices, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
 
 		int dim_x = descriptor.getDim_sampled_x();
 //		int dim_y = descriptor.getDim_sampled_y();
 		
-		int pow = powState.getValue();
-		double startReal = (double) biasReal.getOutput();
-		double startImag = (double) biasImag.getOutput();
-		//TODO state settings zu DataDescriptor
+		int pow = descriptor.getFractalPower();
+		double startReal = descriptor.getFractalBias().getX();
+		double startImag = descriptor.getFractalBias().getY();
 		
 		int globalMaxIterations = descriptor.getMaxIterations();
 		double[] xCoords;
@@ -73,8 +61,8 @@ public class SampleCalculator {
 				double realSq = 0;
 				double imagSq = 0;
 				for (int k = 1 ; k < pow ; k++){
-//					real = Math.abs(real);
-//					imag = Math.abs(imag);
+					real = Math.abs(real);
+					imag = Math.abs(imag);
 					realSq = real*real;
 					imagSq = imag*imag;
 					imag = 2*real*imag;
@@ -102,13 +90,14 @@ public class SampleCalculator {
 			}
 		}
 	}
-	
+
+	@Override
 	public Position getIterationForPosition(Position startPos, Position currentPos){
 		
-		int pow = powState.getValue();
+		int pow = descriptor.getFractalPower();
 		
-		double real = currentPos != null ? currentPos.getX() : (double) biasReal.getOutput();
-		double imag = currentPos != null ? currentPos.getY() : (double) biasImag.getOutput();
+		double real = currentPos != null ? currentPos.getX() : descriptor.getFractalBias().getX();
+		double imag = currentPos != null ? currentPos.getY() : descriptor.getFractalBias().getY();
 		
 		run_iterations++;
 		
@@ -116,8 +105,8 @@ public class SampleCalculator {
 		double new_imag = 1;
 		
 		for (int k = 1 ; k < pow ; k++){
-//			real = Math.abs(real);
-//			imag = Math.abs(imag);
+			real = Math.abs(real);
+			imag = Math.abs(imag);
 			new_real = (real*real - (imag*imag));
 			new_imag = 2*(real*imag);
 			real = new_real;
@@ -128,12 +117,5 @@ public class SampleCalculator {
 		
 		return new Position(real, imag);
 	}
-
-	public DataDescriptor getDescriptor() {
-		return descriptor;
-	}
-
-	public void setDescriptor(DataDescriptor descriptor) {
-		this.descriptor = descriptor;
-	}
 }
+

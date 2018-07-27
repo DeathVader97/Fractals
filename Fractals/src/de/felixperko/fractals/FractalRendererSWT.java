@@ -53,6 +53,10 @@ public class FractalRendererSWT extends FractalRenderer {
 	@Override
 	public void init() {
 		super.init();
+		
+	}
+	
+	public void prepare() {
 		disp_img = new Image(display, new Rectangle(0, 0, dataDescriptor.getDim_goal_x(), dataDescriptor.getDim_goal_y()));
 		stateVisulizationSteps = FractalsMain.mainStateHolder.getState("visulization steps", Integer.class);
 	}
@@ -251,8 +255,8 @@ public class FractalRendererSWT extends FractalRenderer {
 //					b *= 360 - sat%360;
 					if (b > 1)
 						b = 1f;
-					else if (b < 0.2f || b == Float.NaN)
-						b = 0.2f;
+//					else if (b < 0.2f || b == Float.NaN)
+//						b = 0.2f;
 					
 //					b *= (1-notFinishedFraction);
 //					b = 1;
@@ -294,6 +298,10 @@ public class FractalRendererSWT extends FractalRenderer {
 	}
 	
 	public void resized() {
+		if (dataDescriptor == null) {
+			CategoryLogger.WARNING.log("rendererSWT", "attempted to resize while DataDescriptor is null");
+			return;
+		}
 		Rectangle disp_bounds = FractalsMain.mainWindow.canvas.getBounds();
 		CategoryLogger.INFO.log("resizing "+dataDescriptor.getDim_goal_x()+","+dataDescriptor.getDim_goal_y()+" to "+disp_bounds.width+","+disp_bounds.height);
 		Rectangle calc_bounds = new Rectangle(0, 0, (int)Math.round(disp_bounds.width*q), (int)Math.round(disp_bounds.height*q));

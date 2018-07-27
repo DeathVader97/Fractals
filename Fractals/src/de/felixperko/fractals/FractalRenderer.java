@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 
 import de.felixperko.fractals.Tasks.TaskManager;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
+import de.felixperko.fractals.state.stateholders.RendererStateHolder;
 
 import static de.felixperko.fractals.WindowHandler.*;
 
@@ -23,6 +24,8 @@ public class FractalRenderer {
 	
 	public DataDescriptor dataDescriptor;
 	public DataContainer dataContainer;
+	
+	RendererStateHolder rendererStateHolder = new RendererStateHolder();
 	
 	protected boolean redraw = false;
 	int drawn_depth = 0;
@@ -48,7 +51,7 @@ public class FractalRenderer {
 	public void init() {
 		int w = FractalsMain.mainWindow.canvas.getSize().x;
 		int h = FractalsMain.mainWindow.canvas.getSize().y;
-		dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, (int)Math.round(w*q), (int)Math.round(h*q), w, h, maxIterations);
+		dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, (int)Math.round(w*q), (int)Math.round(h*q), w, h, maxIterations, rendererStateHolder);
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
 		draw_img = new BufferedImage(dataDescriptor.getDim_sampled_x(), dataDescriptor.getDim_sampled_y(), BufferedImage.TYPE_INT_RGB);
@@ -232,6 +235,7 @@ public class FractalRenderer {
 	}
 	
 	public void reset() {
+		dataDescriptor.refreshStateParams();
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
 		FractalsMain.taskManager.setDataContainer(dataContainer);
@@ -266,5 +270,13 @@ public class FractalRenderer {
 
 	public Location getLocation(String name) {
 		return new Location(dataDescriptor, name);
+	}
+
+	public RendererStateHolder getRendererStateHolder() {
+		return rendererStateHolder;
+	}
+
+	public void setRendererStateHolder(RendererStateHolder rendererStateHolder) {
+		this.rendererStateHolder = rendererStateHolder;
 	}
 }

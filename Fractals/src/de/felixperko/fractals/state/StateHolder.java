@@ -5,9 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StateHolder {
+public abstract class StateHolder {
+	
 	Map<String, State<?>> states = new HashMap<>();
 	List<State<?>> statesFIFO = new ArrayList<State<?>>();
+	
+	public StateHolder() {
+		stateSetup();
+	}
+	
+	protected abstract void stateSetup();
 	
 	public State<?> getState(String name) {
 		return states.get(name);

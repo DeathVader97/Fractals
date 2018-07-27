@@ -12,8 +12,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import de.felixperko.fractals.DataContainer;
 import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.util.CategoryLogger;
 
 public class TaskManager {
+	
+	CategoryLogger logger = CategoryLogger.INFO.createSubLogger("TaskManager");
 	
 	DataDescriptor dd;
 	DataContainer dc;
@@ -83,9 +86,9 @@ public class TaskManager {
 			iteration_step_size_incr = iteration_step_size_incr_incr;
 			index++;
 		}
-		StringBuilder depthValueStr = new StringBuilder();
-		depthValues.forEach(v -> depthValueStr.append(v).append(", "));
-		System.out.println(depthValueStr.toString());
+//		StringBuilder depthValueStr = new StringBuilder();
+//		depthValues.forEach(v -> depthValueStr.append(v).append(", "));
+//		System.out.println(depthValueStr.toString());
 		int remain = depth - maxIterations;
 		if (remain != 0)
 			prepare_depth(maxIterations, index);
@@ -116,11 +119,11 @@ public class TaskManager {
 		for (AtomicInteger i : depth_unfinishedTaskCount) {
 			i.set(count);
 		}
-		System.out.println("generated "+count+" tasks");
+		logger.log("generated "+count+" tasks");
 	}
 
 	private void generateTask(int depth, int start, int end) {
-		SequentialTask t = new SequentialTask(start, end, depth, jobId);
+		SequentialTask t = new SequentialTask(start, end, depth, jobId, dd);
 		tasks_by_start_index.put(t.startSample, t);
 		openTasks.add(t);
 	}
@@ -333,7 +336,7 @@ public class TaskManager {
 		finished = true;
 		clearTasks();
 		FractalsMain.performanceMonitor.endPhase();
-		System.out.println("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s ("+msg+")");
+		logger.log("finished job after "+ ((System.nanoTime()-generation_time)/1000000)/1000.+"s ("+msg+")");
 	}
 
 	public void clearTasks() {

@@ -19,11 +19,13 @@ public class LocalTaskProvider extends TaskProvider {
 	public Task getTask() throws IllegalStateException{
 		if (taskManager == null) {
 			taskManager = FractalsMain.taskManager;
-			if (taskManager == null)
-				throw new IllegalStateException("LocalTaskProvider can't provide tasks: TaskManager not set.");
+			if (taskManager == null) {
+				CategoryLogger.WARNING.log("LocalTaskProvider", "can't provide tasks: TaskManager not set.");
+				return null;
+			}
 		}
 		if (dataDescriptor == null) {
-			CategoryLogger.WARNING.log("localtaskprovider", "dataDescriptor isn't set: returned no task");
+			CategoryLogger.WARNING.log("LocalTaskProvider", "dataDescriptor isn't set: returned no task");
 			return null;
 		}
 		return taskManager.getTask();

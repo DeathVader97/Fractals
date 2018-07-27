@@ -107,18 +107,20 @@ public class MainWindow {
 	 * @param renderer 
 	 */
 	public void open(FractalRendererSWT renderer) {
+		setMainRenderer(renderer);
+		
 		display = Display.getDefault();
 		createContents();
+
 		shell.open();
 		shell.layout();
-		
-		setMainRenderer(renderer);
 		renderer.init();
-		FractalsMain.taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
+		renderer.prepare();
 		FractalsMain.threadManager = new ThreadManager();
 		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
 		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
 		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
+		FractalsMain.taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
 		FractalsMain.taskManager.generateTasks();
 		FractalsMain.performanceMonitor.startPhase();
 		mainRenderer.startIterationPositionThread();
@@ -267,7 +269,7 @@ public class MainWindow {
 			}
 		});
 		canvas.addPaintListener(e -> {
-			if (mainRenderer != null)
+			if (mainRenderer != null && FractalsMain.taskManager != null)
 				mainRenderer.render(e, save);
 			}
 		);
@@ -435,6 +437,7 @@ public class MainWindow {
 		//TODO transfer hardcoded states to stateholder
 		ArrayList<State<?>> applicableStates = new ArrayList<>();
 		applicableStates.addAll(FractalsMain.mainStateHolder.getStates());
+		applicableStates.addAll(FractalsMain.mainWindow.mainRenderer.getRendererStateHolder().getStates());
 		
 		for (State<?> state : applicableStates) {
 			
@@ -702,7 +705,6 @@ public class MainWindow {
 
 	public void setMainRenderer(FractalRendererSWT renderer) {
 		mainRenderer = renderer;
-		renderer.init();
 		CategoryLogger.INFO.log("mainwindow", "set main renderer");
 	}
 

@@ -11,7 +11,7 @@ import de.felixperko.fractals.state.StateChangeListener;
 public class CategoryLogger {
 	
 	public static CategoryLogger INFO = new CategoryLogger("info", new java.awt.Color(0, 127, 0));
-	public static CategoryLogger WARNING = new CategoryLogger("warning", java.awt.Color.YELLOW);
+	public static CategoryLogger WARNING = new CategoryLogger("warning", java.awt.Color.ORANGE);
 	public static CategoryLogger WARNING_SERIOUS = new CategoryLogger("warning/serious", java.awt.Color.ORANGE);
 	public static CategoryLogger ERROR = new CategoryLogger("error", java.awt.Color.RED);
 	

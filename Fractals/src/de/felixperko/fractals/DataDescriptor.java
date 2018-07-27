@@ -1,6 +1,14 @@
 package de.felixperko.fractals;
 
+import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
+import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.Tasks.calculators.infra.CalculatorFactory;
+import de.felixperko.fractals.state.State;
+import de.felixperko.fractals.state.StateChangeListener;
+import de.felixperko.fractals.state.StateListener;
+import de.felixperko.fractals.state.stateholders.RendererStateHolder;
 import de.felixperko.fractals.util.CategoryLogger;
+import de.felixperko.fractals.util.Position;
 
 public class DataDescriptor{
 	
@@ -19,8 +27,14 @@ public class DataDescriptor{
 	private double[] ycoords;
 	private boolean calculatedCoords = false;
 	
+	private int fractalPower;
+	private Position fractalBias;
+	
+	private CalculatorFactory calculatorFactory = new CalculatorFactory(BurningShipCalculator.class, this);
+	private RendererStateHolder rendererStateHolder;
+	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,
-			int dim_goal_x, int dim_goal_y, int maxIterations) {
+			int dim_goal_x, int dim_goal_y, int maxIterations, RendererStateHolder rendererStateHolder) {
 		this.start_x = start_x;
 		this.start_y = start_y;
 		this.spacing = (end_x - start_x)/dim_sampled_x;
@@ -35,6 +49,17 @@ public class DataDescriptor{
 		this.delta_y = spacing*dim_goal_y;
 		this.end_x = start_x + delta_x;
 		this.end_y = start_y + delta_y;
+		
+		this.rendererStateHolder = rendererStateHolder;
+		this.fractalPower = (int) rendererStateHolder.getState(RendererStateHolder.NAME_POWER).getOutput();
+		this.fractalBias = new Position((double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_REAL).getOutput(),
+				(double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_IMAG).getOutput());
+	}
+
+	public DataDescriptor getRefreshedDescriptor() {
+		DataDescriptor newDD = new DataDescriptor(start_x, start_y, end_x, end_y, dim_sampled_x, dim_sampled_y, dim_goal_x, dim_goal_y, maxIterations, rendererStateHolder);
+		newDD.setSpacing(spacing);
+		return newDD;
 	}
 	
 	public void calculateCoords() {
@@ -174,5 +199,23 @@ public class DataDescriptor{
 		this.delta_y = dim_sampled_y*spacing;
 		this.end_x = start_x + delta_x;
 		this.end_y = start_y + delta_y;
+	}
+
+	public int getFractalPower() {
+		return fractalPower;
+	}
+
+	public Position getFractalBias() {
+		return fractalBias;
+	}
+
+	public CalculatorFactory getCalculatorFactory() {
+		return calculatorFactory;
+	}
+
+	public void refreshStateParams() {
+		this.fractalPower = (int) rendererStateHolder.getState(RendererStateHolder.NAME_POWER).getOutput();
+		this.fractalBias = new Position((double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_REAL).getOutput(),
+				(double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_IMAG).getOutput());
 	}
 }
