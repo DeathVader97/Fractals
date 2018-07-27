@@ -733,22 +733,7 @@ public class MainWindow {
 			public void run() {
 				StringBuilder text = new StringBuilder();
 				ArrayList<StyleRange> ranges = new ArrayList<>();
-				Iterator<Message> it = Logger.getLog().iterator();
-				Message msg;
-				while (it.hasNext()){
-					while (true) {
-						try {
-							msg = it.next();
-							break;
-						} catch (ConcurrentModificationException e) {
-							CategoryLogger.ERROR.log("cmod exception in MainWindow Line 741");
-							try {
-								Thread.sleep(1);
-							} catch (InterruptedException e1) {
-								e1.printStackTrace();
-							}
-						}
-					}
+				for (Message msg : new ArrayList<>(Logger.getLog())){
 					if (filter != null && filter.length() > 0) {
 						if (!msg.getCategoryPrefix().contains(filter))
 							continue;
