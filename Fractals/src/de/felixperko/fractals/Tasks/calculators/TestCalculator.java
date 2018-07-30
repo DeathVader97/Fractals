@@ -7,11 +7,13 @@ import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
 import de.felixperko.fractals.util.Position;
 
-public class BurningShipCalculator extends AbstractCalculator{
+public class TestCalculator extends AbstractCalculator{
 	
-	public BurningShipCalculator(DataDescriptor dataDescriptor, Task task) {
+	public TestCalculator(DataDescriptor dataDescriptor, Task task) {
 		super(dataDescriptor, task);
 	}
+	
+	Random r = new Random();
 	
 	@Override
 	public void calculate_samples(int[] sampleIndices, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
@@ -63,8 +65,10 @@ public class BurningShipCalculator extends AbstractCalculator{
 				double realSq = 0;
 				double imagSq = 0;
 				for (int k = 1 ; k < pow ; k++){
-					real = Math.abs(real);
-					imag = Math.abs(imag);
+					if (r.nextBoolean()){
+						real = Math.abs(real);
+						imag = Math.abs(imag);
+					}
 					realSq = real*real;
 					imagSq = imag*imag;
 					imag = 2*real*imag;
@@ -92,6 +96,8 @@ public class BurningShipCalculator extends AbstractCalculator{
 			}
 		}
 	}
+	
+	boolean burning = true;
 
 	@Override
 	public Position getIterationForPosition(Position startPos, Position currentPos){
@@ -107,8 +113,11 @@ public class BurningShipCalculator extends AbstractCalculator{
 		double new_imag = 1;
 		
 		for (int k = 1 ; k < pow ; k++){
-			real = Math.abs(real);
-			imag = Math.abs(imag);
+			if (burning){
+				real = Math.abs(real);
+				imag = Math.abs(imag);
+			}
+			burning = !burning;
 			new_real = (real*real - (imag*imag));
 			new_imag = 2*(real*imag);
 			real = new_real;
@@ -120,4 +129,3 @@ public class BurningShipCalculator extends AbstractCalculator{
 		return new Position(real, imag);
 	}
 }
-

@@ -740,7 +740,9 @@ public class MainWindow {
 						if (!msg.getCategoryPrefix().contains(filter))
 							continue;
 					}
-					
+
+					//TODO debugging message crash wip
+					try {
 					StyleRange sr = new StyleRange();
 					sr.start = text.length();
 					
@@ -752,6 +754,10 @@ public class MainWindow {
 					
 					sr.foreground = msg.getCategory().getColor();
 					ranges.add(sr);
+					} catch (Exception e){
+						e.printStackTrace();
+						System.out.println("crash message: "+msg);
+					}
 				}
 				styledText_log.setText(text.toString());
 				for (int i = 0  ; i < ranges.size() ; i++){

@@ -95,7 +95,7 @@ public class FractalRenderer {
 		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
 			if (newPartFinish) {
 				redraw = true;
-				nextGoal = tm.last_step_closed_relative/2;
+				nextGoal = tm.last_step_closed_relative/10;
 				newPartFinish = false;
 				currentDrawDepth = finishedDepth;
 				System.out.println("redraw temp");

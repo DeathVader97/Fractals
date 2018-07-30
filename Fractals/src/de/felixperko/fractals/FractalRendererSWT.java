@@ -247,14 +247,14 @@ public class FractalRendererSWT extends FractalRenderer {
 					
 					float sat2 = (float) Math.log10(sat);
 
-					float b = sdc.fluctuance == null ? 1 : (float)Math.pow(sdc.fluctuance[imgx][imgy],0.1)*0.9f;
-					float notFinishedFraction = sdc.notFinishedFraction[imgx][imgy];
-					if (notFinishedFraction > 0)
-						b = 1;
+					float b = sdc.fluctuance == null ? 0 : (float)Math.pow(sdc.fluctuance[imgx][imgy],0.15)*0.9f;
+//					float notFinishedFraction = sdc.notFinishedFraction[imgx][imgy];
+//					if (notFinishedFraction > 0)
+//						b = 1;
 //					float b = 1;
 //					b *= 360 - sat%360;
-					if (b > 1)
-						b = 1f;
+//					if (b > 1)
+//						b = 1f;
 //					else if (b < 0.2f || b == Float.NaN)
 //						b = 0.2f;
 					
