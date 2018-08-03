@@ -59,18 +59,21 @@ public class SampledDataContainer {
 					for (int y2 = startY2 ; y2 < startY2+qualityScaling ; y2++){
 						int index = y2*dim_sampled_x + x2;
 						int sample = container.samples[index];
-						if (sample <= 0){
+						if (sample < 0){
 							notFinished++;
 							continue;
 						}
 //						summedValue += sample;
 						double real = container.currentSamplePos_real[index];
 						double imag = container.currentSamplePos_imag[index];
-						summedValue += sample < 0 ? 0 : Math.sqrt( sample + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 ) / Math.log(2)  );
+						double adjSample = sample < 0 ? sample : Math.sqrt( sample + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  );
+						if (!Double.isNaN(adjSample))
+							summedValue += adjSample;
 //						summedAbsSq += real*real+imag*imag;
 					}
 				}
-				double weight = 1d/(qualityScaling*qualityScaling - notFinished);
+				double count = (qualityScaling*qualityScaling - notFinished);
+				double weight = count == 0 ? 0 : 1d/count;
 				samples[x][y] = summedValue*weight;
 //				absSq[x][y] = summedAbsSq*weight;
 				notFinishedFraction[x][y] = notFinished/((float)qualityScaling*qualityScaling);

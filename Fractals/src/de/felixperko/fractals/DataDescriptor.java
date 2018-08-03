@@ -2,6 +2,7 @@ package de.felixperko.fractals;
 
 import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
 import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.Tasks.calculators.TestCalculator;
 import de.felixperko.fractals.Tasks.calculators.infra.CalculatorFactory;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateChangeListener;

@@ -74,17 +74,15 @@ public class WorkerThread extends Thread {
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
-//					System.out.println("info: thread "+name+" ("+getName()+") interrupted.");
+					log.log("interrupted.");
 				}
 			}
-//			if (System.nanoTime() - taskFinishedTime < 10000000)
-//				phase = "Working ("+lastIterationsPerMs+" it/s)";
-//			else
-//				phase = "Working";
+			
 			setPhase(PHASE_WORKING);
-			if (FractalsMain.taskManager.getJobId() != task.getJobId())
+			
+			if (!FractalsMain.taskManager.isJobActive(task.getJobId()))
 				continue;
-//			System.out.println(name+" task started ("+task.startSample+" "+task.getMaxIterations()+")");
+			
 			TaskProvider tp = taskProvider;
 			try {
 				task.run(tp.dataDescriptor);
@@ -94,15 +92,10 @@ public class WorkerThread extends Thread {
 				setPhase(PHASE_SAVING);
 				tp.taskFinished(task);
 			} catch (Exception e) {
-				if (FractalsMain.taskManager.getJobId() != task.getJobId())
+				if (!FractalsMain.taskManager.isJobActive(task.getJobId()))
 					continue;
 				e.printStackTrace();
 			}
-//			int notFinishedCount = 0;
-//			for (int it : task.results)
-//				if (it == 0)
-//					notFinishedCount++;
-//			System.out.println(name+" task finished... "+task.samplesPerMs+" samples/ms ; not finished: "+notFinishedCount+"/"+(task.endSample-task.startSample));
 		}
 		setPhase(PHASE_STOPPED);
 	}

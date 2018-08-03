@@ -2,6 +2,7 @@ package de.felixperko.fractals;
 
 import de.felixperko.fractals.Tasks.LocalTaskProvider;
 import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;

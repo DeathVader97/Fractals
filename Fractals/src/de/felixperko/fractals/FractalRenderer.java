@@ -11,7 +11,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.state.stateholders.RendererStateHolder;
 
@@ -74,36 +74,40 @@ public class FractalRenderer {
 	}
 	
 	protected int checkDrawConditions() {
-		int finishedDepth = FractalsMain.taskManager.getFinishedDepth();
-		TaskManager tm = FractalsMain.taskManager;
-		if (tm.getJobId() != currentGoalJob) {
-			currentGoalJob = tm.getJobId();
-			nextGoal = 0.2;
-			currentDrawDepth = 0;
-			newFinish = true;
-			newPartFinish = true;
-		}
-		if (tm.isFinished()) {
-			if (newFinish) {
-				redraw = true;
-				newFinish = false;
-				System.out.println("redraw");
+		if (FractalsMain.taskManager instanceof TaskManagerImpl) {
+			TaskManagerImpl tm = (TaskManagerImpl) FractalsMain.taskManager;
+			int finishedDepth = tm.getFinishedDepth();
+			if (tm.getJobId() != currentGoalJob) {
+				currentGoalJob = tm.getJobId();
+				nextGoal = 0.2;
+				currentDrawDepth = 0;
+				newFinish = true;
+				newPartFinish = true;
 			}
-		} else {
-			newFinish = true;
-		}
-		if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
-			if (newPartFinish) {
-				redraw = true;
-				nextGoal = tm.last_step_closed_relative/10;
-				newPartFinish = false;
-				currentDrawDepth = finishedDepth;
-				System.out.println("redraw temp");
+			if (tm.isFinished()) {
+				if (newFinish) {
+					redraw = true;
+					newFinish = false;
+					System.out.println("redraw");
+				}
+			} else {
+				newFinish = true;
 			}
+			if ((tm.last_step_closed_total > 1000 && tm.last_step_closed_relative < nextGoal && currentDrawDepth < finishedDepth)) {
+				if (newPartFinish) {
+					redraw = true;
+					nextGoal = tm.last_step_closed_relative/10;
+					newPartFinish = false;
+					currentDrawDepth = finishedDepth;
+					System.out.println("redraw temp");
+				}
+			} else {
+				newPartFinish = true;
+			}
+			return finishedDepth;
 		} else {
-			newPartFinish = true;
+			throw new IllegalStateException("Class of TaskManager not supported");
 		}
-		return finishedDepth;
 	}
 
 	protected void redraw(boolean save, int finishedDepth, PerfInstance parentPerfInstance) {
@@ -238,7 +242,6 @@ public class FractalRenderer {
 		dataDescriptor.refreshStateParams();
 		dataDescriptor.calculateCoords();
 		dataContainer = new DataContainer(dataDescriptor);
-		FractalsMain.taskManager.setDataContainer(dataContainer);
 		FractalsMain.taskManager.clearTasks();
 		FractalsMain.taskManager.generateTasks();
 	}

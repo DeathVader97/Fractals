@@ -243,7 +243,7 @@ public class FractalRendererSWT extends FractalRenderer {
 //				double absoluteSquared = sdc.absSq[imgx][imgy];
 				if (it > 0) {
 //					float sat = (float)(it+1-Math.log(Math.log(absoluteSquared)*0.5)/Math.log(2));
-					float sat = (float)(it);
+					float sat = (float)(it*10);
 					
 					float sat2 = (float) Math.log10(sat);
 
@@ -265,9 +265,9 @@ public class FractalRendererSWT extends FractalRenderer {
 					
 					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
 				} else {
-					if (it == -2)
-						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
-					else
+//					if (it == -2)
+//						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
+//					else
 						draw_data.setPixel(imgx, imgy, 0);
 				}
 			}

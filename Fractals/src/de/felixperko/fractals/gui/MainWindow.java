@@ -37,7 +37,7 @@ import de.felixperko.fractals.FractalRendererSWT;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
@@ -120,7 +120,7 @@ public class MainWindow {
 		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
 		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
 		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
-		FractalsMain.taskManager = new TaskManager(renderer.getDataDescriptor(), renderer.getDataContainer());
+		FractalsMain.taskManager = new TaskManagerImpl(renderer);
 		FractalsMain.taskManager.generateTasks();
 		FractalsMain.performanceMonitor.startPhase();
 		mainRenderer.startIterationPositionThread();
@@ -165,7 +165,7 @@ public class MainWindow {
 		
 //		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
-		lblStatus.setText(FractalsMain.taskManager.isFinished() ? "fertig" : ""+FractalsMain.taskManager.getFinishedDepth());
+		lblStatus.setText(FractalsMain.taskManager.getStateText());
 	}
 
 //	private void testProgressBar(ProgressBar pb) {
@@ -289,7 +289,7 @@ public class MainWindow {
 					return;
 				
 				//Mouse moved on canvas of MainRenderer
-				DataDescriptor dd = FractalsMain.taskManager.getDataContainer().getDescriptor();
+				DataDescriptor dd = mainRenderer.dataDescriptor;
 				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
 				
 				//timing of visualization refreshs
