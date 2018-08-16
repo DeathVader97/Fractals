@@ -735,7 +735,12 @@ public class MainWindow {
 			public void run() {
 				StringBuilder text = new StringBuilder();
 				ArrayList<StyleRange> ranges = new ArrayList<>();
-				for (Message msg : new ArrayList<>(Logger.getLog())){
+				int j = -1;
+				List<Message> list = new ArrayList<>(Logger.getLog());
+				for (Message msg : list){
+					j++;
+					if (msg == null)
+						continue;
 					if (filter != null && filter.length() > 0) {
 						if (!msg.getCategoryPrefix().contains(filter))
 							continue;
@@ -743,20 +748,21 @@ public class MainWindow {
 
 					//TODO debugging message crash wip
 					try {
-					StyleRange sr = new StyleRange();
-					sr.start = text.length();
-					
-					sr.length = msg.getCategory().getName().length()+3;
-					if (msg.getPrefix() != null)
-						sr.length += msg.getPrefix().length();
-					
-					text.append(msg.getLogString()).append("\r\n");
-					
-					sr.foreground = msg.getCategory().getColor();
-					ranges.add(sr);
+						StyleRange sr = new StyleRange();
+						sr.start = text.length();
+						
+						sr.length = msg.getCategory().getName().length()+3;
+						if (msg.getPrefix() != null)
+							sr.length += msg.getPrefix().length();
+						
+						text.append(msg.getLogString()).append("\r\n");
+						
+						sr.foreground = msg.getCategory().getColor();
+						ranges.add(sr);
 					} catch (Exception e){
 						e.printStackTrace();
-						System.out.println("crash message: "+msg);
+						System.out.println("crash message: ["+j+"/"+list.size()+"] "+msg);
+						System.out.println(list.toString());
 					}
 				}
 				styledText_log.setText(text.toString());

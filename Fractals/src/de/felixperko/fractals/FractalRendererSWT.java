@@ -265,9 +265,9 @@ public class FractalRendererSWT extends FractalRenderer {
 					
 					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
 				} else {
-//					if (it == -2)
-//						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
-//					else
+					if (it == -2)
+						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
+					else
 						draw_data.setPixel(imgx, imgy, 0);
 				}
 			}

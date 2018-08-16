@@ -14,6 +14,8 @@ public class Logger {
 	static ArrayList<Message> log = new ArrayList<>();
 
 	public static void log(Message message) {
+		if (message == null)
+			throw new IllegalArgumentException("The message can't be null");
 		List<Message> list = logMap.get(message.getCategory());
 		if (list == null) {
 			list = new ArrayList<>();

@@ -70,6 +70,8 @@ public class TaskManagerImpl implements TaskManager {
 	public synchronized void generateTasks() {
 		DataDescriptor dd = renderer.getDataDescriptor();
 		int total_samples = dd.getDim_sampled_x()*dd.getDim_sampled_y();
+		
+		//these samples will always get calculated
 		for (int i = 0 ; i < total_samples*denyApproximationSamplesChance ; i++) {
 			denyApproximationSamples.add((int)(Math.random()*total_samples));
 		}
@@ -77,12 +79,12 @@ public class TaskManagerImpl implements TaskManager {
 		jobId = random.nextInt();
 		generation_time = System.nanoTime();
 		int maxIterations = dd.getMaxIterations();
-		
 		int step = iteration_step_size;
-		
 		int index = 0;
 		int depth = iteration_step_size;
 		ArrayList<Integer> depthValues = new ArrayList<>();
+		
+		//set depth steps
 		for ( ; depth <= maxIterations ; depth += step) {
 			prepare_depth(depth, index);
 			depthValues.add(depth);
@@ -90,13 +92,15 @@ public class TaskManagerImpl implements TaskManager {
 			iteration_step_size_incr = iteration_step_size_incr_incr;
 			index++;
 		}
-//		StringBuilder depthValueStr = new StringBuilder();
-//		depthValues.forEach(v -> depthValueStr.append(v).append(", "));
-//		System.out.println(depthValueStr.toString());
+		
+		//set final step if necessary
 		int remain = depth - maxIterations;
 		if (remain != 0)
 			prepare_depth(maxIterations, index);
+		
+		//generate the tasks
 		generateTasks(dd, iteration_step_size);
+		
 		int count = unfinishedTasksCount.get();
 		finished = count == 0;
 	}
@@ -110,15 +114,21 @@ public class TaskManagerImpl implements TaskManager {
 	
 	private void generateTasks(DataDescriptor dd, int depth) {
 		int samples_total = dd.getDim_sampled_x()*dd.getDim_sampled_y();
-		System.out.println("generating "+samples_total+" samples");
+		logger.log("generating "+samples_total+" samples");
 		int start = 0;
+		
+		//generate tasks for chunks of indicies
 		for (int end = start+sample_size ; end < samples_total ; end += sample_size) {
 			generateTask(dd, depth, start, end);
 			start = end;
 		}
+		//generate final task if necessary
 		if (start < samples_total)
 			generateTask(dd, depth, start, samples_total);
+		
 		int count = openTasks.size();
+		
+		//set unfinished task indicators to detect when all tasks (of a given depth) are done
 		unfinishedTasksCount.addAndGet(count);
 		for (AtomicInteger i : depth_unfinishedTaskCount) {
 			i.set(count);
@@ -238,6 +248,8 @@ public class TaskManagerImpl implements TaskManager {
 			return;
 		int dimx = dd.getDim_sampled_x();
 		int dimy = dd.getDim_sampled_y();
+		
+		//iterate changed indices of task
 		for (Integer c : task.changedIndices) {
 			int s = c+task.startSample;
 			int y = s/dimx;
@@ -259,7 +271,7 @@ public class TaskManagerImpl implements TaskManager {
 			if (end_y >= dimy)
 				end_y = dimy-1;
 			
-			if (sample > 0) {
+			if (sample > 0) { //set surrounding samples to be calculated if this sample was finished
 				for (int x2 = start_x ; x2 <= end_x ; x2++) {
 					for (int y2 = start_y ; y2 <= end_y ; y2++) {
 						if ((x2 != x || y2 != y) && dc.samples[x2+y2*dimx] == -2) {
@@ -267,7 +279,7 @@ public class TaskManagerImpl implements TaskManager {
 						}
 					}
 				}
-			} else if (!denyApproximationSamples.contains((Integer)s)){
+			} else if (!denyApproximationSamples.contains((Integer)s)){ //set sample to not be calculated if no surrounding sample is finished
 				boolean allLowerEqual0 = true;
 				exit : for (int x2 = start_x ; x2 <= end_x ; x2++) {
 					for (int y2 = start_y ; y2 <= end_y ; y2++) {
