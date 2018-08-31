@@ -12,10 +12,13 @@ import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Controls.MouseControls;
 import de.felixperko.fractals.Controls.MouseWheelControls;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
+import de.felixperko.fractals.renderer.FractalRendererAWT;
+import de.felixperko.fractals.renderer.Renderer;
 
 public class WindowHandler {
 	
-	static int w = 1280, h = 720;
+	public static int w = 1280;
+	public static int h = 720;
 	static int target_fps = 60;
 	
 	private int iterations = 1000000;
@@ -33,7 +36,7 @@ public class WindowHandler {
 
 	public double quality = 1;
 	
-	public FractalRenderer mainRenderer;
+	public FractalRendererAWT mainRenderer;
 	
 	public boolean save = false;
 	
@@ -140,11 +143,11 @@ public class WindowHandler {
 		changed = true;
 	}
 
-	public FractalRenderer getMainRenderer() {
+	public Renderer getMainRenderer() {
 		return mainRenderer;
 	}
 
-	public void setMainRenderer(FractalRenderer mainRenderer) {
+	public void setMainRenderer(FractalRendererAWT mainRenderer) {
 		this.mainRenderer = mainRenderer;
 	}
 

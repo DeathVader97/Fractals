@@ -5,8 +5,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.WindowHandler;
 import de.felixperko.fractals.gui.MainWindow;
+import de.felixperko.fractals.util.Position;
 
 public class KeyListenerControls implements KeyListener {
 	
@@ -66,12 +68,30 @@ public class KeyListenerControls implements KeyListener {
 //			saveLocation = true;
 //	}
 
+	double shiftSensitivity = 16;
+	Position shift = new Position(0,0);
+	Position nullPos = new Position(0,0);
+	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		System.out.println(e.toString());
+//		System.out.println(e.toString());
 		if (e.character == 'l') {
 			System.out.println("jump");
 			mainWindow.jumpToSavedLocation(false);
+		}
+		
+		else if (e.keyCode == SWT.ARROW_LEFT)
+			shift.addX(shiftSensitivity);
+		else if (e.keyCode == SWT.ARROW_RIGHT)
+			shift.addX(-shiftSensitivity);
+		else if (e.keyCode == SWT.ARROW_UP)
+			shift.addY(shiftSensitivity);
+		else if (e.keyCode == SWT.ARROW_DOWN)
+			shift.addY(-shiftSensitivity);
+		
+		if (!shift.equals(nullPos)) {
+			FractalsMain.mainWindow.shift(shift);
+			shift = new Position(0,0);
 		}
 	}
 

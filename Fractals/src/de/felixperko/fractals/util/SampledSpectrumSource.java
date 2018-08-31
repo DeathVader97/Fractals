@@ -1,6 +1,6 @@
 package de.felixperko.fractals.util;
 
-import de.felixperko.fractals.DataContainer;
+import de.felixperko.fractals.data.DataContainer;
 
 public class SampledSpectrumSource {
 	

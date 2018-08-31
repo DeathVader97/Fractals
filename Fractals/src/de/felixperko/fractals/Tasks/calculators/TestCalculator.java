@@ -2,9 +2,9 @@ package de.felixperko.fractals.Tasks.calculators;
 
 import java.util.Random;
 
-import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
+import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.Position;
 
 public class TestCalculator extends AbstractCalculator{

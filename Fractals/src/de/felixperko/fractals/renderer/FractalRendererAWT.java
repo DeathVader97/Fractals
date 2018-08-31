@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.renderer;
 
 import java.awt.Color;
 import java.awt.DisplayMode;
@@ -11,13 +11,19 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.WindowHandler;
 import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
+import de.felixperko.fractals.data.DataContainer;
+import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.data.Location;
 import de.felixperko.fractals.state.stateholders.RendererStateHolder;
+import de.felixperko.fractals.util.Position;
 
 import static de.felixperko.fractals.WindowHandler.*;
 
-public class FractalRenderer {
+public abstract class FractalRendererAWT implements Renderer {
 	
 	BufferedImage disp_img;
 	BufferedImage draw_img;
@@ -45,9 +51,13 @@ public class FractalRenderer {
 	
 	int maxIterations = 1000000;
 	
-	public FractalRenderer() {
+	public FractalRendererAWT() {
 	}
 	
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#init()
+	 */
+	@Override
 	public void init() {
 		int w = FractalsMain.mainWindow.canvas.getSize().x;
 		int h = FractalsMain.mainWindow.canvas.getSize().y;
@@ -66,6 +76,10 @@ public class FractalRenderer {
 	int currentGoalJob = 0;
 	int currentDrawDepth = 0;
 	
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#render(java.awt.Graphics, boolean)
+	 */
+	@Override
 	public synchronized void render(Graphics g, boolean save) {
 		int finishedDepth = checkDrawConditions();
 		if (redraw || save)
@@ -172,18 +186,34 @@ public class FractalRenderer {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#getDataDescriptor()
+	 */
+	@Override
 	public DataDescriptor getDataDescriptor() {
 		return dataDescriptor;
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setDataDescriptor(de.felixperko.fractals.DataDescriptor)
+	 */
+	@Override
 	public void setDataDescriptor(DataDescriptor dataDescriptor) {
 		this.dataDescriptor = dataDescriptor;
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#getDataContainer()
+	 */
+	@Override
 	public DataContainer getDataContainer() {
 		return dataContainer;
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setDataContainer(de.felixperko.fractals.DataContainer)
+	 */
+	@Override
 	public void setDataContainer(DataContainer dataContainer) {
 		this.dataContainer = dataContainer;
 	}
@@ -192,11 +222,19 @@ public class FractalRenderer {
 		return dataDescriptor.getMaxIterations();
 	}
 	
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setMaxIterations(int)
+	 */
+	@Override
 	public void setMaxIterations(int maxIterations) {
 		dataDescriptor.setMaxIterations(maxIterations);
 		reset();
 	}
 	
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setQuality(double)
+	 */
+	@Override
 	public synchronized void setQuality(double quality) {
 		if (quality == q)
 			return;
@@ -208,6 +246,10 @@ public class FractalRenderer {
 		reset();
 	}
 	
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#updateLocation(int, int, double)
+	 */
+	@Override
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
 		try {
 			double relX = spacing_factor < 1 ? mouse_x/(double)dataDescriptor.getDim_goal_x() : 0.5;
@@ -252,6 +294,10 @@ public class FractalRenderer {
 		redraw = true;
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setLocation(de.felixperko.fractals.Location)
+	 */
+	@Override
 	public void setLocation(Location location) {
 		double desiredRatio = ((double)dataDescriptor.getDim_sampled_x())/dataDescriptor.getDim_sampled_y();
 		double deltaX = (location.getX2()-location.getX1());
@@ -271,6 +317,10 @@ public class FractalRenderer {
 		reset();
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#getLocation(java.lang.String)
+	 */
+	@Override
 	public Location getLocation(String name) {
 		return new Location(dataDescriptor, name);
 	}
@@ -279,7 +329,15 @@ public class FractalRenderer {
 		return rendererStateHolder;
 	}
 
+	/* (non-Javadoc)
+	 * @see de.felixperko.fractals.Renderer#setRendererStateHolder(de.felixperko.fractals.state.stateholders.RendererStateHolder)
+	 */
+	@Override
 	public void setRendererStateHolder(RendererStateHolder rendererStateHolder) {
 		this.rendererStateHolder = rendererStateHolder;
+	}
+	
+	@Override
+	public void shift(Position shift) {
 	}
 }

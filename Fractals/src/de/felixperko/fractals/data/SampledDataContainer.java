@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.data;
 
 import java.util.Arrays;
 
@@ -9,9 +9,9 @@ import de.felixperko.fractals.util.NumberUtil;
 public class SampledDataContainer {
 	
 	boolean done = false;
-	double[][] samples;
+	public double[][] samples;
 //	double[][] absSq;
-	double[][] fluctuance;
+	public double[][] fluctuance;
 	float[][] notFinishedFraction;
 	int[] fluctuanceDistribution = new int[100];
 	

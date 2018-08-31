@@ -32,15 +32,18 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyleRange;
-import de.felixperko.fractals.DataDescriptor;
-import de.felixperko.fractals.FractalRendererSWT;
+
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Controls.KeyListenerControls;
+import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
+import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.FractalRendererSWT;
+import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
@@ -81,7 +84,7 @@ public class MainWindow {
 
 	private Label qualitylbl;
 	
-	FractalRendererSWT mainRenderer;
+	Renderer mainRenderer;
 
 	private Display display;
 
@@ -106,7 +109,7 @@ public class MainWindow {
 	 * Open the window.
 	 * @param renderer 
 	 */
-	public void open(FractalRendererSWT renderer) {
+	public void open(Renderer renderer) {
 		setMainRenderer(renderer);
 		
 		display = Display.getDefault();
@@ -115,12 +118,13 @@ public class MainWindow {
 		shell.open();
 		shell.layout();
 		renderer.init();
-		renderer.prepare();
+		if (renderer instanceof FractalRendererSWT)
+			((FractalRendererSWT)renderer).prepare();
 		FractalsMain.threadManager = new ThreadManager();
 		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
-		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
-		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
-		FractalsMain.taskManager = new TaskManagerImpl(renderer);
+//		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
+//		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
+		FractalsMain.taskManager = new NewTaskManagerImpl();
 		FractalsMain.taskManager.generateTasks();
 		FractalsMain.performanceMonitor.startPhase();
 		mainRenderer.startIterationPositionThread();
@@ -151,13 +155,14 @@ public class MainWindow {
 	private void tick() {
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
 		
-		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
-		int it = ips.getIterations();
-		if (it > lastVisIterations || (lastVisJobID != ips.getJobID() && it > 0)){
-			lastVisJobID = ips.getJobID();
-			lastVisIterations = it;
+		if (needsRedraw())
 			canvas.redraw();
-		}
+//		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
+//		int it = ips.getIterations();
+//		if (it > lastVisIterations || (lastVisJobID != ips.getJobID() && it > 0)){
+//			lastVisJobID = ips.getJobID();
+//			lastVisIterations = it;
+//		}
 
 		//TODO remove
 //		testProgressBar(progressBar);
@@ -166,6 +171,16 @@ public class MainWindow {
 //		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.getStateText());
+	}
+	
+	boolean firstRedraw = true;
+	
+	private boolean needsRedraw() {
+		if (firstRedraw) {
+			firstRedraw = false;
+			return true;
+		}
+		return false;
 	}
 
 //	private void testProgressBar(ProgressBar pb) {
@@ -289,7 +304,7 @@ public class MainWindow {
 					return;
 				
 				//Mouse moved on canvas of MainRenderer
-				DataDescriptor dd = mainRenderer.dataDescriptor;
+				DataDescriptor dd = mainRenderer.getDataDescriptor();
 				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
 				
 				//timing of visualization refreshs
@@ -311,8 +326,11 @@ public class MainWindow {
 //					visRedraw = false;
 					finishedDrawingTimer = 0;
 					State<Position> stateCursorImagePosition = FractalsMain.mainStateHolder.getState("cursor image position", Position.class);
-					stateCursorImagePosition.setValue(new Position(dd.getStart_x()+(e.x/(double)dd.getDim_goal_x())*dd.getDelta_x(), dd.getStart_y()+(e.y/(double)dd.getDim_goal_y())*dd.getDelta_y()));
-					ips.setParameters(stateCursorImagePosition.getValue(), dd, FractalsMain.mainStateHolder.getState("visulization steps", Integer.class).getValue());
+					//TODO warning if dd is null?
+					if (dd != null) {
+						stateCursorImagePosition.setValue(new Position(dd.getStart_x()+(e.x/(double)dd.getDim_goal_x())*dd.getDelta_x(), dd.getStart_y()+(e.y/(double)dd.getDim_goal_y())*dd.getDelta_y()));
+						ips.setParameters(stateCursorImagePosition.getValue(), dd, FractalsMain.mainStateHolder.getState("visulization steps", Integer.class).getValue());
+					}
 				}
 			}
 		});
@@ -703,12 +721,15 @@ public class MainWindow {
 		return display;
 	}
 
-	public void setMainRenderer(FractalRendererSWT renderer) {
+	public void setMainRenderer(Renderer renderer) {
 		mainRenderer = renderer;
 		CategoryLogger.INFO.log("mainwindow", "set main renderer");
 	}
 
-
+	public Renderer getMainRenderer() {
+		return mainRenderer;
+	}
+	
 	public void loopColor(float additionalOffset) {
 		mainRenderer.addColorOffset(additionalOffset);
 	}
@@ -723,10 +744,6 @@ public class MainWindow {
 
 	public void setRedraw(boolean redraw) {
 		this.redraw = redraw;
-	}
-
-	public FractalRendererSWT getMainRenderer() {
-		return mainRenderer;
 	}
 
 	private void updateLog(final StyledText styledText_log, String filter) {
@@ -772,5 +789,9 @@ public class MainWindow {
 				styledText_log.setTopIndex(styledText_log.getLineCount()-1);
 			}
 		});
+	}
+
+	public void shift(Position shift) {
+		mainRenderer.shift(shift);
 	}
 }

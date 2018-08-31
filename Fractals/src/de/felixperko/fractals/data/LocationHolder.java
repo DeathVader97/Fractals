@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.data;
 
 import java.io.File;
 import java.io.IOException;

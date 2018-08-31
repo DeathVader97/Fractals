@@ -2,7 +2,7 @@ package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
 
-import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.data.DataDescriptor;
 
 public abstract class TaskProvider {
 	

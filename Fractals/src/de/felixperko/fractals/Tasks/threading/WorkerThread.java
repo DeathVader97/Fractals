@@ -13,41 +13,27 @@ import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 
-public class WorkerThread extends Thread {
+public class WorkerThread extends FractalsThread {
 	
 	
 	static int ID_COUNTER = 0;
 	
-	static WorkerPhase PHASE_IDLE = new WorkerPhase("Idle", Color.GRAY);
 	static WorkerPhase PHASE_NO_PROVIDER = new WorkerPhase("No provider", Color.ORANGE);
-	static WorkerPhase PHASE_WAITING = new WorkerPhase("Waiting", Color.YELLOW);
-	static WorkerPhase PHASE_WORKING = new WorkerPhase("Working", Color.BLUE);
 	static WorkerPhase PHASE_SAVING = new WorkerPhase("Saving", Color.CYAN);
-	static WorkerPhase PHASE_STOPPED = new WorkerPhase("Stopped", Color.RED);
-	static WorkerPhase DEFAULT_PHASE = PHASE_IDLE;
-
-	CategoryLogger log;
 	
 	TaskProvider taskProvider;
+	Task task;
 	
 	WorkerThreadStateHolder stateHolder = new WorkerThreadStateHolder(this);
 	
-	Task task;
-	
-	WorkerPhase phase = DEFAULT_PHASE;
-	ArrayList<WorkerPhaseChange> phaseChanges = new ArrayList<>();
 	private long iterations = 0;
-	
-	PerformanceMonitor monitor;
 
 	boolean continueWorking = false;
 	boolean end = false;
 	
 	public WorkerThread(TaskProvider taskProvider) {
+		super("WT_"+ID_COUNTER++, 3);
 		this.taskProvider = taskProvider;
-		setName("WT_"+ID_COUNTER++);
-		setPriority(3);
-		log = CategoryLogger.INFO.createSubLogger("threads/"+getName());
 	}
 	
 	double lastIterationsPerMs = 0;
@@ -99,20 +85,11 @@ public class WorkerThread extends Thread {
 		}
 		setPhase(PHASE_STOPPED);
 	}
-	
-	public void setPhase(WorkerPhase phase) {
-		this.phase = phase;
-		phaseChanges.add(new WorkerPhaseChange(phase));
-	}
 
 	public void setTaskProvider(TaskProvider taskProvider) {
 		this.taskProvider = taskProvider;
 //		continueWorking = true;
 //		interrupt();
-	}
-	
-	public WorkerPhase getPhase() {
-		return phase;
 	}
 	
 	private void setLastIterationsPerMs(double iterationsPerMs) {

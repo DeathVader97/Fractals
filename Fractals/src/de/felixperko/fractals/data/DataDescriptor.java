@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.data;
 
 import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
 import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
@@ -18,8 +18,8 @@ public class DataDescriptor{
 	private double delta_x, delta_y;
 	private double spacing;
 	
-	private int dim_sampled_x;
-	private int dim_sampled_y;
+	public int dim_sampled_x;
+	public int dim_sampled_y;
 	private int dim_goal_x, dim_goal_y;
 	
 	private int maxIterations;

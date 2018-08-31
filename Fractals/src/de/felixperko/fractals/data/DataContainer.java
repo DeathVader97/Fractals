@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.data;
 
 public class DataContainer {
 	

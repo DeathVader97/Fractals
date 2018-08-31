@@ -1,4 +1,4 @@
-package de.felixperko.fractals;
+package de.felixperko.fractals.renderer;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -22,14 +22,16 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
+import de.felixperko.fractals.data.SampledDataContainer;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
-public class FractalRendererSWT extends FractalRenderer {
+public class FractalRendererSWT extends FractalRendererAWT {
 	
 	Display display;
 	
@@ -177,6 +179,9 @@ public class FractalRendererSWT extends FractalRenderer {
 						p = p2;
 						pScreen = p2Screen;
 						color.dispose();
+						long t2 = System.nanoTime();
+						if (t2 - t1 > 10000000)
+							break;
 					}
 					long t2 = System.nanoTime();
 					System.out.println("drawing "+visSteps+" took "+(int)((t2-t1)*NumberUtil.NS_TO_MS)+"ms.");
@@ -266,7 +271,7 @@ public class FractalRendererSWT extends FractalRenderer {
 					draw_data.setPixel(imgx, imgy, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
 				} else {
 					if (it == -2)
-						draw_data.setPixel(imgx, imgy, new Color(0f,0,0).getRGB());
+						draw_data.setPixel(imgx, imgy, new Color(1f,0,0).getRGB());
 					else
 						draw_data.setPixel(imgx, imgy, 0);
 				}

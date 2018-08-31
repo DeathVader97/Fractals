@@ -6,7 +6,11 @@ import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
+import de.felixperko.fractals.data.LocationHolder;
 import de.felixperko.fractals.gui.MainWindow;
+import de.felixperko.fractals.renderer.FractalRendererSWT;
+import de.felixperko.fractals.renderer.GridRenderer;
+import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.state.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.Logger;
 
@@ -48,7 +52,8 @@ public class FractalsMain{
 		performanceMonitor = new PerformanceMonitor();
 		
 //		FractalRenderer renderer = new FractalRenderer();
-		FractalRendererSWT renderer = new FractalRendererSWT(mainWindow.getDisplay());
+//		FractalRendererSWT renderer = new FractalRendererSWT(mainWindow.getDisplay());
+		Renderer renderer = new GridRenderer();
 		
 //		windowHandler.getMainRenderer().setDataContainer(dataContainer);
 		

@@ -3,8 +3,8 @@ package de.felixperko.fractals.Tasks.calculators.infra;
 
 import java.lang.reflect.InvocationTargetException;
 
-import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.Tasks.Task;
+import de.felixperko.fractals.data.DataDescriptor;
 
 public class CalculatorFactory {
 	

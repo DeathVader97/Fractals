@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import de.felixperko.fractals.DataContainer;
-import de.felixperko.fractals.DataDescriptor;
+import de.felixperko.fractals.data.DataContainer;
+import de.felixperko.fractals.data.DataDescriptor;
 
 public class Job {
 	
@@ -77,7 +77,7 @@ public class Job {
 		
 	}
 
-	private void updateCulling(Task task) {
+	private void updateCulling(SequentialTask task) {
 		int dimx = dataDescriptor.dim_sampled_x;
 		int dimy = dataDescriptor.dim_sampled_y;
 		for (Integer c : task.changedIndices) {

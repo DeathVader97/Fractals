@@ -1,8 +1,9 @@
 package de.felixperko.fractals.Tasks.calculators;
 
-import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
+import de.felixperko.fractals.data.Chunk;
+import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.Position;
 
 public class MandelbrotCalculator extends AbstractCalculator{
@@ -89,6 +90,86 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				results[i] = -1;
 			}
 		}
+	}
+
+	@Override
+	public void calculate_samples(Chunk chunk, int maxiterations) {
+
+		int dim_x = descriptor.getDim_sampled_x();
+		
+		int pow = descriptor.getFractalPower();
+		double startReal = descriptor.getFractalBias().getX();
+		double startImag = descriptor.getFractalBias().getY();
+		
+		int chunk_size = chunk.getChunkSize();
+		int xShift = -1;
+		int yShift = 0;
+		
+		double xPos = 0;
+		double yPos = 0;
+		
+		int globalMaxIterations = descriptor.getMaxIterations();
+
+		mainLoop : 
+		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
+			
+			//abort if already calculated for now...
+			if (chunk.sampleCount[i] > 0) {
+				continue;
+			}
+			
+			//update position
+			xShift++;
+			if (xShift >= chunk_size) {
+				xShift = 0;
+				yShift++;
+				yPos = chunk.getY(yShift);
+			}
+			xPos = chunk.getX(xShift);
+			
+			int j = chunk.finishedIterations;
+			double real = (j == 0) ? startReal : chunk.currentPosX[i];
+			double imag = (j == 0) ? startImag : chunk.currentPosY[i];
+			double creal = xPos;
+			double cimag = yPos;
+			
+			if (j == 0)
+				chunk.sampleCount[i]++;
+			
+			for ( ; j < maxiterations ; j++) {
+				run_iterations++;
+				double realSq = 0;
+				double imagSq = 0;
+				for (int k = 1 ; k < pow ; k++){
+//					real = Math.abs(real);
+//					imag = Math.abs(imag);
+					realSq = real*real;
+					imagSq = imag*imag;
+					imag = 2*real*imag;
+					real = realSq - imagSq;
+				}
+				real += creal;
+				imag += cimag;
+				
+				if (realSq + imagSq > (1 << 16)) {//outside -> done
+					float iterations = j;
+					chunk.iterationsSum[i] += iterations;
+					chunk.iterationsSumSq[i] += iterations*iterations;
+					chunk.currentPosX[i] = (float) real;
+					chunk.currentPosY[i] = (float) imag;
+					continue mainLoop;
+				}
+			}
+			
+			//still not outside
+			if (maxiterations < globalMaxIterations) { //not done -> store temp result
+				chunk.currentPosX[i] = (float) real;
+				chunk.currentPosY[i] = (float) imag;
+			} else { //max iterations reached -> declared as in the mandelbrot set
+				
+			}
+		}
+		chunk.finishedIterations = maxiterations;
 	}
 
 	@Override

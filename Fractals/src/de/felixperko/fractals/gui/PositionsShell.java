@@ -13,7 +13,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Text;
 
 import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.Location;
+import de.felixperko.fractals.data.Location;
 
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;

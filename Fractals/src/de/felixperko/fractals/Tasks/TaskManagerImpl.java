@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import de.felixperko.fractals.DataContainer;
-import de.felixperko.fractals.DataDescriptor;
-import de.felixperko.fractals.FractalRenderer;
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.data.DataContainer;
+import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.util.CategoryLogger;
 
 public class TaskManagerImpl implements TaskManager {
@@ -57,9 +57,9 @@ public class TaskManagerImpl implements TaskManager {
 	
 	ArrayList<Task> workingTasks = new ArrayList<>();
 	
-	FractalRenderer renderer;
+	Renderer renderer;
 		
-	public TaskManagerImpl(FractalRenderer renderer) {
+	public TaskManagerImpl(Renderer renderer) {
 		this.renderer = renderer;
 	}
 	

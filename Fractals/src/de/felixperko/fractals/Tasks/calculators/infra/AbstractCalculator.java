@@ -1,7 +1,7 @@
 package de.felixperko.fractals.Tasks.calculators.infra;
 
-import de.felixperko.fractals.DataDescriptor;
 import de.felixperko.fractals.Tasks.Task;
+import de.felixperko.fractals.data.DataDescriptor;
 
 public abstract class AbstractCalculator implements SampleCalculator{
 	protected DataDescriptor descriptor;
