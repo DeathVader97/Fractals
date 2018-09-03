@@ -51,9 +51,17 @@ public class Chunk {
 	double priorityMultiplier = 1;
 	double stepPriorityMultiplier = 1;
 	
-	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid) {
+	boolean disposed = false;
+	boolean arraysInstantiated = false;
+	
+	Position gridPos;
+	
+	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
 		this.dataDescriptor = dataDescriptor;
+		this.gridPos = gridPos;
+		this.startPosition = grid.getSpaceOffset(gridPos);
+		this.delta = new Position(dataDescriptor.getDelta_x()*chunk_size/dataDescriptor.dim_sampled_x, dataDescriptor.getDelta_y()*chunk_size/dataDescriptor.dim_sampled_y);
 		this.grid = grid;
 	}
 	
@@ -65,6 +73,7 @@ public class Chunk {
 		currentPosY = new float[arr_size];
 		diff = new float[arr_size];
 		sampleCount = new int[arr_size];
+		arraysInstantiated = true;
 	}
 	
 	public boolean arraysInstantiated() {
@@ -76,11 +85,18 @@ public class Chunk {
 	}
 	
 	public void calculatePixels() {
+		prepareArrays();
 		prepareImageData();
 		fillPixels();
 		setRedrawFlags();
 	}
 	
+	private void prepareArrays() {
+		if (arraysInstantiated)
+			return;
+		instantiateArrays();
+	}
+
 	/**
 	 * create ImageData object if null
 	 */
@@ -89,18 +105,32 @@ public class Chunk {
 			imageData = new ImageData(chunk_size, chunk_size, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
 	}
 	
+	float colorOffset = 0;
+	
 	/**
 	 * fill the pixels according to finished iterations
 	 */
 	private void fillPixels() {
+		int i = 0;
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
-				int p = color;
-				imageData.setPixel(x, y, p);
+				if (sampleCount[i] == 0)
+					imageData.setPixel(y, x, color);
+				else {
+					float sat2 = getAvgIterations(i);
+					sat2 = (float) Math.log10(sat2);
+					float b = sat2 > 0 ? 1 : 0;
+					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
+				}
+				i++;
 			}
 		}
 	}
 	
+	private float getAvgIterations(int i) {
+		return iterationsSum[i]/sampleCount[i];
+	}
+
 	private void setRedrawFlags() {
 		imageCalculated = true;
 		redraw = true;
@@ -133,6 +163,8 @@ public class Chunk {
 	}
 
 	public void dispose() {
+		disposed = true;
+		arraysInstantiated = false;
 		if (image != null)
 			image.dispose();
 		imageData = null;
@@ -144,6 +176,10 @@ public class Chunk {
 		currentPosY = null;
 		diff = null;
 		sampleCount = null;
+	}
+
+	public boolean isDisposed() {
+		return disposed;
 	}
 
 	public Position getStartPosition() {
@@ -163,11 +199,11 @@ public class Chunk {
 	}
 	
 	public double getX(int iX) {
-		return startPosition.getX() + iX*delta.getX()/chunk_size;
+		return startPosition.getX() + (iX)*delta.getX()/chunk_size;
 	}
 	
 	public double getY(int iY) {
-		return startPosition.getY() + iY*delta.getY()/chunk_size;
+		return startPosition.getY() + (iY)*delta.getY()/chunk_size;
 	}
 	
 	public int getChunkSize() {
@@ -200,5 +236,9 @@ public class Chunk {
 
 	public double getPriority() {
 		return priorityMultiplier*stepPriorityMultiplier*distanceToMid;
+	}
+
+	public Position getGridPosition() {
+		return gridPos;
 	}
 }

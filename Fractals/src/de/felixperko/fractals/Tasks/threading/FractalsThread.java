@@ -22,7 +22,7 @@ public class FractalsThread extends Thread {
 	
 	PerformanceMonitor monitor;
 
-	CategoryLogger log;
+	protected CategoryLogger log;
 
 	public FractalsThread(String name, int priority) {
 		setName(name);

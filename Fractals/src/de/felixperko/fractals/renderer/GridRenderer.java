@@ -13,7 +13,9 @@ import org.eclipse.swt.widgets.Canvas;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.data.Chunk;
+import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.Location;
 import de.felixperko.fractals.util.Position;
@@ -22,8 +24,8 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	Canvas canvas;
 	
-	Grid grid;
 	NewTaskManagerImpl taskManager;
+	Grid grid;
 	
 	double maxViewDistance = 5;
 	
@@ -38,26 +40,33 @@ public class GridRenderer extends AbstractRendererImpl {
 	boolean initialized = false;
 	
 	double insidePriorityMultiplier = 1;
-	double outsidePriorityMultiplier = 2;
+	double outsidePriorityMultiplier = 5;
 	
-	public GridRenderer(TaskManager taskManager) {
+	boolean redraw = true;
+	
+	public GridRenderer() {
 		grid = new Grid(this);
-		this.taskManager = taskManager;
 	}
 	
-	public void setMin(Position min) {
+	public void setTaskManager(TaskManager taskManager){
+		if (!(taskManager instanceof NewTaskManagerImpl))
+			throw new IllegalArgumentException();
+		this.taskManager = (NewTaskManagerImpl) taskManager;
+	}
+	
+	public void setGridMin(Position min) {
 		minGridX = min.getX();
 		minGridY = min.getY();
 		calcMid();
 	}
 	
-	public void setMax(Position max) {
+	public void setGridMax(Position max) {
 		maxGridX = max.getX();
 		maxGridY = max.getY();
 		calcMid();
 	}
 	
-	public void setMinMax(Position min, Position max) {
+	public void setGridMinMax(Position min, Position max) {
 		minGridX = min.getX();
 		minGridY = min.getY();
 		maxGridX = max.getX();
@@ -93,6 +102,11 @@ public class GridRenderer extends AbstractRendererImpl {
 	@Override
 	public void init() {
 		this.canvas = FractalsMain.mainWindow.canvas;
+		int w = canvas.getSize().x;
+		int h = canvas.getSize().y;
+		DataDescriptor dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, w, h, w, h, 1000, rendererStateHolder);
+		setDataDescriptor(dataDescriptor);
+		grid.init();
 		updateRendererPositions();
 		initialized = true;
 	}
@@ -117,8 +131,16 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	@Override
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
-		// TODO Auto-generated method stub
-
+		//TODO ZOOM POSITION!
+//		Position clickPoint = grid.getSpaceOffset(grid.getGridPosition(mouse_x, mouse_y));
+		Position newScreenStart = new Position(mouse_x*0.5, mouse_y*0.5);
+		Position newGridStart = grid.getGridPosition((int)newScreenStart.getX(), (int)newScreenStart.getY());//TODO ADJUST FOR ZOOM COPY ALIGNMENT
+		Position newSpaceStart = grid.getSpacePosition(newGridStart);
+		grid.scaleBy(spacing_factor);
+		grid.setScreenOffset(newSpaceStart);
+		//TODO EVERYTHING WRONG HERE! DRAMA!
+		setGridMinMax(new Position(-2,-2), new Position((maxGridX-minGridX)*0.5, (maxGridY-minGridY)*0.5));
+		grid.reset();
 	}
 
 	@Override
@@ -140,24 +162,32 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 
 	@Override
-	public boolean isRedraw() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isRedrawAndReset() {
+		boolean wasRedraw = redraw;
+		redraw = false;
+		return wasRedraw;
+	}
+
+	public void setRedraw() {
+		redraw = true;
 	}
 
 	@Override
 	public void render(PaintEvent e, boolean save) {
+//		PerfInstance renderPerf = PerfInstance.createNewAndBegin("render");
 		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
 			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
 				Chunk chunk = grid.getChunk(gridX, gridY);
 				if (!chunk.imageCalculated) {
 					chunk.calculatePixels();
-					chunk.refreshImage(e.display);
 				}
-				Position offset = grid.getOffset(new Position(gridX, gridY));
+				chunk.refreshImage(e.display);
+				Position offset = grid.getScreenOffset(new Position(gridX, gridY));
 				e.gc.drawImage(chunk.image, (int) offset.getX(), (int) offset.getY());
 			}
 		}
+//		renderPerf.end();
+//		renderPerf.printChildSecondsToLog(3);
 	}
 
 	@Override
@@ -181,7 +211,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	@Override
 	public void shift(Position shift) {
 		//set grid offset
-		grid.setOffset(grid.getOffset().performOperation(Position.addNew, shift));
+		grid.setScreenOffset(grid.getScreenOffset().performOperation(Position.addNew, shift));
 		boundsChanged();
 	}
 	
@@ -221,7 +251,34 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	private void updateRendererPositions() {
 		Point p = canvas.getSize();
-		setMinMax(grid.getGridPosition(0,0), grid.getGridPosition(p.x, p.y));
+		setGridMinMax(new Position(-2,-2), grid.getGridPosition(p.x, p.y));
+//		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
+//			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
+//				grid.getChunk(gridX, gridY);
+//			}
+//		}
+	}
+
+	public void scaleBy(double scaleBy) {
+		getDataDescriptor().scaleBy(scaleBy);
+		scaleGridMax(scaleBy);
+	}
+
+	public Position getGridMin() {
+		return new Position(minGridX, minGridX);
+	}
+
+	public Position getGridMax() {
+		return new Position(maxGridX, maxGridY);
+	}
+
+	public void scaleGridMax(double scaleBy) {
+		Position min = getGridMin();
+		setGridMax(getGridMax().performOperation(Position.sub, min).scaleBy(scaleBy, false).performOperation(Position.add, min));
+	}
+
+	public NewTaskManagerImpl getTaskManager() {
+		return taskManager;
 	}
 
 }

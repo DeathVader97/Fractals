@@ -297,7 +297,7 @@ public class FractalRendererSWT extends FractalRendererAWT {
 	}
 
 
-	public boolean isRedraw() {
+	public boolean isRedrawAndReset() {
 		checkDrawConditions();
 		return redraw;
 	}

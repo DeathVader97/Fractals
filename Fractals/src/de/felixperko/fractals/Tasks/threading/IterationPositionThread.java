@@ -26,6 +26,7 @@ public class IterationPositionThread extends FractalsThread {
 	
 	@Override
 	public void run() {
+		log.log("started");
 		while (!Thread.interrupted()){
 			while (jobIdDone == jobId || iterations >= maxIterations){
 				//TODO replace with reentrant lock etc.

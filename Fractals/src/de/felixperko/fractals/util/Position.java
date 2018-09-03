@@ -23,7 +23,6 @@ public class Position {
 		return new Position((x*x - (y*y)), (x*y + (y*x)));
 	};
 	
-	
 	double x,y;
 	
 
@@ -53,6 +52,16 @@ public class Position {
 
 	public void setY(double y) {
 		this.y = y;
+	}
+	
+	public Position scaleBy(double scale, boolean newInstance){
+		if (newInstance)
+			return new Position(x*scale, y*scale);
+		else {
+			x *= scale;
+			y *= scale;
+			return this;
+		}
 	}
 	
 	public Position screenToPlane(DataDescriptor dataDescriptor) {
@@ -117,5 +126,10 @@ public class Position {
 
 	public void addY(double add) {
 		this.y += add;
+	}
+	
+	@Override
+	public String toString() {
+		return x+", "+y;
 	}
 }

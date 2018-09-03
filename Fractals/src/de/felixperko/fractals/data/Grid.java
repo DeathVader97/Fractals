@@ -13,7 +13,7 @@ import de.felixperko.fractals.util.Position;
 
 public class Grid {
 	
-	int chunk_size = 16;
+	int chunk_size = 64;
 	
 	GridRenderer renderer;
 	
@@ -21,41 +21,72 @@ public class Grid {
 	
 	public HashMap<Position, Chunk> map = new HashMap<>();
 	
-	Position offset;
-	double shiftX;
-	double shiftY;
+	Position screenOffset;
+	double screenShiftX;
+	double screenShiftY;
+	
+	Position spaceOffset;
+	double spaceShiftX;
+	double spaceShiftY;
 	
 	public Grid(GridRenderer renderer) {
 		this.renderer = renderer;
-		this.offset = new Position(0,0);
-		this.shiftX = 16;
-		this.shiftY = 16;
+		
+		this.screenOffset = new Position(0,0);
+		this.screenShiftX = chunk_size;
+		this.screenShiftY = chunk_size;
 	}
 	
+	public void init(){
+		updateSpaceDimensions();
+	}
+
 	public Chunk getChunk(int gridX, int gridY) {
 		Position pos = getPosition(gridX, gridY);
 		Chunk c = map.get(pos);
 		if (c == null) {
-			c = new Chunk(chunk_size, renderer.getDataDescriptor(), this);
+			c = new Chunk(chunk_size, renderer.getDataDescriptor(), this, pos);
 			map.put(pos, c);
+			renderer.getTaskManager().addChunk(c);
 		}
 		return c;
 	}
 	
-	public Position getOffset(Position gridPos) {
-		return new Position(offset.getX() + gridPos.getX()*shiftX, offset.getY() + gridPos.getY()*shiftY);
+	public Position getScreenOffset(Position gridPos) {
+		return new Position(screenOffset.getX() + gridPos.getX()*screenShiftX, screenOffset.getY() + gridPos.getY()*screenShiftY);
 	}
 	
-	public Position getOffset() {
-		return offset;
+	public Position getSpaceOffset(Position gridPos) {
+		return new Position(spaceOffset.getX() + gridPos.getX()*spaceShiftX, spaceOffset.getY() + gridPos.getY()*spaceShiftY);
 	}
 	
-	public void setOffset(Position offset) {
-		this.offset = offset;
+	public Position getScreenOffset() {
+		return screenOffset;
+	}
+	
+	public void setScreenOffset(Position offset) {
+		this.screenOffset = offset;
 	}
 
-	public void shiftOffset(Position shift) {
-		this.offset.performOperation(Position.add, shift);
+	public void shifScreentOffset(Position shift) {
+		this.screenOffset.performOperation(Position.add, shift);
+	}
+	
+	public void updateSpaceDimensions() {
+		double scaleX = getScaleX();
+		double scaleY = getScaleY();
+		this.spaceOffset = new Position(renderer.getDataDescriptor().getStart_x(), renderer.getDataDescriptor().getStart_y());
+//		this.spaceOffset = new Position(screenOffset.getX()*scaleX, screenOffset.getY()*scaleY);
+		this.spaceShiftX = screenShiftX*scaleX;
+		this.spaceShiftY = screenShiftY*scaleY;
+	}
+	
+	public double getScaleX(){
+		return renderer.getDataDescriptor().getDelta_x()/renderer.getDataDescriptor().getDim_goal_x();
+	}
+	
+	public double getScaleY(){
+		return renderer.getDataDescriptor().getDelta_x()/renderer.getDataDescriptor().getDim_goal_x();
 	}
 
 	private Position getPosition(int gridX, int gridY) {
@@ -75,13 +106,45 @@ public class Grid {
 	}
 	
 	public Position getGridPosition(int screenX, int screenY) {
-		return new Position((screenX-offset.getX())/shiftX, (screenY-offset.getY())/shiftY);
+		return new Position((screenX-screenOffset.getX())/screenShiftX, (screenY-screenOffset.getY())/screenShiftY);
 	}
 
 	public void disposeChunk(Position key) {
 		Chunk c = map.remove(key);
 		c.dispose();
-		priorityList.remove(c);
+		renderer.getTaskManager().priorityList.remove(c);
 		positions.get((int)key.getX()).remove((int)key.getY());
 	}
+
+	public int getChunkSize() {
+		return chunk_size;
+	}
+	
+	public void scaleBy(double scaleBy){
+		renderer.scaleBy(scaleBy);
+		updateSpaceDimensions();
+		reset();
+		renderer.setRedraw();
+	}
+
+	public void reset() {
+		positions.clear();
+		for (Chunk c : map.values())
+			c.dispose();
+		map.clear();
+		
+//		spaceShiftX *= 0.5;
+//		spaceShiftY *= 0.5;
+	}
+
+	public GridRenderer getRenderer() {
+		return renderer;
+	}
+
+	public Position getSpacePosition(Position gridPosition) {
+		return new Position(gridPosition.getX()*screenShiftX + spaceOffset.getX(),
+							gridPosition.getY()*screenShiftY + spaceOffset.getY());
+	}
+	
+	
 }

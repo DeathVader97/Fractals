@@ -20,8 +20,8 @@ public interface Renderer {
 	public DataDescriptor getDataDescriptor();
 	public void setDataDescriptor(DataDescriptor dataDescriptor);
 
-	public DataContainer getDataContainer();
-	public void setDataContainer(DataContainer dataContainer);
+//	public DataContainer getDataContainer();
+//	public void setDataContainer(DataContainer dataContainer);
 
 	public void setMaxIterations(int maxIterations);
 
@@ -37,7 +37,7 @@ public interface Renderer {
 
 	public void startIterationPositionThread();
 
-	public boolean isRedraw();
+	public boolean isRedrawAndReset();
 
 	public void render(PaintEvent e, boolean save);
 

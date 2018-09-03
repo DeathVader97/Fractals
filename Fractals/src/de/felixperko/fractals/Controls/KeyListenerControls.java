@@ -68,9 +68,11 @@ public class KeyListenerControls implements KeyListener {
 //			saveLocation = true;
 //	}
 
-	double shiftSensitivity = 16;
-	Position shift = new Position(0,0);
-	Position nullPos = new Position(0,0);
+	double shiftSensitivity = 1000;
+	public static Position shift = new Position(0,0);
+	public static Position nullPos = new Position(0,0);
+	
+	boolean left,right,up,down;
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -80,23 +82,35 @@ public class KeyListenerControls implements KeyListener {
 			mainWindow.jumpToSavedLocation(false);
 		}
 		
-		else if (e.keyCode == SWT.ARROW_LEFT)
+		else if (e.keyCode == SWT.ARROW_LEFT && !left) {
 			shift.addX(shiftSensitivity);
-		else if (e.keyCode == SWT.ARROW_RIGHT)
+			left = true;
+		} else if (e.keyCode == SWT.ARROW_RIGHT && !right) {
 			shift.addX(-shiftSensitivity);
-		else if (e.keyCode == SWT.ARROW_UP)
+			right = true;
+		} else if (e.keyCode == SWT.ARROW_UP && !up) {
 			shift.addY(shiftSensitivity);
-		else if (e.keyCode == SWT.ARROW_DOWN)
+			up = true;
+		} else if (e.keyCode == SWT.ARROW_DOWN && !down) {
 			shift.addY(-shiftSensitivity);
-		
-		if (!shift.equals(nullPos)) {
-			FractalsMain.mainWindow.shift(shift);
-			shift = new Position(0,0);
+			down = true;
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
+		if (e.keyCode == SWT.ARROW_LEFT && left) {
+			shift.addX(-shiftSensitivity);
+			left = false;
+		} else if (e.keyCode == SWT.ARROW_RIGHT && right) {
+			shift.addX(shiftSensitivity);
+			right = false;
+		} else if (e.keyCode == SWT.ARROW_UP && up) {
+			shift.addY(-shiftSensitivity);
+			up = false;
+		} else if (e.keyCode == SWT.ARROW_DOWN && down) {
+			shift.addY(shiftSensitivity);
+			down = false;
+		}
 	}
-
 }

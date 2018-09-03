@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.network.ClientThread;
 import de.felixperko.fractals.network.ServerConnectThread;
@@ -18,6 +19,7 @@ public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
 	IterationPositionThread iterationWorkerThread;
+	NewTaskManagerImpl taskManagerThread;
 	
 	TaskProvider taskProvider;
 	
@@ -68,6 +70,8 @@ public class ThreadManager {
 		
 		iterationWorkerThread = new IterationPositionThread();
 		iterationWorkerThread.start();
+		
+		taskManagerThread = (NewTaskManagerImpl) FractalsMain.taskManager;
 		
 		updateProviders();
 	}

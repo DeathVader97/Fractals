@@ -6,9 +6,12 @@ import de.felixperko.fractals.state.stateholders.RendererStateHolder;
 
 public abstract class AbstractRendererImpl implements Renderer {
 	
-	DataContainer dataContainer;
+//	DataContainer dataContainer;
 	DataDescriptor dataDescriptor;
 	RendererStateHolder rendererStateHolder = new RendererStateHolder();
+	
+	public AbstractRendererImpl() {
+	}
 
 	@Override
 	public DataDescriptor getDataDescriptor() {
@@ -20,15 +23,15 @@ public abstract class AbstractRendererImpl implements Renderer {
 		this.dataDescriptor = dataDescriptor;
 	}
 
-	@Override
-	public DataContainer getDataContainer() {
-		return dataContainer;
-	}
-
-	@Override
-	public void setDataContainer(DataContainer dataContainer) {
-		this.dataContainer = dataContainer;
-	}
+//	@Override
+//	public DataContainer getDataContainer() {
+//		return dataContainer;
+//	}
+//
+//	@Override
+//	public void setDataContainer(DataContainer dataContainer) {
+//		this.dataContainer = dataContainer;
+//	}
 
 	public RendererStateHolder getRendererStateHolder() {
 		return rendererStateHolder;

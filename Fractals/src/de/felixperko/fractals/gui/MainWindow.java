@@ -43,6 +43,7 @@ import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.renderer.FractalRendererSWT;
+import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
@@ -54,6 +55,7 @@ import de.felixperko.fractals.state.SwitchState;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 import de.felixperko.fractals.util.Message;
+import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 import org.eclipse.swt.widgets.ProgressBar;
@@ -122,10 +124,12 @@ public class MainWindow {
 			((FractalRendererSWT)renderer).prepare();
 		FractalsMain.threadManager = new ThreadManager();
 		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
-//		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
-//		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
-		FractalsMain.taskManager = new NewTaskManagerImpl();
+		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
+		FractalsMain.taskProvider.setDataDescriptor(renderer.getDataDescriptor());
+		FractalsMain.taskManager = new NewTaskManagerImpl((GridRenderer) renderer);
 		FractalsMain.taskManager.generateTasks();
+		((NewTaskManagerImpl)FractalsMain.taskManager).start();
+		((GridRenderer)renderer).setTaskManager(FractalsMain.taskManager);
 		FractalsMain.performanceMonitor.startPhase();
 		mainRenderer.startIterationPositionThread();
 		
@@ -133,18 +137,18 @@ public class MainWindow {
 			
 			tick();
 			
-			if (mainRenderer != null && mainRenderer.isRedraw()) {
+			if (mainRenderer != null && mainRenderer.isRedrawAndReset()) {
 				redraw = false;
 				canvas.redraw();
 			}
 			
 			if (!display.readAndDispatch()) {
 //				display.sleep();
-				try {
-					Thread.sleep(8,333333);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+//				try {
+//					Thread.sleep(8,333333);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
 			}
 		}
 	}
@@ -152,10 +156,20 @@ public class MainWindow {
 	int lastVisIterations = 0;
 	int lastVisJobID = -1;
 	
+	long lastTime = 0;
+	
 	private void tick() {
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
 		
-		if (needsRedraw())
+		if (!KeyListenerControls.shift.equals(KeyListenerControls.nullPos)) {
+			double dt = (System.nanoTime() - lastTime)*NumberUtil.NS_TO_S;
+			if (dt > 0.05)
+				dt = 0.05;
+			FractalsMain.mainWindow.shift(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
+		}
+		lastTime = System.nanoTime();
+		
+		if (isRedrawAndReset())
 			canvas.redraw();
 //		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //		int it = ips.getIterations();
@@ -173,9 +187,15 @@ public class MainWindow {
 		lblStatus.setText(FractalsMain.taskManager.getStateText());
 	}
 	
+	public boolean isRedrawAndReset() {
+		boolean redraw = isRedraw();
+		redraw = false;
+		return redraw;
+	}
+
 	boolean firstRedraw = true;
 	
-	private boolean needsRedraw() {
+	private boolean needsFirstRedraw() {
 		if (firstRedraw) {
 			firstRedraw = false;
 			return true;

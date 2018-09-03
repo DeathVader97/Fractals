@@ -114,12 +114,13 @@ public class MandelbrotCalculator extends AbstractCalculator{
 		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
 			
 			//abort if already calculated for now...
-			if (chunk.sampleCount[i] > 0) {
+			if (chunk.isDisposed() || chunk.sampleCount[i] > 0) {
 				continue;
 			}
 			
 			//update position
 			xShift++;
+			yPos = chunk.getY(yShift);
 			if (xShift >= chunk_size) {
 				xShift = 0;
 				yShift++;
@@ -152,7 +153,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				imag += cimag;
 				
 				if (realSq + imagSq > (1 << 16)) {//outside -> done
-					float iterations = j;
+					float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  ));
 					chunk.iterationsSum[i] += iterations;
 					chunk.iterationsSumSq[i] += iterations*iterations;
 					chunk.currentPosX[i] = (float) real;

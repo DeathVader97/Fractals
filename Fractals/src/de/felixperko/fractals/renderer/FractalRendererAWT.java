@@ -205,7 +205,7 @@ public abstract class FractalRendererAWT implements Renderer {
 	/* (non-Javadoc)
 	 * @see de.felixperko.fractals.Renderer#getDataContainer()
 	 */
-	@Override
+//	@Override
 	public DataContainer getDataContainer() {
 		return dataContainer;
 	}
@@ -213,7 +213,7 @@ public abstract class FractalRendererAWT implements Renderer {
 	/* (non-Javadoc)
 	 * @see de.felixperko.fractals.Renderer#setDataContainer(de.felixperko.fractals.DataContainer)
 	 */
-	@Override
+//	@Override
 	public void setDataContainer(DataContainer dataContainer) {
 		this.dataContainer = dataContainer;
 	}

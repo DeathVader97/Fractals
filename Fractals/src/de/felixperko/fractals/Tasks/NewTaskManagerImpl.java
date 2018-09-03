@@ -5,16 +5,19 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.threading.FractalsThread;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.renderer.GridRenderer;
+import de.felixperko.fractals.renderer.Renderer;
 
 public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	
-	public NewTaskManagerImpl() {
+	public NewTaskManagerImpl(GridRenderer renderer) {
 		super("TaskManager", 5);
+		this.renderer = renderer;
 	}
 
 	GridRenderer renderer;
@@ -23,7 +26,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	
 	boolean generateTasks;
 	boolean updatePriorities;
-	public List<Chunk> addChunkList = new ArrayList<>();
+	List<Chunk> addChunkList = new ArrayList<>();
+	List<ChunkTask> finishedTaskList = new ArrayList<>();
 	
 	boolean idle = true;
 	
@@ -38,13 +42,17 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	public void addChunk(Chunk c) {
 		synchronized (addChunkList) {
 			addChunkList.add(c);
+			if (c.getGridPosition().getX() == c.getGridPosition().getY())
+				log.log("Queued "+c.getGridPosition().toString()+" -> "+addChunkList.size()+" "+this);
+			generateTasks = true;
 		}
 	}
 	
 	@Override
 	public void run() {
+		log.log("started");
 		//TODO replace sleep with reentrant lock
-		
+		log.log(this+"");
 		//Task Manager loop
 		while (!Thread.interrupted()) {
 			
@@ -52,6 +60,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			
 			generateTasks();
 			updatePriorities();
+			finishTasks();
 
 			setPhase(FractalsThread.PHASE_IDLE);
 			if (idle) {//nothing has been done, save some time
@@ -65,19 +74,36 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		setPhase(FractalsThread.PHASE_STOPPED);
 	}
 	
+	private void finishTasks() {
+		if (finishedTaskList.isEmpty())
+			return;
+		synchronized (finishedTaskList) {
+			System.out.println(finishedTaskList.size());
+			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.canvas.redraw());
+			finishedTaskList.clear();
+		}
+		
+	}
+
 	@Override
 	public void generateTasks() {
-		if (!generateTasks)
+		if (!generateTasks){
 			return;
+		}
 		generateTasks = false;
 		idle = false;
 		setPhase(FractalsThread.PHASE_WORKING);
 		
 		synchronized (addChunkList) {
-			for (Chunk add : addChunkList) {
-				priorityList.add(new ChunkTask(add, dataDescriptor));
+			if (!addChunkList.isEmpty()){
+				dataDescriptor = renderer.getDataDescriptor();
+				for (Chunk add : addChunkList) {
+					if (!add.isDisposed()) {
+						priorityList.add(new ChunkTask(add, dataDescriptor));
+					}
+				}
+				addChunkList.clear();
 			}
-			addChunkList.clear();
 		}
 	}
 	
@@ -92,19 +118,23 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	}
 
 	@Override
-	public Task getTask() {
+	public synchronized Task getTask() {
 		if (!idle) //busy
 			return null;
-		
+		if (priorityList.isEmpty())
+			return null;
 		ChunkTask c = priorityList.remove(0);
-		
+//		log.log("provided task...");
 		return c;
 	}
 
 	@Override
 	public void taskFinished(Task task) {
-		// TODO Auto-generated method stub
-
+		if (!(task instanceof ChunkTask))
+			throw new IllegalArgumentException();
+		synchronized (finishedTaskList) {
+			finishedTaskList.add((ChunkTask)task);
+		}
 	}
 
 	@Override
@@ -116,7 +146,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	@Override
 	public boolean isJobActive(int jobId) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
