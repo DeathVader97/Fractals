@@ -338,6 +338,6 @@ public abstract class FractalRendererAWT implements Renderer {
 	}
 	
 	@Override
-	public void shift(Position shift) {
+	public void shiftView(Position shift) {
 	}
 }

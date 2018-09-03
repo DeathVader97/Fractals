@@ -812,6 +812,6 @@ public class MainWindow {
 	}
 
 	public void shift(Position shift) {
-		mainRenderer.shift(shift);
+		mainRenderer.shiftView(shift);
 	}
 }

@@ -47,6 +47,6 @@ public interface Renderer {
 
 	public void reset();
 
-	public void shift(Position shift);
+	public void shiftView(Position shift);
 
 }

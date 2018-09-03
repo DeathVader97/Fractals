@@ -78,7 +78,6 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		if (finishedTaskList.isEmpty())
 			return;
 		synchronized (finishedTaskList) {
-			System.out.println(finishedTaskList.size());
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.canvas.redraw());
 			finishedTaskList.clear();
 		}

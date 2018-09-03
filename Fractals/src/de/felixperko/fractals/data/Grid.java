@@ -53,11 +53,13 @@ public class Grid {
 	}
 	
 	public Position getScreenOffset(Position gridPos) {
-		return new Position(screenOffset.getX() + gridPos.getX()*screenShiftX, screenOffset.getY() + gridPos.getY()*screenShiftY);
+		return new Position(screenOffset.getX() + gridPos.getX()*screenShiftX,
+							screenOffset.getY() + gridPos.getY()*screenShiftY);
 	}
 	
 	public Position getSpaceOffset(Position gridPos) {
-		return new Position(spaceOffset.getX() + gridPos.getX()*spaceShiftX, spaceOffset.getY() + gridPos.getY()*spaceShiftY);
+		return new Position(spaceOffset.getX() + gridPos.getX()*spaceShiftX,
+							spaceOffset.getY() + gridPos.getY()*spaceShiftY);
 	}
 	
 	public Position getScreenOffset() {
@@ -66,9 +68,14 @@ public class Grid {
 	
 	public void setScreenOffset(Position offset) {
 		this.screenOffset = offset;
+		Position newGridStart = getGridPosition((int)offset.getX(), (int)offset.getY());
+		Position newSpaceStart = getSpacePosition(newGridStart);
+		renderer.getDataDescriptor().setStart_x(newSpaceStart.getX());
+		renderer.getDataDescriptor().setStart_y(newSpaceStart.getY());
+		updateSpaceDimensions();
 	}
 
-	public void shifScreentOffset(Position shift) {
+	public void shiftScreenOffset(Position shift) {
 		this.screenOffset.performOperation(Position.add, shift);
 	}
 	
@@ -106,7 +113,8 @@ public class Grid {
 	}
 	
 	public Position getGridPosition(int screenX, int screenY) {
-		return new Position((screenX-screenOffset.getX())/screenShiftX, (screenY-screenOffset.getY())/screenShiftY);
+		return new Position((screenX-screenOffset.getX())/screenShiftX,
+							(screenY-screenOffset.getY())/screenShiftY);
 	}
 
 	public void disposeChunk(Position key) {
@@ -142,8 +150,23 @@ public class Grid {
 	}
 
 	public Position getSpacePosition(Position gridPosition) {
-		return new Position(gridPosition.getX()*screenShiftX + spaceOffset.getX(),
-							gridPosition.getY()*screenShiftY + spaceOffset.getY());
+		return new Position(gridPosition.getX()*chunk_size*getScaleX() + spaceOffset.getX(),
+							gridPosition.getY()*chunk_size*getScaleY() + spaceOffset.getY());
+	}
+
+	public Position spaceToGrid(Position spacePosition) {
+		return new Position((spacePosition.getX()-spaceOffset.getX())/getScaleX()/chunk_size,
+							(spacePosition.getY()-spaceOffset.getY())/getScaleY()/chunk_size);
+	}
+
+	public void setSpaceOffset(Position newSpaceOffset) {
+		this.spaceOffset = newSpaceOffset;
+		updateSpaceDimensions();
+	}
+
+	public Position getGridPosition(Position screenPos) {
+		return new Position((screenPos.getX()-screenOffset.getX())/screenShiftX,
+							(screenPos.getY()-screenOffset.getY())/screenShiftY);
 	}
 	
 	
