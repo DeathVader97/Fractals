@@ -4,6 +4,7 @@ import java.util.Random;
 
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
+import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.Position;
 
@@ -95,6 +96,108 @@ public class TestCalculator extends AbstractCalculator{
 				results[i] = -1;
 			}
 		}
+	}
+	
+	@Override
+	public void calculate_samples(Chunk chunk, int maxiterations, Position[] samplepattern) {
+
+		int dim_x = descriptor.getDim_sampled_x();
+		
+		int pow = descriptor.getFractalPower();
+		double startReal = descriptor.getFractalBias().getX();
+		double startImag = descriptor.getFractalBias().getY();
+		
+		int chunk_size = chunk.getChunkSize();
+		int xShift = -1;
+		int yShift = 0;
+		
+		double xPos = 0;
+		double yPos = 0;
+		
+		int globalMaxIterations = descriptor.getMaxIterations();
+		
+		Position delta = new Position(descriptor.getDelta_x()/descriptor.getDim_goal_x(), descriptor.getDelta_y()/descriptor.getDim_goal_y());
+
+		mainLoop : 
+		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
+			
+			//update position
+			xShift++;
+			yPos = chunk.getY(yShift);
+			if (xShift >= chunk_size) {
+				xShift = 0;
+				yShift++;
+				yPos = chunk.getY(yShift);
+			}
+			xPos = chunk.getX(xShift);
+			
+			if (chunk.isDisposed() || chunk.sampleCount == null) {
+				continue;
+			}
+			
+			Position prevsampleoffset = null;
+			
+			sampleLoop:
+			for (int k = chunk.sampleCount[i] ; k < samplepattern.length ; k++) {
+				
+				Position sampleoffset = samplepattern[k];
+				xPos += sampleoffset.getX()*delta.getX();
+				yPos += sampleoffset.getY()*delta.getY();
+				if (prevsampleoffset != null) {
+					xPos -= prevsampleoffset.getX()*delta.getX();
+					yPos -= prevsampleoffset.getY()*delta.getY();
+				}
+				prevsampleoffset = sampleoffset;
+				
+				int j = chunk.finishedIterations;
+				double real = (j == 0) ? startReal : chunk.currentPosX[i];
+				double imag = (j == 0) ? startImag : chunk.currentPosY[i];
+				double creal = xPos;
+				double cimag = yPos;
+				
+				if (j == 0)
+					chunk.sampleCount[i]++;
+				
+				for ( ; j < maxiterations ; j++) {
+					run_iterations++;
+					double realSq = 0;
+					double imagSq = 0;
+					for (int l = 1 ; l < pow ; l++){
+						if (r.nextBoolean()){
+							real = Math.abs(real);
+							imag = Math.abs(imag);
+						}
+						realSq = real*real;
+						imagSq = imag*imag;
+						imag = 2*real*imag;
+						real = realSq - imagSq;
+					}
+					real += creal;
+					imag += cimag;
+					
+					if (realSq + imagSq > (1 << 16)) {//outside -> done
+						float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  ));
+						chunk.iterationsSum[i] += iterations;
+						chunk.iterationsSumSq[i] += iterations*iterations;
+						if (k == 0) {
+							chunk.currentPosX[i] = (float) real;
+							chunk.currentPosY[i] = (float) imag;
+						}
+						continue sampleLoop;
+					}
+				}
+				
+				//still not outside
+				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
+					chunk.currentPosX[i] = (float) real;
+					chunk.currentPosY[i] = (float) imag;
+				} else { //max iterations reached -> declared as in the mandelbrot set
+					
+				}
+			
+			}
+		}
+		chunk.finishedIterations = maxiterations;
 	}
 	
 	boolean burning = true;

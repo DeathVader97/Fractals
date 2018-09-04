@@ -68,7 +68,7 @@ public class KeyListenerControls implements KeyListener {
 //			saveLocation = true;
 //	}
 
-	double shiftSensitivity = 1000;
+	double shiftSensitivity = 500;
 	public static Position shift = new Position(0,0);
 	public static Position nullPos = new Position(0,0);
 	
@@ -83,16 +83,16 @@ public class KeyListenerControls implements KeyListener {
 		}
 		
 		else if (e.keyCode == SWT.ARROW_LEFT && !left) {
-			shift.addX(shiftSensitivity);
+			shift.addX(-shiftSensitivity);
 			left = true;
 		} else if (e.keyCode == SWT.ARROW_RIGHT && !right) {
-			shift.addX(-shiftSensitivity);
+			shift.addX(shiftSensitivity);
 			right = true;
 		} else if (e.keyCode == SWT.ARROW_UP && !up) {
-			shift.addY(shiftSensitivity);
+			shift.addY(-shiftSensitivity);
 			up = true;
 		} else if (e.keyCode == SWT.ARROW_DOWN && !down) {
-			shift.addY(-shiftSensitivity);
+			shift.addY(shiftSensitivity);
 			down = true;
 		}
 	}
@@ -100,16 +100,16 @@ public class KeyListenerControls implements KeyListener {
 	@Override
 	public void keyReleased(KeyEvent e) {
 		if (e.keyCode == SWT.ARROW_LEFT && left) {
-			shift.addX(-shiftSensitivity);
+			shift.addX(shiftSensitivity);
 			left = false;
 		} else if (e.keyCode == SWT.ARROW_RIGHT && right) {
-			shift.addX(shiftSensitivity);
+			shift.addX(-shiftSensitivity);
 			right = false;
 		} else if (e.keyCode == SWT.ARROW_UP && up) {
-			shift.addY(-shiftSensitivity);
+			shift.addY(shiftSensitivity);
 			up = false;
 		} else if (e.keyCode == SWT.ARROW_DOWN && down) {
-			shift.addY(shiftSensitivity);
+			shift.addY(-shiftSensitivity);
 			down = false;
 		}
 	}

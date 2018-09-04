@@ -68,11 +68,11 @@ public class Grid {
 	
 	public void setScreenOffset(Position offset) {
 		this.screenOffset = offset;
-		Position newGridStart = getGridPosition((int)offset.getX(), (int)offset.getY());
-		Position newSpaceStart = getSpacePosition(newGridStart);
-		renderer.getDataDescriptor().setStart_x(newSpaceStart.getX());
-		renderer.getDataDescriptor().setStart_y(newSpaceStart.getY());
-		updateSpaceDimensions();
+//		Position newGridStart = getGridPosition((int)offset.getX(), (int)offset.getY());
+//		Position newSpaceStart = getSpacePosition(newGridStart);
+//		renderer.getDataDescriptor().setStart_x(newSpaceStart.getX());
+//		renderer.getDataDescriptor().setStart_y(newSpaceStart.getY());
+//		updateSpaceDimensions();
 	}
 
 	public void shiftScreenOffset(Position shift) {
@@ -111,11 +111,6 @@ public class Grid {
 		}
 		return pos;
 	}
-	
-	public Position getGridPosition(int screenX, int screenY) {
-		return new Position((screenX-screenOffset.getX())/screenShiftX,
-							(screenY-screenOffset.getY())/screenShiftY);
-	}
 
 	public void disposeChunk(Position key) {
 		Chunk c = map.remove(key);
@@ -129,10 +124,8 @@ public class Grid {
 	}
 	
 	public void scaleBy(double scaleBy){
-		renderer.scaleBy(scaleBy);
 		updateSpaceDimensions();
 		reset();
-		renderer.setRedraw();
 	}
 
 	public void reset() {
@@ -155,18 +148,29 @@ public class Grid {
 	}
 
 	public Position spaceToGrid(Position spacePosition) {
-		return new Position((spacePosition.getX()-spaceOffset.getX())/getScaleX()/chunk_size,
-							(spacePosition.getY()-spaceOffset.getY())/getScaleY()/chunk_size);
+//		return new Position((spacePosition.getX()+spaceOffset.getX())/getScaleX()/chunk_size,
+//							(spacePosition.getY()+spaceOffset.getY())/getScaleY()/chunk_size);
+		return new Position((spacePosition.getX())/getScaleX()/chunk_size,
+							(spacePosition.getY())/getScaleY()/chunk_size);
 	}
 
 	public void setSpaceOffset(Position newSpaceOffset) {
 		this.spaceOffset = newSpaceOffset;
 		updateSpaceDimensions();
 	}
+	
+	public Position getGridPosition(int screenX, int screenY) {
+		return new Position((screenX)/screenShiftX+screenOffset.getX(),
+							(screenY)/screenShiftY+screenOffset.getY());
+	}
 
 	public Position getGridPosition(Position screenPos) {
-		return new Position((screenPos.getX()-screenOffset.getX())/screenShiftX,
-							(screenPos.getY()-screenOffset.getY())/screenShiftY);
+		return new Position((screenPos.getX())/screenShiftX+screenOffset.getX(),
+							(screenPos.getY())/screenShiftY+screenOffset.getY());
+	}
+
+	public Position getScale() {
+		return new Position(getScaleX(), getScaleY());
 	}
 	
 	

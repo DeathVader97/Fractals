@@ -14,7 +14,7 @@ public class Position {
 	};
 	public static BiOperation sub = (p1,p2) -> {
 		p1.setX(p1.getX()-p2.getX());
-		p1.setY(p1.getX()-p2.getY());
+		p1.setY(p1.getY()-p2.getY());
 		return p1;
 	};
 	public static SingleOperation complexSquared = (p) -> { 
@@ -131,5 +131,33 @@ public class Position {
 	@Override
 	public String toString() {
 		return x+", "+y;
+	}
+
+	public Position add(Position other) {
+		this.x += other.x;
+		this.y += other.y;
+		return this;
+	}
+
+	public Position sub(Position other) {
+		this.x -= other.x;
+		this.y -= other.y;
+		return this;
+	}
+
+	public Position mult(Position other) {
+		this.x *= other.x;
+		this.y *= other.y;
+		return this;
+	}
+
+	public Position mult(double factor) {
+		this.x *= factor;
+		this.y *= factor;
+		return this;
+	}
+	
+	public Position copy() {
+		return new Position(x,y);
 	}
 }

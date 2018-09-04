@@ -1,9 +1,29 @@
 package de.felixperko.fractals.Tasks;
 
+import java.util.ArrayList;
+
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.util.Position;
 
 public class ChunkTask extends Task {
+	
+//	static Position[] samplepattern = new Position[] {
+//			new Position(0,0)
+//			,new Position(0.25, 0.25)
+//			,new Position(-0.25, -0.25)
+//			,new Position(-0.25, 0.25)
+//			,new Position(0.25, -0.25)
+//			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
+//			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
+//			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
+//			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
+//			};
+	static Position[] samplepattern = new Position[1000];
+	static {
+		for (int i = 0 ; i < samplepattern.length ; i++)
+			samplepattern[i] = new Position(Math.random()-0.5, Math.random()-0.5);
+	}
 	
 	Chunk chunk;
 	DataDescriptor dataDescriptor;
@@ -17,7 +37,8 @@ public class ChunkTask extends Task {
 	@Override
 	protected void calculate() {
 		int depth = dataDescriptor.getMaxIterations();
-		sampleCalculator.calculate_samples(chunk, depth);
+		sampleCalculator.calculate_samples(chunk, depth, samplepattern);
+		chunk.calculateDiff();
 		chunk.calculatePixels();
 		chunk.setStepPriorityMultiplier(10000);
 	}
@@ -36,5 +57,11 @@ public class ChunkTask extends Task {
 
 	public void setDataDescriptor(DataDescriptor dataDescriptor) {
 		this.dataDescriptor = dataDescriptor;
+	}
+
+	public double getPriority() {
+		if (chunk == null)
+			return Double.MAX_VALUE;
+		return chunk.getPriority();
 	}
 }

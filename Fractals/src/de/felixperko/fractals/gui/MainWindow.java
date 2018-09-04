@@ -137,11 +137,6 @@ public class MainWindow {
 			
 			tick();
 			
-			if (mainRenderer != null && mainRenderer.isRedrawAndReset()) {
-				redraw = false;
-				canvas.redraw();
-			}
-			
 			if (!display.readAndDispatch()) {
 //				display.sleep();
 //				try {
@@ -160,17 +155,24 @@ public class MainWindow {
 	
 	private void tick() {
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
-		
+
+		boolean updateTime = true;
 		if (!KeyListenerControls.shift.equals(KeyListenerControls.nullPos)) {
 			double dt = (System.nanoTime() - lastTime)*NumberUtil.NS_TO_S;
 			if (dt > 0.05)
 				dt = 0.05;
-			FractalsMain.mainWindow.shift(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
+			if (dt < 0.01)
+				updateTime = false;
+			else
+				FractalsMain.mainWindow.shiftScaled(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
 		}
-		lastTime = System.nanoTime();
+		if (updateTime)
+			lastTime = System.nanoTime();
 		
-		if (isRedrawAndReset())
+		if (isRedrawAndReset()) {
 			canvas.redraw();
+			canvas.update();
+		}
 //		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //		int it = ips.getIterations();
 //		if (it > lastVisIterations || (lastVisJobID != ips.getJobID() && it > 0)){
@@ -186,10 +188,10 @@ public class MainWindow {
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.getStateText());
 	}
-	
+
 	public boolean isRedrawAndReset() {
 		boolean redraw = isRedraw();
-		redraw = false;
+		this.redraw = false;
 		return redraw;
 	}
 
@@ -813,5 +815,9 @@ public class MainWindow {
 
 	public void shift(Position shift) {
 		mainRenderer.shiftView(shift);
+	}
+	
+	private void shiftScaled(Position shift) {
+		mainRenderer.shiftView(shift.mult(((GridRenderer)mainRenderer).getGrid().getScale()));
 	}
 }
