@@ -59,6 +59,8 @@ public class ChunkTask extends Task {
 	protected void calculate() {
 		int depth = dataDescriptor.getMaxIterations();
 		try {
+			if (!chunk.arraysInstantiated())
+				chunk.instantiateArrays();
 			sampleCalculator.calculate_samples(chunk, depth, samplepattern);
 			chunk.calculateDiff();
 			chunk.calculatePixels();

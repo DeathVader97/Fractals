@@ -332,8 +332,8 @@ public class GridRenderer extends AbstractRendererImpl {
 		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
 			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
 				Chunk c = grid.getChunk(gridX, gridY);
-				if (!c.imageCalculated)
-					c.calculatePixels();
+//				if (!c.imageCalculated)
+//					c.calculatePixels();
 			}
 		}
 	}
