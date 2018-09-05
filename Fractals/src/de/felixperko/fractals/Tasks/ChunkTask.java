@@ -8,8 +8,8 @@ import de.felixperko.fractals.util.Position;
 
 public class ChunkTask extends Task {
 	
-	static Position[] samplepattern = new Position[] {
-			new Position(0,0)
+//	static Position[] samplepattern = new Position[] {
+//			new Position(0,0)
 //			,new Position(0.25, 0.25)
 //			,new Position(-0.25, -0.25)
 //			,new Position(-0.25, 0.25)
@@ -18,8 +18,28 @@ public class ChunkTask extends Task {
 //			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
 //			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
 //			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
-			};
+//			};
 	
+	static int sampleDim = 4;
+	static Position[] samplepattern = new Position[sampleDim*sampleDim];
+	static {
+		double dimD = Math.sqrt(samplepattern.length);
+		int dim = (int) dimD;
+		if (dimD > dim)
+			throw new IllegalStateException("the squareroot of samplepattern.length has to be integer.");
+		
+		double start = -0.5;
+		double totalDelta = 1;
+		double stepDelta = totalDelta/dim;
+		int i = 0;
+		for (int x = 0 ; x < dim ; x++){
+			for (int y = 0 ; y < dim ; y++){
+				samplepattern[i] = new Position(start+stepDelta*x, start+stepDelta*y);
+				i++;
+			}
+		}
+	}
+
 //	static Position[] samplepattern = new Position[100];
 //	static {
 //		for (int i = 0 ; i < samplepattern.length ; i++)
@@ -69,7 +89,7 @@ public class ChunkTask extends Task {
 
 	public double getPriority() {
 		if (chunk == null)
-			return Double.MAX_VALUE;
+			throw new NullPointerException();
 		return chunk.getPriority();
 	}
 }

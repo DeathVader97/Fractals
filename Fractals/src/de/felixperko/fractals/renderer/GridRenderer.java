@@ -247,8 +247,10 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	@Override
 	public void resized() {
-		if (initialized)
+		if (initialized){
 			updateRendererPositions();
+			boundsChanged();
+		}
 	}
 
 	@Override
