@@ -8,23 +8,23 @@ import de.felixperko.fractals.util.Position;
 
 public class ChunkTask extends Task {
 	
-//	static Position[] samplepattern = new Position[] {
-//			new Position(0,0)
+	static Position[] samplepattern = new Position[] {
+			new Position(0,0)
 //			,new Position(0.25, 0.25)
 //			,new Position(-0.25, -0.25)
 //			,new Position(-0.25, 0.25)
 //			,new Position(0.25, -0.25)
-////			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
-////			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
-////			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
-////			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
-//			};
+//			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
+//			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
+//			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
+//			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
+			};
 	
-	static Position[] samplepattern = new Position[100];
-	static {
-		for (int i = 0 ; i < samplepattern.length ; i++)
-			samplepattern[i] = new Position(Math.random()-0.5, Math.random()-0.5);
-	}
+//	static Position[] samplepattern = new Position[100];
+//	static {
+//		for (int i = 0 ; i < samplepattern.length ; i++)
+//			samplepattern[i] = new Position(Math.random()-0.5, Math.random()-0.5);
+//	}
 	
 	Chunk chunk;
 	DataDescriptor dataDescriptor;
@@ -38,10 +38,17 @@ public class ChunkTask extends Task {
 	@Override
 	protected void calculate() {
 		int depth = dataDescriptor.getMaxIterations();
-		sampleCalculator.calculate_samples(chunk, depth, samplepattern);
-		chunk.calculateDiff();
-		chunk.calculatePixels();
-		chunk.setStepPriorityMultiplier(10000);
+		try {
+			sampleCalculator.calculate_samples(chunk, depth, samplepattern);
+			chunk.calculateDiff();
+			chunk.calculatePixels();
+			chunk.setStepPriorityMultiplier(10000);
+		} catch (NullPointerException e) {
+			if (!chunk.isDisposed()) {
+				System.err.println("NPE at non-disposed chunk task calculation.");
+				throw e;
+			}
+		}
 	}
 	
 	public Chunk getChunk() {

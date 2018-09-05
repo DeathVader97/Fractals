@@ -43,11 +43,11 @@ public class FractalsMain{
 		
 		locationHolder = new LocationHolder();
 		
-		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			Thread.sleep(10);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
 		
 		performanceMonitor = new PerformanceMonitor();
 		

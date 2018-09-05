@@ -7,6 +7,7 @@ import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
@@ -21,6 +22,7 @@ import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.Location;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
+import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class GridRenderer extends AbstractRendererImpl {
 	
@@ -189,26 +191,58 @@ public class GridRenderer extends AbstractRendererImpl {
 	public void setRedraw() {
 		redraw = true;
 	}
+	
+	PerfInstance renderPerf;
 
 	@Override
 	public void render(PaintEvent e, boolean save) {
 //		log.log("render");
-//		PerfInstance renderPerf = PerfInstance.createNewAndBegin("render");
+		renderGrid(e);
+//		renderMinimap(e);
+	}
+
+	private void renderGrid(PaintEvent e) {
 		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
 			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
+				renderPerf = createNewAndBegin("renderChunk");
+				
+				PerfInstance get = createNewSubInstanceAndBegin("getChunk", renderPerf);
 				double shiftX = (gridX-minGridX-1)*grid.getChunkSize();
 				double shiftY = (gridY-minGridY-1)*grid.getChunkSize();
 				Chunk chunk = grid.getChunk(gridX, gridY);
+				get.end();
+				
 				if (!chunk.imageCalculated) {
+					PerfInstance calculate = createNewSubInstanceAndBegin("calculate", renderPerf);
 					chunk.calculatePixels();
+					calculate.end();
 				}
+				
+				PerfInstance refreshImage = createNewSubInstanceAndBegin("refreshImage", renderPerf);
 				chunk.refreshImage(e.display);
-				Position offset = grid.getScreenOffset(new Position(gridX, gridY));
+				refreshImage.end();
+				
+//				Position offset = grid.getScreenOffset(new Position(gridX, gridY));
+				
+				PerfInstance drawImage = createNewSubInstanceAndBegin("drawImage", renderPerf);
 				e.gc.drawImage(chunk.image, (int) shiftX, (int) shiftY);
+				drawImage.end();
+				renderPerf.end();
+				renderPerf.printSecondsToLog(3, true, 0.01);
 			}
 		}
-//		renderPerf.end();
-//		renderPerf.printChildSecondsToLog(3);
+	}
+
+	private void renderMinimap(PaintEvent e) {
+		Point size = canvas.getSize();
+		if (size.x < 200 || size.y < 200)
+			return;
+		e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_BLACK));
+		e.gc.setAlpha(255);
+		e.gc.drawRectangle(size.x-150, size.y-150, 100, 100);
+		e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WHITE));
+		e.gc.setAlpha(255);
+		e.gc.drawRectangle(size.x-150, size.y-150, 100, 100);
 	}
 
 	@Override
@@ -314,6 +348,7 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	private void scaleBy(double scaleBy) {
 		getDataDescriptor().scaleBy(scaleBy);
+		taskManager.clearTasks();
 		grid.scaleBy(scaleBy);
 		Position diff = getGridMax().sub(getGridMin());
 		setGridMin(getGridMin().mult(1/scaleBy));

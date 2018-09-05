@@ -66,11 +66,12 @@ public class PerfInstance implements Comparable<PerfInstance>{
 		return logging;
 	}
 	
-	public void start(){
+	public PerfInstance start(){
 		if (refreshWarning && started)
 			warningLogger.log("perf/measure", "PerfInstance was started while running already! [PerfLogger.start()]");
 		started = true;
 		startTime = System.nanoTime();
+		return this;
 	}
 	
 	public void end(){
@@ -117,7 +118,11 @@ public class PerfInstance implements Comparable<PerfInstance>{
 	}
 	
 	public double getDeltaInS(int precision) throws IllegalStateException{
-		return NumberUtil.getRoundedDouble(NumberUtil.NS_TO_S*getFinalDelta(), precision);
+		return NumberUtil.getRoundedDouble(getDeltaInS(), precision);
+	}
+	
+	private double getDeltaInS() {
+		return getFinalDelta()*NumberUtil.NS_TO_S;
 	}
 
 	public boolean isRefreshWarning() {
@@ -143,10 +148,19 @@ public class PerfInstance implements Comparable<PerfInstance>{
 			runWhenEnded.add(runnable);
 	}
 
-	public void printSecondsToLog(int precision) {
-		perf.log("instance/"+name, "Finished after "+getDeltaInS(precision)+"s");
+	public void printSecondsToLog(int precision, boolean printChildren) {
+		if (!printChildren)
+			perf.log("instance/"+name, "Finished after "+getDeltaInS(precision)+"s");
+		else
+			printChildSecondsToLog(precision);
 	}
-	
+
+	public void printSecondsToLog(int precision, boolean printChildren, double tresholdInS) {
+		double delta = getDeltaInS();
+		if (delta >= tresholdInS)
+			printSecondsToLog(precision, printChildren);
+	}
+
 	public PerfInstance addChild(PerfInstance child) {
 		childInstances.put(child.getName(), child);
 		return child; //for chaining

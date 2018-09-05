@@ -38,6 +38,7 @@ import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.TaskManagerImpl;
+import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
@@ -73,6 +74,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.events.TraverseEvent;
+import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class MainWindow {
 	
@@ -137,13 +139,16 @@ public class MainWindow {
 			
 			tick();
 			
-			if (!display.readAndDispatch()) {
-//				display.sleep();
-//				try {
-//					Thread.sleep(8,333333);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
+			while (true) {
+				if (!display.readAndDispatch()) {
+					display.sleep();
+					break;
+				}
+			}
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -154,8 +159,12 @@ public class MainWindow {
 	long lastTime = 0;
 	
 	private void tick() {
+		PerfInstance perf = new PerfInstance("windowloop").start();
+		
+		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
-
+		listeners.end();
+		
 		boolean updateTime = true;
 		if (!KeyListenerControls.shift.equals(KeyListenerControls.nullPos)) {
 			double dt = (System.nanoTime() - lastTime)*NumberUtil.NS_TO_S;
@@ -163,15 +172,20 @@ public class MainWindow {
 				dt = 0.05;
 			if (dt < 0.01)
 				updateTime = false;
-			else
+			else {
+				PerfInstance shift = createNewSubInstanceAndBegin("shift", perf);;
 				FractalsMain.mainWindow.shiftScaled(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
+				shift.end();
+			}
 		}
 		if (updateTime)
 			lastTime = System.nanoTime();
 		
 		if (isRedrawAndReset()) {
+			PerfInstance redraw = createNewSubInstanceAndBegin("redraw", perf);;
 			canvas.redraw();
 			canvas.update();
+			redraw.end();
 		}
 //		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //		int it = ips.getIterations();
@@ -187,6 +201,8 @@ public class MainWindow {
 //		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.getStateText());
+		perf.end();
+		perf.printSecondsToLog(3, true, 0.1);
 	}
 
 	public boolean isRedrawAndReset() {

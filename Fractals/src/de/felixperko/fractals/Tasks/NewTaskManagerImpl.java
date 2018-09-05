@@ -87,6 +87,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		synchronized (finishedTaskList) {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			finishedTaskList.clear();
+			
 		}
 		
 	}
@@ -150,8 +151,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 
 	@Override
 	public void clearTasks() {
-		// TODO Auto-generated method stub
-
+		priorityList.clear();
 	}
 
 	@Override
