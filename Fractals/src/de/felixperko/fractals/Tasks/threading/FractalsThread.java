@@ -26,7 +26,7 @@ public class FractalsThread extends Thread {
 
 	public FractalsThread(String name, int priority) {
 		setName(name);
-		setPriority(priority);
+//		setPriority(priority);
 		log = CategoryLogger.INFO.createSubLogger("threads/"+getName());
 	}
 	
