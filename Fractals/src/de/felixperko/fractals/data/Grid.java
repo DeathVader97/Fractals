@@ -13,7 +13,7 @@ import de.felixperko.fractals.util.Position;
 
 public class Grid {
 	
-	int chunk_size = 64;
+	int chunk_size = 128;
 	
 	GridRenderer renderer;
 	

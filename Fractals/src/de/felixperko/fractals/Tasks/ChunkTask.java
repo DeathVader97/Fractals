@@ -14,12 +14,13 @@ public class ChunkTask extends Task {
 //			,new Position(-0.25, -0.25)
 //			,new Position(-0.25, 0.25)
 //			,new Position(0.25, -0.25)
-//			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
-//			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
-//			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
-//			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
+////			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
+////			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
+////			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
+////			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
 //			};
-	static Position[] samplepattern = new Position[1000];
+	
+	static Position[] samplepattern = new Position[100];
 	static {
 		for (int i = 0 ; i < samplepattern.length ; i++)
 			samplepattern[i] = new Position(Math.random()-0.5, Math.random()-0.5);

@@ -40,26 +40,26 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		}
 	};
 	
+	/**
+	 * Adds a chunk to be calculated.
+	 * @param c
+	 */
 	public void addChunk(Chunk c) {
 		synchronized (addChunkList) {
 			addChunkList.add(c);
-//			if (c.getGridPosition().getX() == c.getGridPosition().getY())
-//				log.log("Queued "+c.getGridPosition().toString()+" idle: "+idle);
 			generateTasks = true;
 		}
 	}
 	long debug_t = 0;
 	@Override
 	public void run() {
+		
 		log.log("started");
-		//TODO replace sleep with reentrant lock
 		log.log(this+"");
+		
 		//Task Manager loop
+		//TODO replace sleep with reentrant lock
 		while (!Thread.interrupted()) {
-//			if (System.nanoTime() - debug_t > NumberUtil.NS_TO_S/10) {
-//				System.out.println("loop");
-//				debug_t = System.nanoTime();
-//			}
 			idle = true;
 			
 			generateTasks();
@@ -69,7 +69,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			setPhase(FractalsThread.PHASE_IDLE);
 			if (idle) {//nothing has been done, save some time
 				try {
-					Thread.sleep(1);
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -81,6 +81,9 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	private void finishTasks() {
 		if (finishedTaskList.isEmpty())
 			return;
+		
+//		log.log("finishing tasks...");
+		
 		synchronized (finishedTaskList) {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			finishedTaskList.clear();
@@ -97,7 +100,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		idle = false;
 		setPhase(FractalsThread.PHASE_WORKING);
 
-		log.log("generating tasks...");
+//		log.log("generating tasks...");
+		
 		synchronized (addChunkList) {
 			if (!addChunkList.isEmpty()){
 				dataDescriptor = renderer.getDataDescriptor();
@@ -118,6 +122,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		updatePriorities = false;
 		idle = false;
 		setPhase(FractalsThread.PHASE_WORKING);
+
+//		log.log("updating priorities...");
 		
 		Collections.sort(priorityList, priorityComparator);
 	}

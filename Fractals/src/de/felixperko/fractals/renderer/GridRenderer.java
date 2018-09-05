@@ -81,8 +81,8 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 	
 	private void calcMid() {
-		midGridX = (maxGridX-minGridX)/2;
-		midGridY = (maxGridY-minGridY)/2;
+		midGridX = (maxGridX+minGridX)/2;
+		midGridY = (maxGridY+minGridY)/2;
 	}
 	
 	public double midGridDistSq(double gridX, double gridY) {
@@ -240,6 +240,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		minGridY += gridShift.getY();
 		maxGridX += gridShift.getX();
 		maxGridY += gridShift.getY();
+		calcMid();
 //		Position newMin = getGridMin().performOperation(Position.add, gridShift);
 //		Position newMax = getGridMax().performOperation(Position.add, gridShift);
 //		setGridMinMax(newMin, newMax);
@@ -252,6 +253,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		minGridY += gridShift.getY();
 		maxGridX += gridShift.getX();
 		maxGridY += gridShift.getY();
+		calcMid();
 		boundsChanged();
 	}
 	
