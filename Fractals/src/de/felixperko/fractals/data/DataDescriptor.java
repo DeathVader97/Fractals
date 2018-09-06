@@ -31,7 +31,7 @@ public class DataDescriptor{
 	private int fractalPower;
 	private Position fractalBias;
 	
-	private CalculatorFactory calculatorFactory = new CalculatorFactory(MandelbrotCalculator.class, this);
+	private CalculatorFactory calculatorFactory = new CalculatorFactory(BurningShipCalculator.class, this);
 	private RendererStateHolder rendererStateHolder;
 	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,

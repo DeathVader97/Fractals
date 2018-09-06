@@ -2,9 +2,9 @@ package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
 
-import de.felixperko.fractals.Tasks.calculators.infra.patternprovider.BasicPatternProvider;
-import de.felixperko.fractals.Tasks.calculators.infra.patternprovider.PatternProvider;
-import de.felixperko.fractals.Tasks.calculators.infra.patternprovider.SinglePatternProvider;
+import de.felixperko.fractals.Tasks.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.Tasks.patternprovider.PatternProvider;
+import de.felixperko.fractals.Tasks.patternprovider.SinglePatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.Position;
@@ -70,11 +70,11 @@ public class ChunkTask extends Task {
 			int state = chunk.getAndIncrementPatternState();
 			chunk.setReadyToDraw(false);
 			sampleCalculator.calculate_samples(chunk, depth, patternProvider.getNextPattern(state));
-			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
+//			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
 			chunk.calculateDiff();
 			chunk.calculatePixels();
 			chunk.setReadyToDraw(true);
-			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
+//			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
 		} catch (NullPointerException e) {
 			if (!chunk.isDisposed()) {
 				System.err.println("NPE at non-disposed chunk task calculation.");

@@ -50,7 +50,7 @@ public class Chunk {
 	
 	double distanceToMid;
 	double priorityMultiplier = 1;
-	double stepPriorityMultiplier = 1;
+	double stepPriorityOffset = 50;
 	
 	boolean disposed = false;
 	boolean arraysInstantiated = false;
@@ -134,7 +134,7 @@ public class Chunk {
 					
 					float b = it > 0 ? (diff == null ? 1 : (float)Math.pow(diff[i],0.15)*0.9f) : 0;
 					
-					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
+//					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
 					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
 				}
 				i++;
@@ -143,7 +143,10 @@ public class Chunk {
 	}
 	
 	private float getAvgIterations(int i) {
-		return iterationsSum[i]/sampleCount[i];
+		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
+		if (sucessfulIterations == 0)
+			return -1;
+		return iterationsSum[i]/sucessfulIterations;
 	}
 
 	private float getAvgIterations(int x, int y) {
@@ -248,16 +251,16 @@ public class Chunk {
 		this.priorityMultiplier = priorityMultiplier;
 	}
 
-	public double getStepPriorityMultiplier() {
-		return stepPriorityMultiplier;
+	public double getStepPriorityOffset() {
+		return stepPriorityOffset;
 	}
 
-	public void setStepPriorityMultiplier(double stepPriorityMultiplier) {
-		this.stepPriorityMultiplier = stepPriorityMultiplier;
+	public void setStepPriorityOffset(double stepPriorityMultiplier) {
+		this.stepPriorityOffset = stepPriorityMultiplier;
 	}
 
 	public double getPriority() {
-		return priorityMultiplier*stepPriorityMultiplier*distanceToMid;
+		return priorityMultiplier*distanceToMid + stepPriorityOffset*(patternState+1);
 	}
 
 	public Position getGridPosition() {

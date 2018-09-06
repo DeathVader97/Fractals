@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.calculators.infra.patternprovider;
+package de.felixperko.fractals.Tasks.patternprovider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,28 +8,22 @@ import de.felixperko.fractals.util.Position;
 public class BasicPatternProvider implements PatternProvider {
 	
 	List<Position[]> patterns = new ArrayList<>();
+	List<Integer> summedCount = new ArrayList<>();
+	int totalCount = 0;
 	
 	public BasicPatternProvider(int maxCount, int stepSize) {
-		int count = 0;
+		
 		addPattern(new Position(0,0));
-		count++;
-		int c = maxCount/stepSize;
-		int i = 0;
-		if (stepSize > 1) {
-			addPattern(getRandomPattern(stepSize-1));
-			i++;
-			count += stepSize-1;
-		}
-		for ( ; i < c ; i++) {
-			int step = stepSize;
-			if (count+step > maxCount) {
-				step = maxCount - count;
-			}
-			if (step != 0) {
-				addPattern(getRandomPattern(step));
-				count += step;
+		addPattern(new Position(-0.25, -0.25), new Position(0.25, 0.25));
+		addPattern(new Position(0.25, -0.25), new Position(-0.25, 0.25));
+		if (stepSize > 0){
+			int c = (maxCount-totalCount)/stepSize;
+			for (int i = 0 ; i < c ; i++) {
+				addPattern(getRandomPattern(stepSize));
 			}
 		}
+		if (totalCount < maxCount)
+			addPattern(getRandomPattern(maxCount - totalCount));
 	}
 	
 	@Override
@@ -38,6 +32,8 @@ public class BasicPatternProvider implements PatternProvider {
 	}
 	
 	protected void addPattern(Position... pattern) {
+		totalCount += pattern.length;
+		summedCount.add(totalCount);
 		patterns.add(pattern);
 	}
 	
@@ -52,6 +48,10 @@ public class BasicPatternProvider implements PatternProvider {
 	@Override
 	public int getMaxState() {
 		return patterns.size()-1;
+	}
+
+	public int getSummedSamplesAtState(int i) {
+		return summedCount.get(i);
 	}
 
 }
