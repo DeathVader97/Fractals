@@ -33,6 +33,7 @@ public class Chunk {
 	public float[] currentPosX;
 	public float[] currentPosY;
 	public int[] sampleCount;
+	public int[] failSampleCount;
 	
 	Grid grid;
 	DataDescriptor dataDescriptor;
@@ -56,6 +57,13 @@ public class Chunk {
 	
 	Position gridPos;
 	
+	float colorOffset = 0;
+
+	int patternState = -1;
+	int drawnPatternState = -1;
+
+	private boolean readyToDraw = false;
+	
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
 		this.dataDescriptor = dataDescriptor;
@@ -73,6 +81,7 @@ public class Chunk {
 		currentPosY = new float[arr_size];
 		diff = new float[arr_size];
 		sampleCount = new int[arr_size];
+		failSampleCount = new int[arr_size];
 		arraysInstantiated = true;
 	}
 	
@@ -105,31 +114,28 @@ public class Chunk {
 			imageData = new ImageData(chunk_size, chunk_size, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
 	}
 	
-	float colorOffset = 0;
-	
 	/**
 	 * fill the pixels according to finished iterations
 	 */
 	private void fillPixels() {
 		int i = 0;
+		boolean first = true;
 		int maxiterations = dataDescriptor.getMaxIterations();
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
 				if (sampleCount[i] == 0)
 					imageData.setPixel(y, x, color);
 				else {
+					if (sampleCount[i] > 1 && gridPos.getX() == 5 && gridPos.getY() == 5)
+						first = false;
 					float it = getAvgIterations(i);
 //					sat2 = (float) Math.log10(sat2);
-					float sat2 = (float) Math.log(it);
+					float hue = (float) Math.log(it);
 					
-//					int full = (int)sat2;
-//					float part = sat2-full;
-//					if (sat2 % 2 == 1)
-//						sat2 = full+1 - part;
-						
-//					float b = sat2 > 0 ? 1 : 0;
-					float b = sat2 > 0 ? (diff == null ? 1 : (float)Math.pow(diff[i],0.15)*0.9f) : 0;
-					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+sat2), 0.4f, b));
+					float b = it > 0 ? (diff == null ? 1 : (float)Math.pow(diff[i],0.15)*0.9f) : 0;
+					
+					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
+					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
 				}
 				i++;
 			}
@@ -150,10 +156,12 @@ public class Chunk {
 	}
 	
 	public void refreshImage(Device device) {
+		
 		if (image != null) {
 			image.dispose();
 		}
 		image = new Image(device, imageData);
+		drawnPatternState = patternState;
 	}
 	
 	/**
@@ -189,6 +197,7 @@ public class Chunk {
 		currentPosY = null;
 		diff = null;
 		sampleCount = null;
+		failSampleCount = null;
 	}
 
 	public boolean isDisposed() {
@@ -413,5 +422,25 @@ public class Chunk {
 		if (Double.isNaN(d))
 			return 0;
 		return d;
+	}
+
+	public int getPatternState() {
+		return patternState;
+	}
+	
+	public int getAndIncrementPatternState() {
+		return patternState++;
+	}
+
+	public boolean refreshNeeded() {
+		return drawnPatternState < patternState;
+	}
+	
+	public boolean isReadyToDraw() {
+		return readyToDraw;
+	}
+	
+	public void setReadyToDraw(boolean readyToDraw) {
+		this.readyToDraw = readyToDraw;
 	}
 }

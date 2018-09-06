@@ -132,7 +132,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 			Position prevsampleoffset = null;
 			
 			sampleLoop:
-			for (int k = chunk.sampleCount[i] ; k < samplepattern.length ; k++) {
+			for (int k = 0 ; k < samplepattern.length ; k++) {
 				
 				Position sampleoffset = samplepattern[k];
 				xPos += sampleoffset.getX()*delta.getX();
@@ -149,8 +149,8 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				double creal = xPos;
 				double cimag = yPos;
 				
-				if (j == 0)
-					chunk.sampleCount[i]++;
+//				if (j == 0)
+				chunk.sampleCount[i]++;
 				
 				for ( ; j < maxiterations ; j++) {
 					run_iterations++;
@@ -184,7 +184,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 					chunk.currentPosX[i] = (float) real;
 					chunk.currentPosY[i] = (float) imag;
 				} else { //max iterations reached -> declared as in the mandelbrot set
-					
+					chunk.failSampleCount[i]++;
 				}
 			
 			}

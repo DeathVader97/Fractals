@@ -36,6 +36,10 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	public Comparator<ChunkTask> priorityComparator = new Comparator<ChunkTask>() {
 		@Override
 		public int compare(ChunkTask arg0, ChunkTask arg1) {
+			if (arg0 == null || arg1 == null) {
+				Thread.dumpStack();
+				return 0;
+			}
 			return Double.compare(arg0.getPriority(), arg1.getPriority());
 		}
 	};
@@ -83,13 +87,26 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			return;
 		
 //		log.log("finishing tasks...");
+		int newlyAdded = 0;
 		
 		synchronized (finishedTaskList) {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
-			finishedTaskList.clear();
 			
+			int maxState = ChunkTask.patternProvider.getMaxState();
+			for (ChunkTask finishedTask : finishedTaskList) {
+				if (finishedTask.getChunk().getPatternState() < maxState) {
+					addTask(finishedTask);
+					newlyAdded++;
+				}
+			}
+			
+			finishedTaskList.clear();
 		}
 		
+		if (newlyAdded > 0) {
+			updatePriorities = true;
+			updatePriorities();
+		}
 	}
 
 	@Override
@@ -108,13 +125,17 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 				dataDescriptor = renderer.getDataDescriptor();
 				for (Chunk add : addChunkList) {
 					if (!add.isDisposed()) {
-						priorityList.add(new ChunkTask(add, dataDescriptor));
+						addTask(new ChunkTask(add, dataDescriptor));
 					}
 				}
 				log.log("generated "+addChunkList.size()+" tasks");
 				addChunkList.clear();
 			}
 		}
+	}
+
+	private void addTask(ChunkTask task) {
+		priorityList.add(task);
 	}
 	
 	public void updatePriorities() {

@@ -134,6 +134,7 @@ public class MainWindow {
 		((GridRenderer)renderer).setTaskManager(FractalsMain.taskManager);
 		FractalsMain.performanceMonitor.startPhase();
 		mainRenderer.startIterationPositionThread();
+		setRedraw(true);
 		
 		while (!shell.isDisposed()) {
 			

@@ -215,15 +215,20 @@ public class GridRenderer extends AbstractRendererImpl {
 				if (!chunk.imageCalculated) {
 					PerfInstance calculate = createNewSubInstanceAndBegin("calculate", renderPerf);
 					chunk.calculatePixels();
+					chunk.refreshImage(e.display);
 					calculate.end();
 				}
 				
-				PerfInstance refreshImage = createNewSubInstanceAndBegin("refreshImage", renderPerf);
-				chunk.refreshImage(e.display);
-				refreshImage.end();
-				
-//				Position offset = grid.getScreenOffset(new Position(gridX, gridY));
-				
+				if (chunk.isReadyToDraw()) {
+					if (chunk.refreshNeeded()) {
+						PerfInstance refreshImage = createNewSubInstanceAndBegin("refreshImage", renderPerf);
+						chunk.refreshImage(e.display);
+						refreshImage.end();
+					}
+				}
+					
+//					Position offset = grid.getScreenOffset(new Position(gridX, gridY));
+					
 				PerfInstance drawImage = createNewSubInstanceAndBegin("drawImage", renderPerf);
 				e.gc.drawImage(chunk.image, (int) shiftX, (int) shiftY);
 				drawImage.end();
