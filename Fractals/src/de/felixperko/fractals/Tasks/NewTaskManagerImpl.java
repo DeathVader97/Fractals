@@ -122,6 +122,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		
 		synchronized (addChunkList) {
 			if (!addChunkList.isEmpty()){
+				setUpdatePriorities();
 				dataDescriptor = renderer.getDataDescriptor();
 				for (Chunk add : addChunkList) {
 					if (!add.isDisposed()) {

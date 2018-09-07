@@ -134,7 +134,9 @@ public class Chunk {
 					
 					float b = it > 0 ? (diff == null ? 1 : (float)Math.pow(diff[i],0.15)*0.9f) : 0;
 					
-//					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
+					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
+					if (b > 1)
+						b = 1;
 					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
 				}
 				i++;
