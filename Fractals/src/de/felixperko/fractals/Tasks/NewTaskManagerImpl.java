@@ -92,9 +92,9 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		synchronized (finishedTaskList) {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			
-			int maxState = ChunkTask.patternProvider.getMaxState();
+			int maxState = dataDescriptor.getPatternProvider().getMaxState();
 			for (ChunkTask finishedTask : finishedTaskList) {
-				if (finishedTask.getChunk().getPatternState() < maxState) {
+				if (finishedTask.getChunk().getPatternState().getId() < maxState) {
 					addTask(finishedTask);
 					newlyAdded++;
 				}

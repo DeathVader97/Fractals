@@ -1,6 +1,7 @@
 package de.felixperko.fractals.data;
 
 import java.awt.Color;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
@@ -8,20 +9,15 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 
+import de.felixperko.fractals.renderer.painter.FailRatioPainter;
+import de.felixperko.fractals.renderer.painter.Painter;
+import de.felixperko.fractals.renderer.painter.SamplesPainter;
+import de.felixperko.fractals.renderer.painter.StandardPainter;
 import de.felixperko.fractals.util.Position;
 
 public class Chunk {
 	
-	int color = Color.GRAY.getRGB();
-//	{
-//		double r = Math.random();
-//		if (r < 1./3)
-//			color = Color.RED.getRGB();
-//		else if (r < 2./3)
-//			color = Color.GREEN.getRGB();
-//		else
-//			color = Color.BLUE.getRGB();
-//	}
+	public static AtomicInteger count_active = new AtomicInteger(0);
 	
 	final int chunk_size;
 	int arr_size;
@@ -57,9 +53,11 @@ public class Chunk {
 	
 	Position gridPos;
 	
-	float colorOffset = 0;
+	Painter painter = new FailRatioPainter();
+	
+	float colorOffset = 0; //TODO move to painter
 
-	int patternState = -1;
+	PatternState patternState;
 	int drawnPatternState = -1;
 
 	private boolean readyToDraw = false;
@@ -67,6 +65,7 @@ public class Chunk {
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
 		this.dataDescriptor = dataDescriptor;
+		this.patternState = new PatternState(dataDescriptor.getPatternProvider());
 		this.gridPos = gridPos;
 		this.startPosition = grid.getSpaceOffset(gridPos);
 		this.delta = new Position(dataDescriptor.getDelta_x()*chunk_size/dataDescriptor.dim_sampled_x, dataDescriptor.getDelta_y()*chunk_size/dataDescriptor.dim_sampled_y);
@@ -83,6 +82,7 @@ public class Chunk {
 		sampleCount = new int[arr_size];
 		failSampleCount = new int[arr_size];
 		arraysInstantiated = true;
+		count_active.incrementAndGet();
 	}
 	
 	public boolean arraysInstantiated() {
@@ -119,32 +119,22 @@ public class Chunk {
 	 */
 	private void fillPixels() {
 		int i = 0;
-		boolean first = true;
-		int maxiterations = dataDescriptor.getMaxIterations();
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
-				if (sampleCount[i] == 0)
-					imageData.setPixel(y, x, color);
-				else {
-					if (sampleCount[i] > 1 && gridPos.getX() == 5 && gridPos.getY() == 5)
-						first = false;
-					float it = getAvgIterations(i);
-//					sat2 = (float) Math.log10(sat2);
-					float hue = (float) Math.log(it);
-					
-					float b = it > 0 ? (diff == null ? 1 : (float)Math.pow(diff[i],0.15)*0.9f) : 0;
-					
-					b *= 1 - (failSampleCount[i]/(float)sampleCount[i]);
-					if (b > 1)
-						b = 1;
-					imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
-				}
+				painter.paint(imageData, this, i, x, y);
 				i++;
 			}
 		}
 	}
 	
-	private float getAvgIterations(int i) {
+	public float getFailRatio(int i) {
+		int samples = sampleCount[i];
+		if (samples == 0)
+			return 0;
+		return failSampleCount[i]/(float)samples;
+	}
+
+	public float getAvgIterations(int i) {
 		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
 		if (sucessfulIterations == 0)
 			return -1;
@@ -166,7 +156,7 @@ public class Chunk {
 			image.dispose();
 		}
 		image = new Image(device, imageData);
-		drawnPatternState = patternState;
+		drawnPatternState = patternState.id;
 	}
 	
 	/**
@@ -189,6 +179,7 @@ public class Chunk {
 	}
 
 	public void dispose() {
+		count_active.decrementAndGet();
 		disposed = true;
 		arraysInstantiated = false;
 		if (image != null)
@@ -262,7 +253,7 @@ public class Chunk {
 	}
 
 	public double getPriority() {
-		return priorityMultiplier*distanceToMid + stepPriorityOffset*(patternState+1);
+		return priorityMultiplier*distanceToMid + stepPriorityOffset*(patternState.id+1);
 	}
 
 	public Position getGridPosition() {
@@ -428,17 +419,13 @@ public class Chunk {
 			return 0;
 		return d;
 	}
-
-	public int getPatternState() {
-		return patternState;
-	}
 	
-	public int getAndIncrementPatternState() {
-		return patternState++;
+	public PatternState getPatternState() {
+		return patternState;
 	}
 
 	public boolean refreshNeeded() {
-		return drawnPatternState < patternState;
+		return drawnPatternState < patternState.id;
 	}
 	
 	public boolean isReadyToDraw() {

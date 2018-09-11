@@ -2,6 +2,7 @@ package de.felixperko.fractals.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -11,21 +12,37 @@ public class Logger {
 	
 	public static State<Integer> state = new State<>("loggercontrol", 0);
 	static Map<String, List<Message>> logMap = java.util.Collections.synchronizedMap(new HashMap<>());
+	static ArrayList<Message> addMessages = new ArrayList<>(); 
 	static ArrayList<Message> log = new ArrayList<>();
 
 	public static void log(Message message) {
 		if (message == null)
 			throw new IllegalArgumentException("The message can't be null");
-		List<Message> list = logMap.get(message.getCategory());
-		if (list == null) {
-			list = new ArrayList<>();
-			logMap.put(message.getCategory().category, list);
-		}
-		list.add(message);
 		String str = message.getLogString();
-		log.add(message);
 		System.out.println(str);
 		state.setValue(0);
+		addMessages.add(message);
+	}
+	
+	public static int addNewMessages() {
+		if (addMessages.isEmpty())
+			return 0;
+		int c = 0;
+		Iterator<Message> it = addMessages.iterator();
+		while (it.hasNext()) {
+			Message message = it.next();
+			String catName = message.getCategory().getName();
+			List<Message> list = logMap.get(catName);
+			if (list == null) {
+				list = new ArrayList<>();
+				logMap.put(catName, list);
+			}
+			list.add(message);
+			log.add(message);
+			it.remove();
+			c++;
+		}
+		return c;
 	}
 	
 	public static List<Message> getLog(){

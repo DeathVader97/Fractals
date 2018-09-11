@@ -3,10 +3,12 @@ package de.felixperko.fractals.Tasks;
 import java.util.ArrayList;
 
 import de.felixperko.fractals.Tasks.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.Tasks.patternprovider.Pattern;
 import de.felixperko.fractals.Tasks.patternprovider.PatternProvider;
 import de.felixperko.fractals.Tasks.patternprovider.SinglePatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.data.PatternState;
 import de.felixperko.fractals.util.Position;
 
 public class ChunkTask extends Task {
@@ -23,7 +25,6 @@ public class ChunkTask extends Task {
 //			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
 //			};
 	
-	public static PatternProvider patternProvider = new BasicPatternProvider(100, 10);
 //	public static PatternProvider patternProvider = new SinglePatternProvider(10);
 	
 //	static int sampleDim = 5;
@@ -67,9 +68,12 @@ public class ChunkTask extends Task {
 		try {
 			if (!chunk.arraysInstantiated())
 				chunk.instantiateArrays();
-			int state = chunk.getAndIncrementPatternState();
+			PatternState patternState = chunk.getPatternState();
+			Pattern oldPattern = patternState.getPattern();
+			patternState.increment();
+			Pattern newPattern = patternState.getPattern();
 			chunk.setReadyToDraw(false);
-			sampleCalculator.calculate_samples(chunk, depth, patternProvider.getNextPattern(state));
+			sampleCalculator.calculate_samples(chunk, depth, newPattern);
 //			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
 			chunk.calculateDiff();
 			chunk.calculatePixels();

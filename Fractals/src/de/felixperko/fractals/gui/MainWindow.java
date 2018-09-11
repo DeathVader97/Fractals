@@ -34,6 +34,7 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyleRange;
 
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.Controls.Console;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.Task;
@@ -42,6 +43,7 @@ import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
+import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.renderer.FractalRendererSWT;
 import de.felixperko.fractals.renderer.GridRenderer;
@@ -77,8 +79,6 @@ import org.eclipse.swt.events.TraverseEvent;
 import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class MainWindow {
-	
-	static CategoryLogger inputLogger = new CategoryLogger("command", Color.GREEN);
 
 	public Shell shell;
 	
@@ -162,6 +162,8 @@ public class MainWindow {
 	
 	private void tick() {
 		PerfInstance perf = new PerfInstance("windowloop").start();
+		
+		System.out.println(Chunk.count_active);
 		
 		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
@@ -676,7 +678,7 @@ public class MainWindow {
 		text_commandline = new Text(composite_10, SWT.BORDER);
 		text_commandline.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {
-				inputLogger.log("Entered: "+text_commandline.getText());
+				Console.enteredCommand(text_commandline.getText());
 				text_commandline.setText("");
 			}
 		});
@@ -790,10 +792,12 @@ public class MainWindow {
 		display.syncExec(new Runnable(){
 			@Override
 			public void run() {
+				if (Logger.addNewMessages() == 0)
+					return;
 				StringBuilder text = new StringBuilder();
 				ArrayList<StyleRange> ranges = new ArrayList<>();
 				int j = -1;
-				List<Message> list = new ArrayList<>(Logger.getLog());
+				List<Message> list = Logger.getLog();
 				for (Message msg : list){
 					j++;
 					if (msg == null)

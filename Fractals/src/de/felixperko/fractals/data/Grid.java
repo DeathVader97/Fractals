@@ -9,6 +9,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import de.felixperko.fractals.renderer.GridRenderer;
+import de.felixperko.fractals.renderer.painter.Painter;
+import de.felixperko.fractals.renderer.painter.StandardPainter;
 import de.felixperko.fractals.util.Position;
 
 public class Grid {
@@ -171,6 +173,24 @@ public class Grid {
 
 	public Position getScale() {
 		return new Position(getScaleX(), getScaleY());
+	}
+
+	public int getIndexFromGridPos(Position cursorGridPos) {
+		double x = cursorGridPos.getX();
+		double y = cursorGridPos.getY();
+		
+		if (x < 0)
+			x = 1- (Math.abs(x)%1);
+		else
+			x %= 1;
+		if (y < 0)
+			y = 1- (Math.abs(y)%1);
+		else
+			y %= 1;
+		
+		int xindex = (int) (x*chunk_size);
+		int yi = (int) (y);
+		return xindex*chunk_size + yi;
 	}
 	
 	

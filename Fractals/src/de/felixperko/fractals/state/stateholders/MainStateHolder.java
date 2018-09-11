@@ -10,11 +10,11 @@ import de.felixperko.fractals.util.Position;
 
 public class MainStateHolder extends StateHolder {
 	
-	DiscreteState<Integer> stateThreadCount;
-	State<Position> statecursorPosition;
-	State<Position> stateCursorImagePosition;
-	SwitchState stateFullscreen;
-	DiscreteState<Integer> stateVisualizationSteps;
+	public DiscreteState<Integer> stateThreadCount;
+	public State<Position> statecursorPosition;
+	public State<Position> stateCursorImagePosition;
+	public SwitchState stateFullscreen;
+	public DiscreteState<Integer> stateVisualizationSteps;
 	
 	public MainStateHolder(FractalsMain main) {
 		super();
@@ -69,7 +69,7 @@ public class MainStateHolder extends StateHolder {
 				Position p = getValue();
 				return p.getX()+", "+p.getY();
 			}
-		}.setVisible(false);
+		}.setVisible(true);
 	}
 
 	private void configureCursorPosition() {

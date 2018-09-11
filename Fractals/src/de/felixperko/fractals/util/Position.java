@@ -116,7 +116,7 @@ public class Position {
 		Position operation(Position p1, Position p2);
 	}
 	
-	interface SingleOperation{
+	public interface SingleOperation{
 		Position operation(Position p);
 	}
 

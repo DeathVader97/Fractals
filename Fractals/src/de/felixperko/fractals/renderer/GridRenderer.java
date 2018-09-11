@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Canvas;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
@@ -139,6 +140,7 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	@Override
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
+		AbstractCalculator.resetDebug();
 		//TODO ZOOM POSITION!
 //		Position clickPoint = grid.getSpaceOffset(grid.getGridPosition(mouse_x, mouse_y));
 		int w = canvas.getSize().x;
