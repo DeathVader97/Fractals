@@ -45,6 +45,10 @@ public abstract class AbstractCalculator implements SampleCalculator{
 	}
 	
 	protected int getRequiredSampleCount(Chunk chunk, int index) {
+		boolean debug = isDebug(chunk, index);
+		if (debug) {
+			debug = false;
+		}
 		Pattern pattern = chunk.getPatternState().getPattern();
 		int maxSize = pattern.getPositions().length;
 		if (!pattern.isGeneric())
@@ -63,7 +67,7 @@ public abstract class AbstractCalculator implements SampleCalculator{
 		logDebug.log(chunk.sampleCount[index]+": "+chunk.currentPosX[index]+"/"+chunk.currentPosY[index]+" -> "+chunk.getAvgIterations(index));
 	}
 
-	protected static boolean isDebug(Chunk chunk, int index) {
+	public static boolean isDebug(Chunk chunk, int index) {
 		if (debugChunkPosition == null)
 			return false;
 		return chunk.getGridPosition().equals(debugChunkPosition) && index == debugChunkIndex;

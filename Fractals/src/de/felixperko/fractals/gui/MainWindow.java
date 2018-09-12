@@ -163,7 +163,7 @@ public class MainWindow {
 	private void tick() {
 		PerfInstance perf = new PerfInstance("windowloop").start();
 		
-		System.out.println(Chunk.count_active);
+//		System.out.println(Chunk.count_active);
 		
 		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));

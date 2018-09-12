@@ -18,7 +18,7 @@ public class FailRatioPainter implements Painter {
 		
 		float b = 1;
 		
-		b *= 1 - failRatio;
+		b *= 1 - failRatio* 0.5f;
 		imageData.setPixel(y, x, Color.HSBtoRGB((float) (hue), 0.4f, b));
 	}
 

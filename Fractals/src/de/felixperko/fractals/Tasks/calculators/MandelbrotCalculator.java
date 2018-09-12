@@ -117,7 +117,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 		
 		Position delta = new Position(descriptor.getDelta_x()/descriptor.getDim_goal_x(), descriptor.getDelta_y()/descriptor.getDim_goal_y());
 		
-//		boolean trackinghelper = false;
+		boolean trackinghelper = false;
 		
 		int newSummedCount = pattern.getSummedCount();
 
@@ -140,6 +140,13 @@ public class MandelbrotCalculator extends AbstractCalculator{
 			int sampleCount = chunk.sampleCount[i];
 //			if (sampleCount > 0 && sampleCount == chunk.failSampleCount[i] && chunk.sampleCount[i] > 0.1*newSummedCount) {
 			int requiredSamples = getRequiredSampleCount(chunk, i);
+//			if (isDebug(chunk, i))
+//				System.out.println("state="+chunk.getPatternState().getId()+" required samples="+requiredSamples);
+			
+			boolean debug = isDebug(chunk, i);
+			if (debug){
+				trackinghelper = true;
+			}
 			
 			Position prevsampleoffset = null;
 			
@@ -184,9 +191,6 @@ public class MandelbrotCalculator extends AbstractCalculator{
 						imag = 2*real*imag;
 						real = realSq - imagSq;
 					}
-//					if (chunk.getGridPosition().getX() == 5 && chunk.getGridPosition().getY() == 5 && i == 0){
-//						trackinghelper = true;
-//					}
 					real += creal;
 					imag += cimag;
 					
