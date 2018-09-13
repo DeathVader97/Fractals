@@ -69,7 +69,7 @@ public class MainStateHolder extends StateHolder {
 				Position p = getValue();
 				return p.getX()+", "+p.getY();
 			}
-		}.setVisible(true);
+		}.setVisible(false);
 	}
 
 	private void configureCursorPosition() {

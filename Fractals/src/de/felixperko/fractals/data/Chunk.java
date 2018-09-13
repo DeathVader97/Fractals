@@ -46,14 +46,14 @@ public class Chunk {
 	
 	double distanceToMid;
 	double priorityMultiplier = 1;
-	double stepPriorityOffset = 50;
+	double stepPriorityOffset = 200;
 	
 	boolean disposed = false;
 	boolean arraysInstantiated = false;
 	
 	Position gridPos;
 	
-	Painter painter = new FailRatioPainter();
+	Painter painter = new StandardPainter();
 	
 	float colorOffset = 0; //TODO move to painter
 

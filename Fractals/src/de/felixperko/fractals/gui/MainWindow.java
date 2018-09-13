@@ -79,6 +79,8 @@ import org.eclipse.swt.events.TraverseEvent;
 import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class MainWindow {
+	
+	CategoryLogger log = new CategoryLogger("GUI/window", Color.BLUE);
 
 	public Shell shell;
 	
@@ -139,7 +141,12 @@ public class MainWindow {
 		
 		while (!shell.isDisposed()) {
 			
+			long t1 = System.nanoTime();
+			
 			tick();
+			
+			long t2 = System.nanoTime();
+//			System.out.println("FRAMETIME: "+NumberUtil.getRoundedDouble((t2-t1)*NumberUtil.NS_TO_S, 3));
 			
 			while (true) {
 				if (!display.readAndDispatch()) {
