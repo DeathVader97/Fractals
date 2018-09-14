@@ -52,6 +52,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		synchronized (addChunkList) {
 			addChunkList.add(c);
 			generateTasks = true;
+			updatePriorities = true;
 		}
 	}
 	long debug_t = 0;

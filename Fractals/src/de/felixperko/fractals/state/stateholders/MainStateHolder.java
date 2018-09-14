@@ -6,12 +6,14 @@ import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateHolder;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 public class MainStateHolder extends StateHolder {
 	
 	public DiscreteState<Integer> stateThreadCount;
-	public State<Position> statecursorPosition;
+	public State<Position> stateCursorPosition;
+	public State<Position> stateCursorGridPosition;
 	public State<Position> stateCursorImagePosition;
 	public SwitchState stateFullscreen;
 	public DiscreteState<Integer> stateVisualizationSteps;
@@ -26,12 +28,14 @@ public class MainStateHolder extends StateHolder {
 		configureThreadCount();
 		configureFullscreen();
 		configureCursorPosition();
+		configureCursorGridPosition();
 		configureCursorImagePosition();
 		configureVisualizationSteps();
 		
 		addState(stateThreadCount);
 		addState(stateFullscreen);
-		addState(statecursorPosition);
+		addState(stateCursorPosition);
+		addState(stateCursorGridPosition);
 		addState(stateCursorImagePosition);
 		addState(stateVisualizationSteps);
 	}
@@ -67,13 +71,23 @@ public class MainStateHolder extends StateHolder {
 			@Override
 			public String getValueString() {
 				Position p = getValue();
-				return p.getX()+", "+p.getY();
+				return NumberUtil.getRoundedDouble(p.getX(), 5)+", "+NumberUtil.getRoundedDouble(p.getY(), 5);
 			}
-		}.setVisible(false);
+		}.setVisible(true);
+	}
+
+	private void configureCursorGridPosition() {
+		stateCursorGridPosition = new State<Position>("cursor grid position", new Position()){
+			@Override
+			public String getValueString() {
+				Position p = getValue();
+				return NumberUtil.getRoundedDouble(p.getX(), 2)+", "+NumberUtil.getRoundedDouble(p.getY(), 2);
+			}
+		}.setVisible(true);
 	}
 
 	private void configureCursorPosition() {
-		statecursorPosition = new State<Position>("cursor position", new Position()){
+		stateCursorPosition = new State<Position>("cursor position", new Position()){
 			@Override
 			public String getValueString() {
 				Position p = getValue();

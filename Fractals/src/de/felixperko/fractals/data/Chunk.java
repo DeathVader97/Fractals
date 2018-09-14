@@ -53,7 +53,7 @@ public class Chunk {
 	
 	Position gridPos;
 	
-	Painter painter = new StandardPainter();
+	Painter painter = new SamplesPainter();
 	
 	float colorOffset = 0; //TODO move to painter
 
@@ -132,6 +132,17 @@ public class Chunk {
 		if (samples == 0)
 			return 0;
 		return failSampleCount[i]/(float)samples;
+	}
+	
+	public float getVariance(int i) {
+		int samples = sampleCount[i];
+		float sumSqAvg = iterationsSumSq[i]/samples;
+		float sumAvg = iterationsSum[i]/samples;
+		return sumSqAvg - (sumAvg * sumAvg);
+	}
+	
+	public float getStandardDeviation(int i) {
+		return (float) Math.sqrt(getVariance(i));
 	}
 
 	public float getAvgIterations(int i) {

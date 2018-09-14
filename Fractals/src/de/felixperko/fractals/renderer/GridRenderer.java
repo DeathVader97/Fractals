@@ -140,28 +140,25 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	@Override
 	public void updateLocation(int mouse_x, int mouse_y, double spacing_factor) {
+		//disable position debugging
 		AbstractCalculator.resetDebug();
-		//TODO ZOOM POSITION!
-//		Position clickPoint = grid.getSpaceOffset(grid.getGridPosition(mouse_x, mouse_y));
+		
+		//calculate new position
 		int w = canvas.getSize().x;
 		int h = canvas.getSize().y;
 		Position newScreenStart = new Position(mouse_x - w*0.5*spacing_factor, mouse_y - h*0.5*spacing_factor);
-//		Position newScreenStart = new Position(w/4, h/4);
-//		Position newScreenEnd = new Position(mouse_x + w/4, mouse_y + h/4);
-//		Position newGridStart = grid.getGridPosition(newScreenStart).performOperation(Position.add, getGridMin());//TODO ADJUST FOR ZOOM COPY ALIGNMENT
 		Position newGridStart = grid.getGridPosition(newScreenStart);//TODO ADJUST FOR ZOOM COPY ALIGNMENT
 		Position newSpaceStart = grid.getSpacePosition(newGridStart);
+		
+		//calculate shift
 		Position currentSpaceStart = grid.getSpacePosition(new Position(minGridX, minGridY));
-		Position spaceShift = newSpaceStart.performOperation(Position.subNew, currentSpaceStart);
+		Position spaceShift = newSpaceStart.subNew(currentSpaceStart);
+		
+		//execute scale + shift
 		scaleBy(spacing_factor);
 		shiftView(spaceShift);
-		Position updatedGridStart = grid.spaceToGrid(newSpaceStart);
-		Position updatedScreenStart = grid.getScreenOffset(updatedGridStart);
-//		grid.setSpaceOffset(newSpaceStart);
-//		Position newGridEnd = grid.getGridPosition((int)newScreenEnd.getX(), (int)newScreenEnd.getY());
-		//TODO EVERYTHING WRONG HERE! DRAMA!
-//		setGridMinMax(new Position(-2,-2), new Position((maxGridX-minGridX)*0.5, (maxGridY-minGridY)*0.5));
-//		setGridMinMax(newGridStart, newGridEnd);
+		
+		//recalculate bounds
 		boundsChanged();
 	}
 
@@ -274,21 +271,8 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	@Override
 	public void shiftView(Position shift) {
-		//set grid offset
-		double chunkSize = grid.getChunkSize();
-//		Position gridShift = new Position(shift.getX()/grid.getScaleX()/chunkSize, shift.getY()/grid.getScaleY()/chunkSize);
-		Position gridShift = grid.spaceToGrid(shift);
-//		System.out.println("shift by "+shift+" grid: "+gridShift);
-		minGridX += gridShift.getX();
-		minGridY += gridShift.getY();
-		maxGridX += gridShift.getX();
-		maxGridY += gridShift.getY();
-		calcMid();
-//		Position newMin = getGridMin().performOperation(Position.add, gridShift);
-//		Position newMax = getGridMax().performOperation(Position.add, gridShift);
-//		setGridMinMax(newMin, newMax);
-//		grid.setScreenOffset(grid.getScreenOffset().performOperation(Position.addNew, shift));
-		boundsChanged();
+		Position gridShift = shift.div(grid.getScale()).div(grid.getChunkSize());
+		shiftViewGrid(gridShift);
 	}
 	
 	public void shiftViewGrid(Position gridShift) {
@@ -306,7 +290,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		//update positions
 //		updateRendererPositions();
 		
-		grid.setScreenOffset(getGridMin());
+		grid.setScreenOffset(getGridMin().add(new Position(1,1)));
 		
 		//update distances and queue out of bounds removals
 		for (Entry<Position, Chunk> e : grid.map.entrySet()) {

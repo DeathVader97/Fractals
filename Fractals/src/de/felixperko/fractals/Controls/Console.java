@@ -20,7 +20,8 @@ public class Console {
 		} else if (command.equalsIgnoreCase("debugPosition")) {
 			Position cursorSpacePos = FractalsMain.mainStateHolder.stateCursorImagePosition.getValue();
 			GridRenderer renderer = ((GridRenderer)(FractalsMain.mainWindow.getMainRenderer()));
-			Position cursorGridPos = renderer.getGrid().spaceToGrid(cursorSpacePos);
+//			Position cursorGridPos = renderer.getGrid().spaceToGrid(cursorSpacePos);
+			Position cursorGridPos = FractalsMain.mainStateHolder.stateCursorGridPosition.getValue();
 			int cursorChunkIndex = renderer.getGrid().getIndexFromGridPos(cursorGridPos);
 			Position cursorChunkGridPos = new Position((int)cursorGridPos.getX(), (int)cursorGridPos.getY());
 //			double newX = ;

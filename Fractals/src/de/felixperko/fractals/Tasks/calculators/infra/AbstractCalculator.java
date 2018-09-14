@@ -54,17 +54,23 @@ public abstract class AbstractCalculator implements SampleCalculator{
 		if (!pattern.isGeneric())
 			return maxSize;
 		double failRatio = chunk.getFailRatio(index);
-		if (failRatio == 0)
+		if (failRatio < 1)
+			failRatio = 0;
+		double diffMultiplier = Math.min(chunk.diff[index]*5, 1);
+		if (failRatio == 0 && diffMultiplier == 1)
 			return maxSize;
 		double finishedSamples = chunk.sampleCount[index];
-		int diff = (int) (Math.ceil(pattern.getSummedCount()*(failRatioSampleCountFactor*failRatio)) - finishedSamples);
+		double failRatioMultiplier = (1- (failRatioSampleCountFactor*failRatio));
+		int diff = (int) (Math.ceil(pattern.getSummedCount()*failRatioMultiplier*diffMultiplier) - finishedSamples);
+		if (diff <= 0)
+			return 0;
 		return Math.min(diff, pattern.getPositions().length);
 	}
 	
 	protected void logIfDebug(Chunk chunk, int index) {
 		if (!isDebug(chunk, index))
 			return;
-		logDebug.log(chunk.sampleCount[index]+": "+chunk.currentPosX[index]+"/"+chunk.currentPosY[index]+" -> "+chunk.getAvgIterations(index));
+		logDebug.log(chunk.sampleCount[index]+": "+chunk.getAvgIterations(index)+" \u00B1 "+chunk.getStandardDeviation(index));
 	}
 
 	public static boolean isDebug(Chunk chunk, int index) {
