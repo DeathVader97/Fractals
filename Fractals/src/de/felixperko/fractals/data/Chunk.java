@@ -53,7 +53,7 @@ public class Chunk {
 	
 	Position gridPos;
 	
-	Painter painter = new StandardPainter();
+	Painter painter = new SamplesPainter();
 	
 	float colorOffset = 0; //TODO move to painter
 
@@ -133,7 +133,7 @@ public class Chunk {
 			return 0;
 		return failSampleCount[i]/(float)samples;
 	}
-
+	
 	public float getAvgIterations(int i) {
 		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
 		if (sucessfulIterations == 0)

@@ -58,7 +58,8 @@ public abstract class AbstractCalculator implements SampleCalculator{
 			return maxSize;
 		double finishedSamples = chunk.sampleCount[index];
 		int diff = (int) (Math.ceil(pattern.getSummedCount()*(failRatioSampleCountFactor*failRatio)) - finishedSamples);
-		return Math.min(diff, pattern.getPositions().length);
+		diff = Math.min(diff, pattern.getPositions().length);
+		return diff >= 0 ? diff : 0;
 	}
 	
 	protected void logIfDebug(Chunk chunk, int index) {

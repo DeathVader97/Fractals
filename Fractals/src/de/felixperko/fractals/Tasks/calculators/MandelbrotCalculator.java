@@ -151,7 +151,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 			Position prevsampleoffset = null;
 			
 			sampleLoop:
-			for (int k = 0 ; k < patternPositions.length ; k++) {
+			for (int k = 0 ; k < requiredSamples ; k++) {
 				
 				Position sampleoffset = patternPositions[k];
 				xPos += sampleoffset.getX()*delta.getX();
