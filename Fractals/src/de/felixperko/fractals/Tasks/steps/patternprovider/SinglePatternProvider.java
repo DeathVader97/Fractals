@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.patternprovider;
+package de.felixperko.fractals.Tasks.steps.patternprovider;
 
 import de.felixperko.fractals.util.Position;
 

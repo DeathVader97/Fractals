@@ -4,8 +4,9 @@ import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
 import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
 import de.felixperko.fractals.Tasks.calculators.TestCalculator;
 import de.felixperko.fractals.Tasks.calculators.infra.CalculatorFactory;
-import de.felixperko.fractals.Tasks.patternprovider.BasicPatternProvider;
-import de.felixperko.fractals.Tasks.patternprovider.PatternProvider;
+import de.felixperko.fractals.Tasks.steps.StepProvider;
+import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.Tasks.steps.patternprovider.PatternProvider;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
@@ -34,7 +35,7 @@ public class DataDescriptor{
 	private Position fractalBias;
 	
 	private CalculatorFactory calculatorFactory = new CalculatorFactory(MandelbrotCalculator.class, this);
-	private PatternProvider patternProvider = new BasicPatternProvider(100, 10);
+	private StepProvider stepProvider = new DefaultStepProvider(new BasicPatternProvider(100, 10));
 	private RendererStateHolder rendererStateHolder;
 	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,
@@ -223,11 +224,11 @@ public class DataDescriptor{
 				(double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_IMAG).getOutput());
 	}
 
-	public PatternProvider getPatternProvider() {
-		return patternProvider;
+	public StepProvider getStepProvider() {
+		return stepProvider;
 	}
 
-	public void setPatternProvider(PatternProvider patternProvider) {
-		this.patternProvider = patternProvider;
+	public void setStepProvider(StepProvider stepProvider) {
+		this.stepProvider = stepProvider;
 	}
 }

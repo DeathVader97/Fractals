@@ -5,8 +5,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 
-import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.WindowHandler;
 import de.felixperko.fractals.gui.MainWindow;
 import de.felixperko.fractals.util.Position;
 

@@ -151,10 +151,64 @@ public class Position {
 		return this;
 	}
 
+	public Position div(Position other) {
+		this.x /= other.x;
+		this.y /= other.y;
+		return this;
+	}
+	
+	public Position addNew(Position other) {
+		Position newPos = copy();
+		newPos.x += other.x;
+		newPos.y += other.y;
+		return newPos;
+	}
+
+	public Position subNew(Position other) {
+		Position newPos = copy();
+		newPos.x -= other.x;
+		newPos.y -= other.y;
+		return newPos;
+	}
+	
+	public Position multNew(Position other) {
+		Position newPos = copy();
+		newPos.x *= other.x;
+		newPos.y *= other.y;
+		return newPos;
+	}
+	
+	public Position divNew(Position other) {
+		Position newPos = copy();
+		newPos.x /= other.x;
+		newPos.y /= other.y;
+		return newPos;
+	}
+	
 	public Position mult(double factor) {
 		this.x *= factor;
 		this.y *= factor;
 		return this;
+	}
+	
+	public Position div(double factor) {
+		this.x /= factor;
+		this.y /= factor;
+		return this;
+	}
+	
+	public Position multNew(double factor) {
+		Position newPos = copy();
+		newPos.x *= factor;
+		newPos.y *= factor;
+		return newPos;
+	}
+	
+	public Position divNew(double factor) {
+		Position newPos = copy();
+		newPos.x /= factor;
+		newPos.y /= factor;
+		return newPos;
 	}
 	
 	public Position copy() {

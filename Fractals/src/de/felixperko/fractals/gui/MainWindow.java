@@ -38,14 +38,13 @@ import de.felixperko.fractals.Controls.Console;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.TaskManagerImpl;
 import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
-import de.felixperko.fractals.renderer.FractalRendererSWT;
+import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.state.DiscreteState;
@@ -55,6 +54,7 @@ import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
+import de.felixperko.fractals.state.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 import de.felixperko.fractals.util.Message;
@@ -71,7 +71,6 @@ import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.TraverseListener;
@@ -124,8 +123,6 @@ public class MainWindow {
 		shell.open();
 		shell.layout();
 		renderer.init();
-		if (renderer instanceof FractalRendererSWT)
-			((FractalRendererSWT)renderer).prepare();
 		FractalsMain.threadManager = new ThreadManager();
 		FractalsMain.threadManager.setThreadCount(FractalsMain.HELPER_THREAD_COUNT);
 		FractalsMain.threadManager.addTaskProvider(FractalsMain.taskProvider);
@@ -354,7 +351,17 @@ public class MainWindow {
 				
 				//Mouse moved on canvas of MainRenderer
 				DataDescriptor dd = mainRenderer.getDataDescriptor();
-				FractalsMain.mainStateHolder.getState("cursor position", Position.class).setValue(new Position(e.x, e.y));
+				MainStateHolder mainStateHolder = FractalsMain.mainStateHolder;
+				GridRenderer gridRenderer = ((GridRenderer)mainRenderer);
+				Grid grid = gridRenderer.getGrid();
+				
+				Position screenPos = new Position(e.x, e.y);
+				Position gridPos = grid.getGridPosition(screenPos);
+				Position spacePos = grid.getSpacePosition(gridPos);
+				
+				mainStateHolder.stateCursorPosition.setValue(screenPos);
+				mainStateHolder.stateCursorGridPosition.setValue(gridPos);
+				mainStateHolder.stateCursorImagePosition.setValue(spacePos);
 				
 				//timing of visualization refreshs
 				//TODO implement "buffered completion scheduling" (cooldown,...)
@@ -377,7 +384,7 @@ public class MainWindow {
 					State<Position> stateCursorImagePosition = FractalsMain.mainStateHolder.getState("cursor image position", Position.class);
 					//TODO warning if dd is null?
 					if (dd != null) {
-						stateCursorImagePosition.setValue(new Position(dd.getStart_x()+(e.x/(double)dd.getDim_goal_x())*dd.getDelta_x(), dd.getStart_y()+(e.y/(double)dd.getDim_goal_y())*dd.getDelta_y()));
+//						stateCursorImagePosition.setValue(new Position(dd.getStart_x()+(e.x/(double)dd.getDim_goal_x())*dd.getDelta_x(), dd.getStart_y()+(e.y/(double)dd.getDim_goal_y())*dd.getDelta_y()));
 						ips.setParameters(stateCursorImagePosition.getValue(), dd, FractalsMain.mainStateHolder.getState("visulization steps", Integer.class).getValue());
 					}
 				}

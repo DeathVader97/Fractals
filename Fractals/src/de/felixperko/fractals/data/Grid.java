@@ -150,10 +150,10 @@ public class Grid {
 	}
 
 	public Position spaceToGrid(Position spacePosition) {
-//		return new Position((spacePosition.getX()+spaceOffset.getX())/getScaleX()/chunk_size,
-//							(spacePosition.getY()+spaceOffset.getY())/getScaleY()/chunk_size);
-		return new Position((spacePosition.getX())/getScaleX()/chunk_size,
-							(spacePosition.getY())/getScaleY()/chunk_size);
+		return new Position((spacePosition.getX()+spaceOffset.getX())/getScaleX()/chunk_size,
+							(spacePosition.getY()+spaceOffset.getY())/getScaleY()/chunk_size);
+//		return new Position((spacePosition.getX())/getScaleX()/chunk_size,
+//							(spacePosition.getY())/getScaleY()/chunk_size);
 	}
 
 	public void setSpaceOffset(Position newSpaceOffset) {

@@ -45,4 +45,12 @@ public abstract class DiscreteState<T> extends State<T> {
 
 	public abstract T getNext();
 	public abstract T getPrevious();
+
+	public void incrementValue() {
+		setValue(getNext());
+	}
+	
+	public void decrementValue() {
+		setValue(getPrevious());
+	}
 }

@@ -1,6 +1,8 @@
 package de.felixperko.fractals.data;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Device;
@@ -9,10 +11,12 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.renderer.painter.FailRatioPainter;
 import de.felixperko.fractals.renderer.painter.Painter;
 import de.felixperko.fractals.renderer.painter.SamplesPainter;
 import de.felixperko.fractals.renderer.painter.StandardPainter;
+import de.felixperko.fractals.state.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.Position;
 
 public class Chunk {
@@ -22,14 +26,14 @@ public class Chunk {
 	final int chunk_size;
 	int arr_size;
 	public int finishedIterations;
-	
-	public float[] iterationsSum;
-	public float[] iterationsSumSq;
-	public float[] diff;
-	public float[] currentPosX;
-	public float[] currentPosY;
-	public int[] sampleCount;
-	public int[] failSampleCount;
+
+	float[] iterationsSum;
+	float[] iterationsSumSq;
+	float[] diff;
+	float[] currentPosX;
+	float[] currentPosY;
+	int[] sampleCount;
+	int[] failSampleCount;
 	
 	Grid grid;
 	DataDescriptor dataDescriptor;
@@ -51,25 +55,50 @@ public class Chunk {
 	boolean disposed = false;
 	boolean arraysInstantiated = false;
 	
-	Position gridPos;
+	protected final Position gridPos;
 	
-	Painter painter = new SamplesPainter();
+	protected final Position[] neigbourPositions = new Position[8];
+	
+	Painter painter = new StandardPainter();
 	
 	float colorOffset = 0; //TODO move to painter
 
-	PatternState patternState;
-	int drawnPatternState = -1;
+	ProcessingStepState processingStepState;
+	int drawnStep = -1;
 
 	private boolean readyToDraw = false;
+	
+	IndexMask setIndexMask = DefaultMask.instance;
+	IndexMask getIndexMask = DefaultMask.instance;
 	
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
 		this.dataDescriptor = dataDescriptor;
-		this.patternState = new PatternState(dataDescriptor.getPatternProvider());
+		this.processingStepState = new ProcessingStepState(dataDescriptor.getStepProvider());
 		this.gridPos = gridPos;
+		
+		int i = 0;
+		int gridX = (int) gridPos.getX();
+		int gridY = (int) gridPos.getY();
+		for (int x = gridX-1 ; x <= gridX+1 ; x++){
+			for (int y = gridY-1 ; y <= gridY+1 ; y++){
+				if (x == gridX && y == gridY)
+					continue;
+				neigbourPositions[i++] = new Position(x, y);
+			}
+		}
+		
 		this.startPosition = grid.getSpaceOffset(gridPos);
 		this.delta = new Position(dataDescriptor.getDelta_x()*chunk_size/dataDescriptor.dim_sampled_x, dataDescriptor.getDelta_y()*chunk_size/dataDescriptor.dim_sampled_y);
 		this.grid = grid;
+	}
+
+	private int applySetIndexMasks(int i) {
+		return setIndexMask.getIndex(i);
+	}
+
+	private int applyGetIndexMasks(int i) {
+		return getIndexMask.getIndex(i);
 	}
 	
 	public void instantiateArrays() {
@@ -83,6 +112,7 @@ public class Chunk {
 		failSampleCount = new int[arr_size];
 		arraysInstantiated = true;
 		count_active.incrementAndGet();
+		FractalsMain.mainStateHolder.stateActiveChunkCount.incrementValue();
 	}
 	
 	public boolean arraysInstantiated() {
@@ -128,13 +158,28 @@ public class Chunk {
 	}
 	
 	public float getFailRatio(int i) {
+		i = applyGetIndexMasks(i);
 		int samples = sampleCount[i];
 		if (samples == 0)
 			return 0;
 		return failSampleCount[i]/(float)samples;
 	}
 	
+	public float getVariance(int i) {
+		i = applyGetIndexMasks(i);
+		int samples = sampleCount[i];
+		float sumSqAvg = iterationsSumSq[i]/samples;
+		float sumAvg = iterationsSum[i]/samples;
+		return sumSqAvg - (sumAvg * sumAvg);
+	}
+	
+	public float getStandardDeviation(int i) {
+		i = applyGetIndexMasks(i);
+		return (float) Math.sqrt(getVariance(i));
+	}
+	
 	public float getAvgIterations(int i) {
+		i = applyGetIndexMasks(i);
 		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
 		if (sucessfulIterations == 0)
 			return -1;
@@ -156,7 +201,7 @@ public class Chunk {
 			image.dispose();
 		}
 		image = new Image(device, imageData);
-		drawnPatternState = patternState.id;
+		drawnStep = processingStepState.state;
 	}
 	
 	/**
@@ -180,6 +225,7 @@ public class Chunk {
 
 	public void dispose() {
 		count_active.decrementAndGet();
+		FractalsMain.mainStateHolder.stateActiveChunkCount.decrementValue();
 		disposed = true;
 		arraysInstantiated = false;
 		if (image != null)
@@ -253,7 +299,7 @@ public class Chunk {
 	}
 
 	public double getPriority() {
-		return priorityMultiplier*distanceToMid + stepPriorityOffset*(patternState.id+1);
+		return priorityMultiplier*distanceToMid + stepPriorityOffset*(processingStepState.state+1);
 	}
 
 	public Position getGridPosition() {
@@ -420,12 +466,12 @@ public class Chunk {
 		return d;
 	}
 	
-	public PatternState getPatternState() {
-		return patternState;
+	public ProcessingStepState getProcessingStepState() {
+		return processingStepState;
 	}
 
 	public boolean refreshNeeded() {
-		return drawnPatternState < patternState.id;
+		return drawnStep < processingStepState.state;
 	}
 	
 	public boolean isReadyToDraw() {
@@ -434,5 +480,103 @@ public class Chunk {
 	
 	public void setReadyToDraw(boolean readyToDraw) {
 		this.readyToDraw = readyToDraw;
+	}
+	
+	public float getIterationsSum(int i) {
+		i = applyGetIndexMasks(i);
+		return iterationsSum[i];
+	}
+
+	public void setIterationsSum(int i, float value) {
+		i = applySetIndexMasks(i);
+		this.iterationsSum[i] = value;
+	}
+	
+	public void addIterationsSum(int i, float add) {
+		i = applySetIndexMasks(i);
+		this.iterationsSum[i] += add;
+	}
+
+	public float getIterationsSumSq(int i) {
+		i = applyGetIndexMasks(i);
+		return iterationsSumSq[i];
+	}
+
+	public void setIterationsSumSq(int i, float value) {
+		i = applySetIndexMasks(i);
+		this.iterationsSumSq[i] = value;
+	}
+	
+	public void addIterationsSumSq(int i, float add) {
+		i = applySetIndexMasks(i);
+		this.iterationsSumSq[i] += add;
+	}
+
+	public float[] getDiff() {
+		return diff;
+	}
+
+	public float getDiff(int i) {
+		i = applyGetIndexMasks(i);
+		return diff[i];
+	}
+
+	public void setDiff(int i, float value) {
+		i = applySetIndexMasks(i);
+		this.diff[i] = value;
+	}
+
+	public float getCurrentPosX(int i) {
+		i = applyGetIndexMasks(i);
+		return currentPosX[i];
+	}
+
+	public void setCurrentPosX(int i, float value) {
+		i = applySetIndexMasks(i);
+		this.currentPosX[i] = value;
+	}
+
+	public float getCurrentPosY(int i) {
+		i = applyGetIndexMasks(i);
+		return currentPosY[i];
+	}
+
+	public void setCurrentPosY(int i, float value) {
+		i = applySetIndexMasks(i);
+		this.currentPosY[i] = value;
+	}
+
+	public int getSampleCount(int i) {
+		i = applyGetIndexMasks(i);
+		return sampleCount[i];
+	}
+
+	public void setSampleCount(int i, int value) {
+		i = applySetIndexMasks(i);
+		this.sampleCount[i] = value;
+	}
+
+	public void addSampleCount(int i, int add) {
+		i = applySetIndexMasks(i);
+		this.sampleCount[i] += add;
+	}
+
+	public int getFailSampleCount(int i) {
+		i = applyGetIndexMasks(i);
+		return failSampleCount[i];
+	}
+
+	public void setFailSampleCount(int i, int value) {
+		i = applySetIndexMasks(i);
+		this.failSampleCount[i] = value;
+	}
+
+	public void addFailSampleCount(int i, int add) {
+		i = applySetIndexMasks(i);
+		this.failSampleCount[i] += add;
+	}
+
+	public int[] getSampleCount() {
+		return sampleCount;
 	}
 }

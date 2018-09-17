@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.patternprovider;
+package de.felixperko.fractals.Tasks.steps.patternprovider;
 
 import de.felixperko.fractals.util.Position;
 
@@ -36,5 +36,10 @@ public class Pattern {
 
 	public void setSummedCount(int summedCount) {
 		this.summedCount = summedCount;
+	}
+	
+	@Override
+	public String toString() {
+		return positions.length+" - "+generic+" - "+positions.toString();
 	}
 }

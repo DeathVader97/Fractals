@@ -5,7 +5,7 @@ import java.util.Random;
 import de.felixperko.fractals.Tasks.ChunkTask;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.CategoryLogger;
@@ -119,7 +119,7 @@ public class BurningShipCalculator extends AbstractCalculator{
 		
 		boolean trackinghelper = false;
 		
-		int newSummedCount = ((BasicPatternProvider)ChunkTask.patternProvider).getSummedSamplesAtState(Integer.min(chunk.getPatternState()+1, ChunkTask.patternProvider.getMaxState()));
+		int newSummedCount = ((BasicPatternProvider)ChunkTask.patternProvider).getSummedSamplesAtState(Integer.min(chunk.getProcessingStepState()+1, ChunkTask.patternProvider.getMaxState()));
 
 		mainLoop : 
 		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
@@ -162,7 +162,7 @@ public class BurningShipCalculator extends AbstractCalculator{
 				int j = 0;
 				double real;
 				double imag;
-				if (j == 0 || chunk.getPatternState() > -1){
+				if (j == 0 || chunk.getProcessingStepState() > -1){
 					real = startReal;
 					imag = startImag;
 				} else {

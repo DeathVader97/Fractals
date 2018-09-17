@@ -36,7 +36,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	public Comparator<ChunkTask> priorityComparator = new Comparator<ChunkTask>() {
 		@Override
 		public int compare(ChunkTask arg0, ChunkTask arg1) {
-			if (arg0 == null || arg1 == null) {
+			if (arg0 == null || arg1 == null) {//debug: why do i get occasional NPEs here?
 				Thread.dumpStack();
 				return 0;
 			}
@@ -52,6 +52,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		synchronized (addChunkList) {
 			addChunkList.add(c);
 			generateTasks = true;
+			updatePriorities = true;
 		}
 	}
 	long debug_t = 0;
@@ -73,7 +74,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			setPhase(FractalsThread.PHASE_IDLE);
 			if (idle) {//nothing has been done, save some time
 				try {
-					Thread.sleep(10);
+					Thread.sleep(1);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -92,9 +93,9 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		synchronized (finishedTaskList) {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			
-			int maxState = dataDescriptor.getPatternProvider().getMaxState();
+			int maxState = dataDescriptor.getStepProvider().getMaxState();
 			for (ChunkTask finishedTask : finishedTaskList) {
-				if (finishedTask.getChunk().getPatternState().getId() < maxState) {
+				if (finishedTask.getChunk().getProcessingStepState().getId() < maxState) {
 					addTask(finishedTask);
 					newlyAdded++;
 				}

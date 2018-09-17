@@ -1,7 +1,7 @@
 package de.felixperko.fractals.Tasks.calculators.infra;
 
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.patternprovider.Pattern;
+import de.felixperko.fractals.Tasks.steps.patternprovider.Pattern;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.CategoryLogger;
@@ -49,23 +49,28 @@ public abstract class AbstractCalculator implements SampleCalculator{
 		if (debug) {
 			debug = false;
 		}
-		Pattern pattern = chunk.getPatternState().getPattern();
+		Pattern pattern = chunk.getProcessingStepState().getProcessingStep().getPattern();
 		int maxSize = pattern.getPositions().length;
 		if (!pattern.isGeneric())
 			return maxSize;
 		double failRatio = chunk.getFailRatio(index);
-		if (failRatio == 0)
+		if (failRatio < 1)
+			failRatio = 0;
+		double diffMultiplier = Math.min(chunk.getDiff(index)*5, 1);
+		if (failRatio == 0 && diffMultiplier == 1)
 			return maxSize;
-		double finishedSamples = chunk.sampleCount[index];
-		int diff = (int) (Math.ceil(pattern.getSummedCount()*(failRatioSampleCountFactor*failRatio)) - finishedSamples);
-		diff = Math.min(diff, pattern.getPositions().length);
-		return diff >= 0 ? diff : 0;
+		double finishedSamples = chunk.getSampleCount(index);
+		double failRatioMultiplier = (1- (failRatioSampleCountFactor*failRatio));
+		int diff = (int) (Math.ceil(pattern.getSummedCount()*failRatioMultiplier*diffMultiplier) - finishedSamples);
+		if (diff <= 0)
+			return 0;
+		return Math.min(diff, pattern.getPositions().length);
 	}
 	
 	protected void logIfDebug(Chunk chunk, int index) {
 		if (!isDebug(chunk, index))
 			return;
-		logDebug.log(chunk.sampleCount[index]+": "+chunk.currentPosX[index]+"/"+chunk.currentPosY[index]+" -> "+chunk.getAvgIterations(index));
+		logDebug.log(chunk.getSampleCount(index)+": "+chunk.getAvgIterations(index)+" \u00B1 "+chunk.getStandardDeviation(index));
 	}
 
 	public static boolean isDebug(Chunk chunk, int index) {

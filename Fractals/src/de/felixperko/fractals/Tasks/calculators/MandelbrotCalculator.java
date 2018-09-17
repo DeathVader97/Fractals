@@ -3,8 +3,9 @@ package de.felixperko.fractals.Tasks.calculators;
 import de.felixperko.fractals.Tasks.ChunkTask;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.patternprovider.BasicPatternProvider;
-import de.felixperko.fractals.Tasks.patternprovider.Pattern;
+import de.felixperko.fractals.Tasks.steps.ProcessingStep;
+import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.Tasks.steps.patternprovider.Pattern;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.util.CategoryLogger;
@@ -97,7 +98,10 @@ public class MandelbrotCalculator extends AbstractCalculator{
 	}
 
 	@Override
-	public void calculate_samples(Chunk chunk, int maxiterations, Pattern pattern) {
+	public void calculate_samples(Chunk chunk, ProcessingStep step) {
+		Pattern pattern = step.getPattern();
+		int maxiterations = step.getMaxIterations();
+		
 		Position[] patternPositions = pattern.getPositions();
 		
 		int dim_x = descriptor.getDim_sampled_x();
@@ -133,11 +137,11 @@ public class MandelbrotCalculator extends AbstractCalculator{
 			}
 			xPos = chunk.getX(xShift);
 			
-			if (chunk.isDisposed() || chunk.sampleCount == null) {
+			if (chunk.isDisposed() || chunk.getSampleCount() == null) {
 				continue;
 			}
 			
-			int sampleCount = chunk.sampleCount[i];
+			int sampleCount = chunk.getSampleCount(i);
 //			if (sampleCount > 0 && sampleCount == chunk.failSampleCount[i] && chunk.sampleCount[i] > 0.1*newSummedCount) {
 			int requiredSamples = getRequiredSampleCount(chunk, i);
 //			if (isDebug(chunk, i))
@@ -167,12 +171,12 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				int j = 0;
 				double real;
 				double imag;
-				if (j == 0 || !chunk.getPatternState().isDefaultState()){
+				if (j == 0 || !chunk.getProcessingStepState().isDefaultState()){
 					real = startReal;
 					imag = startImag;
 				} else {
-					real = chunk.currentPosX[i];
-					imag = chunk.currentPosY[i];
+					real = chunk.getCurrentPosX(i);
+					imag = chunk.getCurrentPosY(i);
 				}
 				double creal = xPos;
 				double cimag = yPos;
@@ -196,13 +200,13 @@ public class MandelbrotCalculator extends AbstractCalculator{
 					
 					if (realSq + imagSq > (1 << 16)) {//outside -> done
 						float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  ));
-						chunk.iterationsSum[i] += iterations;
-						chunk.iterationsSumSq[i] += iterations*iterations;
+						chunk.addIterationsSum(i, iterations);
+						chunk.addIterationsSumSq(i, iterations*iterations);
 						if (k == 0) {
-							chunk.currentPosX[i] = (float) real;
-							chunk.currentPosY[i] = (float) imag;
+							chunk.setCurrentPosX(i, (float) real);
+							chunk.setCurrentPosY(i, (float) imag);
 						}
-						chunk.sampleCount[i]++;
+						chunk.addSampleCount(i, 1);
 						logIfDebug(chunk, i);
 						continue sampleLoop;
 					}
@@ -210,17 +214,21 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				
 				//still not outside
 				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
-					chunk.currentPosX[i] = (float) real;
-					chunk.currentPosY[i] = (float) imag;
+					chunk.setCurrentPosX(i, (float) real);
+					chunk.setCurrentPosY(i, (float) imag);
 				} else { //max iterations reached -> declared as in the mandelbrot set
-					chunk.sampleCount[i]++;
-					chunk.failSampleCount[i]++;
+					chunk.addSampleCount(i, 1);
+					chunk.addFailSampleCount(i, 1);
 					logIfDebug(chunk, i);
 				}
 			
 			}
 		}
 		chunk.finishedIterations = maxiterations;
+	}
+	
+	public Position getDelta(double sizeX, double sizeY){
+		return new Position(descriptor.getDelta_x()*sizeX/descriptor.getDim_goal_x(), descriptor.getDelta_y()*sizeY/descriptor.getDim_goal_y());
 	}
 
 	@Override
