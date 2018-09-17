@@ -1,5 +1,7 @@
 package de.felixperko.fractals.Tasks.steps.patternprovider;
 
+import java.util.List;
+
 import de.felixperko.fractals.util.Position;
 
 public class SinglePatternProvider extends AbstractPatternProviderImpl {

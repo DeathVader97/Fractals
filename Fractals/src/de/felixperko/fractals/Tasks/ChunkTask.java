@@ -75,6 +75,18 @@ public class ChunkTask extends Task {
 //			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
 			chunk.calculateDiff();
 			chunk.calculatePixels();
+			
+			//update surrounding chunk positions
+//			for (Position p : chunk.getNeighbourPositions()) {
+//				Chunk c = chunk.getGrid().getChunkOrNull(p);
+//				if (c != null && c.imageCalculated && c != chunk) {
+//					c.setReadyToDraw(false);
+//					c.calculateDiff();
+//					c.calculatePixels();
+//					c.setReadyToDraw(true);
+//				}
+//			}
+			
 			chunk.setReadyToDraw(true);
 //			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
 		} catch (NullPointerException e) {

@@ -10,6 +10,7 @@ import de.felixperko.fractals.Tasks.threading.FractalsThread;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
+import de.felixperko.fractals.data.ProcessingStepState;
 import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.util.NumberUtil;
@@ -94,8 +95,10 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			
 			int maxState = dataDescriptor.getStepProvider().getMaxState();
+			boolean refresh = false;
 			for (ChunkTask finishedTask : finishedTaskList) {
-				if (finishedTask.getChunk().getProcessingStepState().getId() < maxState) {
+				ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
+				if (state.getStateNumber() < maxState) {
 					addTask(finishedTask);
 					newlyAdded++;
 				}
@@ -149,7 +152,9 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 
 //		log.log("updating priorities...");
 		
-		Collections.sort(priorityList, priorityComparator);
+		synchronized (this) {
+			Collections.sort(priorityList, priorityComparator);
+		}
 	}
 
 	@Override

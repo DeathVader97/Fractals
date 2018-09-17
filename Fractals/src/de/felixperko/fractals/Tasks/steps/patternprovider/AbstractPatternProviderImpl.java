@@ -15,6 +15,11 @@ public abstract class AbstractPatternProviderImpl implements PatternProvider {
 	}
 	
 	@Override
+	public List<Pattern> getPatterns() {
+		return patterns;
+	}
+	
+	@Override
 	public Pattern getNextPattern(int patternState) {
 		return patterns.get(patternState+1);
 	}

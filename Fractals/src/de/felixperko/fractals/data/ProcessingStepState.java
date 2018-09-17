@@ -6,7 +6,7 @@ import de.felixperko.fractals.Tasks.steps.StepProvider;
 public class ProcessingStepState {
 	
 	StepProvider stepProvider;
-	int state;
+	int stateNumber;
 	
 	/**
 	 * creates a default pattern state (id = -1)
@@ -14,31 +14,36 @@ public class ProcessingStepState {
 	 */
 	public ProcessingStepState(StepProvider stepProvider) {
 		this.stepProvider = stepProvider;
-		state = -1;
+		stateNumber = -1;
 	}
 	
-	public ProcessingStepState(StepProvider stepProvider, int state) {
+	public ProcessingStepState(StepProvider stepProvider, int stateNumber) {
 		this.stepProvider = stepProvider;
-		this.state = state;
+		this.stateNumber = stateNumber;
 	}
 	
 	public ProcessingStep getProcessingStep() {
-		return stepProvider.getStep(state);
+		return stepProvider.getStep(stateNumber);
 	}
 	
 	public ProcessingStepState increment() {
-		return stepProvider.incrementStepState(this);
+		stepProvider.incrementStepState(this);
+		return this;
 	}
 
 	public ProcessingStepState copy() {
-		return new ProcessingStepState(stepProvider, state);
+		return new ProcessingStepState(stepProvider, stateNumber);
 	}
 
 	public boolean isDefaultState() {
-		return state == -1;
+		return stateNumber == -1;
 	}
 
-	public int getId() {
-		return state;
+	public int getStateNumber() {
+		return stateNumber;
+	}
+
+	public void setStateNumber(int stateNumber) {
+		this.stateNumber = stateNumber;
 	}
 }

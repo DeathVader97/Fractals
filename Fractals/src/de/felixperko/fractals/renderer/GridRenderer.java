@@ -113,7 +113,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		this.canvas = FractalsMain.mainWindow.canvas;
 		int w = canvas.getSize().x;
 		int h = canvas.getSize().y;
-		DataDescriptor dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, w, h, w, h, 10000, rendererStateHolder);
+		DataDescriptor dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, w, h, w, h, 10000, rendererStateHolder, grid.getChunkSize());
 		setDataDescriptor(dataDescriptor);
 		grid.init();
 		updateRendererPositions();

@@ -23,6 +23,10 @@ public class Chunk {
 	
 	public static AtomicInteger count_active = new AtomicInteger(0);
 	
+	public static int getIndex(int relX, int relY, int chunkSize) {
+		return relX*chunkSize + relY;
+	}
+	
 	final int chunk_size;
 	int arr_size;
 	public int finishedIterations;
@@ -57,7 +61,7 @@ public class Chunk {
 	
 	protected final Position gridPos;
 	
-	protected final Position[] neigbourPositions = new Position[8];
+	protected final Position[] neigbourPositions = new Position[9];
 	
 	Painter painter = new StandardPainter();
 	
@@ -82,8 +86,6 @@ public class Chunk {
 		int gridY = (int) gridPos.getY();
 		for (int x = gridX-1 ; x <= gridX+1 ; x++){
 			for (int y = gridY-1 ; y <= gridY+1 ; y++){
-				if (x == gridX && y == gridY)
-					continue;
 				neigbourPositions[i++] = new Position(x, y);
 			}
 		}
@@ -189,6 +191,52 @@ public class Chunk {
 	private float getAvgIterations(int x, int y) {
 		return getAvgIterations(getIndex(x,y));
 	}
+	
+	private float getAvgIterationsGlobal(int x, int y) {
+		Chunk c = getGlobalChunk(x,y);
+		if (c == null || !c.arraysInstantiated)
+			return Float.NaN;
+		int s = getChunkSize();
+		if (x < 0)
+			x += s;
+		else if (x >= s)
+			x -= s;
+		if (y < 0)
+			y += s;
+		else if (y >= s)
+			y -= s;
+		return c.getAvgIterations(x, y);
+	}
+
+	private Chunk getGlobalChunk(int x, int y) {
+		int s = getChunkSize();
+		if (x < 0) {
+			if (y < 0) {
+				return grid.getChunkOrNull(neigbourPositions[0]);
+			} else if (y >= s){
+				return grid.getChunkOrNull(neigbourPositions[2]);
+			} else {
+				return grid.getChunkOrNull(neigbourPositions[1]);
+			}
+		}
+		else if (x >= s) {
+			if (y < 0) {
+				return grid.getChunkOrNull(neigbourPositions[6]);
+			} else if (y >= s){
+				return grid.getChunkOrNull(neigbourPositions[8]);
+			} else {
+				return grid.getChunkOrNull(neigbourPositions[7]);
+			}
+		} else {
+			if (y < 0) {
+				return grid.getChunkOrNull(neigbourPositions[3]);
+			} else if (y >= s){
+				return grid.getChunkOrNull(neigbourPositions[5]);
+			} else {
+				return this;
+			}
+		}
+	}
 
 	private void setRedrawFlags() {
 		imageCalculated = true;
@@ -201,7 +249,7 @@ public class Chunk {
 			image.dispose();
 		}
 		image = new Image(device, imageData);
-		drawnStep = processingStepState.state;
+		drawnStep = processingStepState.stateNumber;
 	}
 	
 	/**
@@ -299,7 +347,7 @@ public class Chunk {
 	}
 
 	public double getPriority() {
-		return priorityMultiplier*distanceToMid + stepPriorityOffset*(processingStepState.state+1);
+		return priorityMultiplier*distanceToMid + stepPriorityOffset*(processingStepState.stateNumber+1);
 	}
 
 	public Position getGridPosition() {
@@ -307,86 +355,35 @@ public class Chunk {
 	}
 
 	public void calculateDiff() {
-//		int i = 0;
-//		for (int x = 0 ; x < chunk_size ; x++) {
-//			for (int y = 0 ; y < chunk_size ; y++) {
-//				double diff = 0;
-//				int c = 0;
-//				double avgIterations = getAvgIterations(i);
-//				for (int x2 = x-1 ; x2 <= x+1 ; x2++) {
-//					for (int y2 = y-1 ; y2 <= y+1 ; y2++) {
-//						if (x2 >= 0 && y2 >= 0 && x2 < chunk_size && y2 < chunk_size && (x2 != x || y2 != y)) {
-//							int i2 = x2*chunk_size + y2;
-//							diff += Math.abs(getAvgIterations(i2) - avgIterations);
-//							c++;
-//						}
-//					}
-//				}
-//				this.diff[i] = (float) (diff/c);
-//				i++;
-//			}
-//		}
-		
-		
 		int rad = 0;
 		int boxBlurIterations = 1;
 		int radDim = rad*2+1;
+		
+		float[] otherValues = new float[4];
+		int c = 0;
 				
 		double[] pass1 = new double[arr_size];
-		double[] pass_buffer = new double[radDim];
-		int pass_buffer_offset = 0;
-		
-		int iterationCount = 0;
-		
-		int kernelMid = rad;
 		int index = 0;
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
-//				double neighbour_sum = 0;
-//				int c = 0;
-//				if (x > 0) {
-//					c++;
-//					neighbour_sum += replaceNaN(adjSamples[x-1][y]);
-//				}
-//				if (y > 0) {
-//					c++;
-//					neighbour_sum += replaceNaN(adjSamples[x][y-1]);
-//				}
-//				if (x < samples.length - 1) {
-//					c++;
-//					neighbour_sum += replaceNaN(adjSamples[x+1][y]);
-//				}
-//				if (y < samples[0].length - 1) {
-//					c++;
-//					neighbour_sum += replaceNaN(adjSamples[x][y+1]);
-//				}
-//				double value = replaceNaN(adjSamples[x][y]);
-//				double neighbour_avg = neighbour_sum/c;
-//				diff[x][y] = Math.abs(value - neighbour_avg);
-//				iterationCount += c+1;
 
 				double value = replaceNaN(getAvgIterations(x,y));
 				double delta = 0;
-				int c = 0;
-				if (x > 0) {
-					c++;
-					delta += Math.abs(value - replaceNaN(getAvgIterations(x-1, y)));
+				otherValues[0] = getAvgIterationsGlobal(x-1, y);
+				otherValues[1] = getAvgIterationsGlobal(x, y-1);
+				otherValues[2] = getAvgIterationsGlobal(x+1, y);
+				otherValues[3] = getAvgIterationsGlobal(x, y+1);
+				for (int i = 0 ; i < otherValues.length ; i++) {
+					float v = otherValues[i];
+					if (!Float.isNaN(v)) {
+						delta += Math.abs(value - v);
+						c++;
+					}
 				}
-				if (y > 0) {
-					c++;
-					delta += Math.abs(value - replaceNaN(getAvgIterations(x, y-1)));
-				}
-				if (x < chunk_size - 1) {
-					c++;
-					delta += Math.abs(value - replaceNaN(getAvgIterations(x+1, y)));
-				}
-				if (y < chunk_size - 1) {
-					c++;
-					delta += Math.abs(value - replaceNaN(getAvgIterations(x, y+1)));
-				}
-				diff[index] = (float) (delta/c);
+				if (c > 0)
+					diff[index] = (float) (delta/c);
+				c = 0;
 				index++;
-				iterationCount += c+1;
 			}
 		}
 		
@@ -471,7 +468,7 @@ public class Chunk {
 	}
 
 	public boolean refreshNeeded() {
-		return drawnStep < processingStepState.state;
+		return drawnStep < processingStepState.stateNumber;
 	}
 	
 	public boolean isReadyToDraw() {
@@ -578,5 +575,21 @@ public class Chunk {
 
 	public int[] getSampleCount() {
 		return sampleCount;
+	}
+
+	public void setSetIndexMask(IndexMask setIndexMask) {
+		this.setIndexMask = setIndexMask;
+	}
+
+	public void setGetIndexMask(IndexMask getIndexMask) {
+		this.getIndexMask = getIndexMask;
+	}
+
+	public Position[] getNeighbourPositions() {
+		return neigbourPositions;
+	}
+
+	public Grid getGrid() {
+		return grid;
 	}
 }

@@ -4,6 +4,7 @@ import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
 import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
 import de.felixperko.fractals.Tasks.calculators.TestCalculator;
 import de.felixperko.fractals.Tasks.calculators.infra.CalculatorFactory;
+import de.felixperko.fractals.Tasks.steps.DefaultStepProvider;
 import de.felixperko.fractals.Tasks.steps.StepProvider;
 import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.Tasks.steps.patternprovider.PatternProvider;
@@ -25,6 +26,8 @@ public class DataDescriptor{
 	public int dim_sampled_y;
 	private int dim_goal_x, dim_goal_y;
 	
+	private int chunkSize;
+	
 	private int maxIterations;
 	
 	private double[] xcoords;
@@ -35,11 +38,11 @@ public class DataDescriptor{
 	private Position fractalBias;
 	
 	private CalculatorFactory calculatorFactory = new CalculatorFactory(MandelbrotCalculator.class, this);
-	private StepProvider stepProvider = new DefaultStepProvider(new BasicPatternProvider(100, 10));
+	private StepProvider stepProvider;
 	private RendererStateHolder rendererStateHolder;
 	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,
-			int dim_goal_x, int dim_goal_y, int maxIterations, RendererStateHolder rendererStateHolder) {
+			int dim_goal_x, int dim_goal_y, int maxIterations, RendererStateHolder rendererStateHolder, int chunkSize) {
 		this.start_x = start_x;
 		this.start_y = start_y;
 		this.spacing = (end_x - start_x)/dim_sampled_x;
@@ -59,10 +62,12 @@ public class DataDescriptor{
 		this.fractalPower = (int) rendererStateHolder.getState(RendererStateHolder.NAME_POWER).getOutput();
 		this.fractalBias = new Position((double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_REAL).getOutput(),
 				(double) rendererStateHolder.getState(RendererStateHolder.NAME_BIAS_IMAG).getOutput());
+		this.chunkSize = chunkSize;
+		this.stepProvider = new DefaultStepProvider(this);
 	}
 
 	public DataDescriptor getRefreshedDescriptor() {
-		DataDescriptor newDD = new DataDescriptor(start_x, start_y, end_x, end_y, dim_sampled_x, dim_sampled_y, dim_goal_x, dim_goal_y, maxIterations, rendererStateHolder);
+		DataDescriptor newDD = new DataDescriptor(start_x, start_y, end_x, end_y, dim_sampled_x, dim_sampled_y, dim_goal_x, dim_goal_y, maxIterations, rendererStateHolder, chunkSize);
 		newDD.setSpacing(spacing);
 		return newDD;
 	}
@@ -230,5 +235,9 @@ public class DataDescriptor{
 
 	public void setStepProvider(StepProvider stepProvider) {
 		this.stepProvider = stepProvider;
+	}
+
+	public int getChunkSize() {
+		return chunkSize;
 	}
 }

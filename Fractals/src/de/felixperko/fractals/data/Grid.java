@@ -53,7 +53,32 @@ public class Grid {
 		}
 		return c;
 	}
+
+	public Chunk getChunk(Position gridPos) {
+		return getChunk((int)gridPos.getX(), (int)gridPos.getY());
+	}
 	
+	private Chunk getChunkOrNull(int gridX, int gridY) {
+		HashMap<Integer, Position> xmap = positions.get(gridX);
+		if (xmap == null)
+			return null;
+		Position pos = xmap.get(gridY);
+		if (pos == null)
+			return null;
+		return map.get(pos);
+	}
+
+	public Chunk getChunkOrNull(Position gridPos) {
+		return getChunkOrNull((int)gridPos.getX(), (int)gridPos.getY());
+	}
+
+//	public Position getGridPosOrNull(int gridX, int gridY) {
+//		HashMap<Integer, Position> map = positions.get(gridX);
+//		if (map == null)
+//			return null;
+//		return map.get(gridY);
+//	}
+
 	public Position getScreenOffset(Position gridPos) {
 		return new Position(screenOffset.getX() + gridPos.getX()*screenShiftX,
 							screenOffset.getY() + gridPos.getY()*screenShiftY);
@@ -192,6 +217,4 @@ public class Grid {
 		int yi = (int) (y);
 		return xindex*chunk_size + yi;
 	}
-	
-	
 }

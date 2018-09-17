@@ -6,5 +6,5 @@ public interface StepProvider {
 	
 	public ProcessingStep getStep(int state);
 	public int getMaxState();
-	public ProcessingStepState incrementStepState(ProcessingStepState processingStepState);
+	public void incrementStepState(ProcessingStepState processingStepState);
 }

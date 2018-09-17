@@ -1,5 +1,7 @@
 package de.felixperko.fractals.Tasks.calculators;
 
+import java.util.BitSet;
+
 import de.felixperko.fractals.Tasks.ChunkTask;
 import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
@@ -99,7 +101,9 @@ public class MandelbrotCalculator extends AbstractCalculator{
 
 	@Override
 	public void calculate_samples(Chunk chunk, ProcessingStep step) {
+		chunk.setGetIndexMask(step.getIndexMask());
 		Pattern pattern = step.getPattern();
+		BitSet activeIndices = step.getActiveIndices();
 		int maxiterations = step.getMaxIterations();
 		
 		Position[] patternPositions = pattern.getPositions();
@@ -111,8 +115,8 @@ public class MandelbrotCalculator extends AbstractCalculator{
 		double startImag = descriptor.getFractalBias().getY();
 		
 		int chunk_size = chunk.getChunkSize();
-		int xShift = -1;
-		int yShift = 0;
+		int xShift = 0;
+		int yShift = -1;
 		
 		double xPos = 0;
 		double yPos = 0;
@@ -128,14 +132,17 @@ public class MandelbrotCalculator extends AbstractCalculator{
 		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
 			
 			//update position
-			xShift++;
+			yShift++;
 			yPos = chunk.getY(yShift);
-			if (xShift >= chunk_size) {
-				xShift = 0;
-				yShift++;
+			if (yShift >= chunk_size) {
+				yShift = 0;
+				xShift++;
 				yPos = chunk.getY(yShift);
 			}
 			xPos = chunk.getX(xShift);
+			
+			if (!activeIndices.get(i))
+				continue;
 			
 			if (chunk.isDisposed() || chunk.getSampleCount() == null) {
 				continue;

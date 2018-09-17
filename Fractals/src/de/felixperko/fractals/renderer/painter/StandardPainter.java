@@ -15,7 +15,7 @@ public class StandardPainter implements Painter {
 	@Override
 	public void paint(ImageData imageData, Chunk chunk, int index, int x, int y) {
 		if (chunk.getSampleCount(index) == 0)
-			imageData.setPixel(y, x, color);
+			imageData.setPixel(x, y, color);
 		else {
 			float it = chunk.getAvgIterations(index);
 //			sat2 = (float) Math.log10(sat2);
@@ -24,9 +24,11 @@ public class StandardPainter implements Painter {
 			float b = it > 0 ? (chunk.getDiff() == null ? 1 : (float)Math.pow(chunk.getDiff(index),0.15)*0.9f) : 0;
 			
 			b *= 1 - chunk.getFailRatio(index);
+			if (it < 1)
+				b *= it;
 			if (b > 1)
 				b = 1;
-			imageData.setPixel(y, x, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
+			imageData.setPixel(x, y, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
 		}
 	}
 
