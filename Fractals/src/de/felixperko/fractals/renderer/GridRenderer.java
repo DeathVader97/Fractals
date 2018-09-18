@@ -201,8 +201,8 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 
 	private void renderGrid(PaintEvent e) {
-		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
-			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
+		for (long gridX = (long) minGridX ; gridX < maxGridX ; gridX++) {
+			for (long gridY = (long) minGridY ; gridY < maxGridY ; gridY++) {
 				renderPerf = createNewAndBegin("renderChunk");
 				
 				PerfInstance get = createNewSubInstanceAndBegin("getChunk", renderPerf);
@@ -227,10 +227,12 @@ public class GridRenderer extends AbstractRendererImpl {
 				}
 					
 //					Position offset = grid.getScreenOffset(new Position(gridX, gridY));
-					
-				PerfInstance drawImage = createNewSubInstanceAndBegin("drawImage", renderPerf);
-				e.gc.drawImage(chunk.image, (int) shiftX, (int) shiftY);
-				drawImage.end();
+				
+				if (!chunk.isDisposed() && chunk.image != null){
+					PerfInstance drawImage = createNewSubInstanceAndBegin("drawImage", renderPerf);
+					e.gc.drawImage(chunk.image, (int) shiftX, (int) shiftY);
+					drawImage.end();
+				}
 				renderPerf.end();
 				renderPerf.printSecondsToLog(3, true, 0.01);
 			}
@@ -276,6 +278,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 	
 	public void shiftViewGrid(Position gridShift) {
+		System.out.println("GridRenderer.shiftViewGrid(): "+gridShift);
 		minGridX += gridShift.getX();
 		minGridY += gridShift.getY();
 		maxGridX += gridShift.getX();
@@ -320,9 +323,14 @@ public class GridRenderer extends AbstractRendererImpl {
 		FractalsMain.mainWindow.setRedraw(true);
 		
 		//generate chunks
-		for (int gridX = (int) minGridX ; gridX < maxGridX ; gridX++) {
-			for (int gridY = (int) minGridY ; gridY < maxGridY ; gridY++) {
+		if (Double.isInfinite(maxGridX) || Double.isInfinite(maxGridY))
+			throw new IllegalStateException();
+		for (long gridX = (long) minGridX ; gridX < maxGridX ; gridX++) {
+			int loop = 0;
+			for (long gridY = (long) minGridY ; gridY < maxGridY ; gridY++) {
 				Chunk c = grid.getChunk(gridX, gridY);
+				if (loop++ > 100)
+					System.out.println("GridRenderer.boundsChanged() : loop(y)= "+loop);
 //				if (!c.imageCalculated)
 //					c.calculatePixels();
 			}

@@ -15,11 +15,11 @@ import de.felixperko.fractals.util.Position;
 
 public class Grid {
 	
-	int chunk_size = 128;
+	int chunk_size = 256;
 	
 	GridRenderer renderer;
 	
-	HashMap<Integer, HashMap<Integer, Position>> positions = new HashMap<>();
+	HashMap<Long, HashMap<Long, Position>> positions = new HashMap<>();
 	
 	public HashMap<Position, Chunk> map = new HashMap<>();
 	
@@ -43,7 +43,7 @@ public class Grid {
 		updateSpaceDimensions();
 	}
 
-	public Chunk getChunk(int gridX, int gridY) {
+	public Chunk getChunk(long gridX, long gridY) {
 		Position pos = getPosition(gridX, gridY);
 		Chunk c = map.get(pos);
 		if (c == null) {
@@ -55,11 +55,11 @@ public class Grid {
 	}
 
 	public Chunk getChunk(Position gridPos) {
-		return getChunk((int)gridPos.getX(), (int)gridPos.getY());
+		return getChunk((long)gridPos.getX(), (long)gridPos.getY());
 	}
 	
-	private Chunk getChunkOrNull(int gridX, int gridY) {
-		HashMap<Integer, Position> xmap = positions.get(gridX);
+	private Chunk getChunkOrNull(long gridX, long gridY) {
+		HashMap<Long, Position> xmap = positions.get(gridX);
 		if (xmap == null)
 			return null;
 		Position pos = xmap.get(gridY);
@@ -69,7 +69,7 @@ public class Grid {
 	}
 
 	public Chunk getChunkOrNull(Position gridPos) {
-		return getChunkOrNull((int)gridPos.getX(), (int)gridPos.getY());
+		return getChunkOrNull((long)gridPos.getX(), (long)gridPos.getY());
 	}
 
 //	public Position getGridPosOrNull(int gridX, int gridY) {
@@ -104,6 +104,7 @@ public class Grid {
 
 	public void shiftScreenOffset(Position shift) {
 		this.screenOffset.performOperation(Position.add, shift);
+		this.spaceOffset = this.screenOffset;
 	}
 	
 	public void updateSpaceDimensions() {
@@ -113,6 +114,7 @@ public class Grid {
 //		this.spaceOffset = new Position(screenOffset.getX()*scaleX, screenOffset.getY()*scaleY);
 		this.spaceShiftX = screenShiftX*scaleX;
 		this.spaceShiftY = screenShiftY*scaleY;
+		System.out.println("Grid.updateSpaceDimensions() : spaceShift: "+spaceShiftX+","+spaceShiftY);
 	}
 	
 	public double getScaleX(){
@@ -123,11 +125,11 @@ public class Grid {
 		return renderer.getDataDescriptor().getDelta_x()/renderer.getDataDescriptor().getDim_goal_x();
 	}
 
-	private Position getPosition(int gridX, int gridY) {
+	private Position getPosition(long gridX, long gridY) {
 		Position pos = null;
-		HashMap<Integer, Position> yMap = positions.get(gridX);
+		HashMap<Long, Position> yMap = positions.get(gridX);
 		if (yMap == null) {
-			yMap = new HashMap<Integer, Position>();
+			yMap = new HashMap<Long, Position>();
 			positions.put(gridX, yMap);
 		} else {
 			pos = yMap.get(gridY);
@@ -143,7 +145,7 @@ public class Grid {
 		Chunk c = map.remove(key);
 		c.dispose();
 		renderer.getTaskManager().priorityList.remove(c);
-		positions.get((int)key.getX()).remove((int)key.getY());
+		positions.get((long)key.getX()).remove((long)key.getY());
 	}
 
 	public int getChunkSize() {

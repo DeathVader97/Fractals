@@ -76,22 +76,25 @@ public class ChunkTask extends Task {
 			chunk.calculateDiff();
 			chunk.calculatePixels();
 			
-			//update surrounding chunk positions
-//			for (Position p : chunk.getNeighbourPositions()) {
-//				Chunk c = chunk.getGrid().getChunkOrNull(p);
-//				if (c != null && c.imageCalculated && c != chunk) {
-//					c.setReadyToDraw(false);
-//					c.calculateDiff();
-//					c.calculatePixels();
-//					c.setReadyToDraw(true);
-//				}
-//			}
+			try {
+				//update surrounding chunk positions
+				for (Position p : chunk.getNeighbourPositions()) {
+					Chunk c = chunk.getGrid().getChunkOrNull(p);
+					if (c != null && c.imageCalculated && c != chunk) {
+						c.calculateDiff();
+						c.calculatePixels();
+						c.setRedrawNeeded(true);
+					}
+				}
+			} catch (Exception e){
+				throw e;
+			}
 			
 			chunk.setReadyToDraw(true);
 //			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
 		} catch (NullPointerException e) {
 			if (!chunk.isDisposed()) {
-				System.err.println("NPE at non-disposed chunk task calculation.");
+//				System.err.println("NPE at non-disposed chunk task calculation.");
 				throw e;
 			}
 		}

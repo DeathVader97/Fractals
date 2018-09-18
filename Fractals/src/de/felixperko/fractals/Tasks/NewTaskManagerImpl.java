@@ -75,7 +75,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			setPhase(FractalsThread.PHASE_IDLE);
 			if (idle) {//nothing has been done, save some time
 				try {
-					Thread.sleep(1);
+					Thread.sleep(5);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

@@ -45,6 +45,8 @@ public class RendererStateHolder extends StateHolder{
 		statePower.setIncrementable(true).setDecrementable(true).addStateListener(new StateListener<Integer>() {
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
+				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
 		});
@@ -60,6 +62,8 @@ public class RendererStateHolder extends StateHolder{
 		stateBiasImag.addStateListener(new StateListener<Integer>() {
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
+				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
 		});
@@ -76,6 +80,8 @@ public class RendererStateHolder extends StateHolder{
 		stateBiasReal.addStateListener(new StateListener<Integer>() {
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
+				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
 		});

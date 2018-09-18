@@ -89,7 +89,8 @@ public class MainStateHolder extends StateHolder {
 			@Override
 			public String getValueString() {
 				Position p = getValue();
-				return NumberUtil.getRoundedDouble(p.getX(), 5)+", "+NumberUtil.getRoundedDouble(p.getY(), 5);
+//				return NumberUtil.getRoundedDouble(p.getX(), 5)+", "+NumberUtil.getRoundedDouble(p.getY(), 5);
+				return p.toString();
 			}
 		}.setVisible(true);
 	}

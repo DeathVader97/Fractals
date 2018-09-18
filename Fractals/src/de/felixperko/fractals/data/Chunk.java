@@ -92,6 +92,8 @@ public class Chunk {
 		
 		this.startPosition = grid.getSpaceOffset(gridPos);
 		this.delta = new Position(dataDescriptor.getDelta_x()*chunk_size/dataDescriptor.dim_sampled_x, dataDescriptor.getDelta_y()*chunk_size/dataDescriptor.dim_sampled_y);
+		System.out.println("Chunk.new : deltaX = "+delta.getX()+" deltaY = "+delta.getY()+" gridPos: "+gridPos);
+		Thread.dumpStack();
 		this.grid = grid;
 	}
 
@@ -311,11 +313,13 @@ public class Chunk {
 	}
 	
 	public double getX(int iX) {
-		return startPosition.getX() + (iX)*delta.getX()/chunk_size;
+		return grid.getSpacePosition(gridPos.addNew(new Position(iX/(double)chunk_size, 0))).getX();
+//		return startPosition.getX() + (iX)*delta.getX()/chunk_size;
 	}
 	
 	public double getY(int iY) {
-		return startPosition.getY() + (iY)*delta.getY()/chunk_size;
+		return grid.getSpacePosition(gridPos.addNew(new Position(0, iY/(double)chunk_size))).getY();
+//		return startPosition.getY() + (iY)*delta.getY()/chunk_size;
 	}
 	
 	public int getChunkSize() {
@@ -375,7 +379,7 @@ public class Chunk {
 				otherValues[3] = getAvgIterationsGlobal(x, y+1);
 				for (int i = 0 ; i < otherValues.length ; i++) {
 					float v = otherValues[i];
-					if (!Float.isNaN(v)) {
+					if (!Float.isNaN(v) && v != 0) {
 						delta += Math.abs(value - v);
 						c++;
 					}
@@ -392,69 +396,69 @@ public class Chunk {
 		int buff_index = 0;
 		int buff_size = 0;
 		
-		for (int i = 0 ; i < boxBlurIterations ; i++) {
-			//vertical box blur
-			for (int x = 0 ; x < chunk_size ; x++) {
-				//read first values
-				for (int y = 0 ; y < rad ; y++) {
-					double value = diff[getIndex(x, y)];
-					addedValue += value;
-					buff[buff_index] = value;
-					buff_index++;
-					buff_size++;
-				}
-				//actual loop
-				for (int y = 0 ; y < chunk_size ; y++) {
-					if (y+rad >= radDim) {
-						addedValue -= buff[buff_index];
-						buff_size--;
-					}
-					if (y+rad <= chunk_size-1) {
-						double value = diff[getIndex(x, y+rad)];
-						buff_size++;
-						addedValue += value;
-						buff[buff_index] = value;
-						buff_index = (buff_index+1) % radDim;
-					}
-					pass1[getIndex(x, y)] = addedValue/radDim;
-				}
-				buff_index = 0;
-				buff_size = 0;
-				addedValue = 0;
-			}
-			//horizontal box blur
-			for (int y = 0 ; y < chunk_size ; y++) {
-				//read first values
-				for (int x = 0 ; x < rad ; x++) {
-					double value = pass1[getIndex(x, y)];
-					addedValue += value;
-					buff[buff_index] = value;
-					buff_index++;
-					buff_size++;
-				}
-				//actual loop
-				for (int x = 0 ; x < chunk_size ; x++) {
-					if (x+rad >= radDim) {
-						addedValue -= buff[buff_index];
-						buff_size--;
-					}
-					if (x+rad <= chunk_size-1) {
-						double value = pass1[getIndex(x+rad, y)];
-						buff_size++;
-						addedValue += value;
-						buff[buff_index] = value;
-						buff_index = (buff_index+1) % radDim;
-					}
-//					if (i == boxBlurIterations-1)
-//						fluctuance[x][y] = addedValue/buff_size;
-//					else
-						diff[getIndex(x, y)] = (float) (addedValue/buff_size);
-				}
-				buff_index = 0;
-				buff_size = 0;
-				addedValue = 0;
-			}
-		}
+//		for (int i = 0 ; i < boxBlurIterations ; i++) {
+//			//vertical box blur
+//			for (int x = 0 ; x < chunk_size ; x++) {
+//				//read first values
+//				for (int y = 0 ; y < rad ; y++) {
+//					double value = diff[getIndex(x, y)];
+//					addedValue += value;
+//					buff[buff_index] = value;
+//					buff_index++;
+//					buff_size++;
+//				}
+//				//actual loop
+//				for (int y = 0 ; y < chunk_size ; y++) {
+//					if (y+rad >= radDim) {
+//						addedValue -= buff[buff_index];
+//						buff_size--;
+//					}
+//					if (y+rad <= chunk_size-1) {
+//						double value = diff[getIndex(x, y+rad)];
+//						buff_size++;
+//						addedValue += value;
+//						buff[buff_index] = value;
+//						buff_index = (buff_index+1) % radDim;
+//					}
+//					pass1[getIndex(x, y)] = addedValue/radDim;
+//				}
+//				buff_index = 0;
+//				buff_size = 0;
+//				addedValue = 0;
+//			}
+//			//horizontal box blur
+//			for (int y = 0 ; y < chunk_size ; y++) {
+//				//read first values
+//				for (int x = 0 ; x < rad ; x++) {
+//					double value = pass1[getIndex(x, y)];
+//					addedValue += value;
+//					buff[buff_index] = value;
+//					buff_index++;
+//					buff_size++;
+//				}
+//				//actual loop
+//				for (int x = 0 ; x < chunk_size ; x++) {
+//					if (x+rad >= radDim) {
+//						addedValue -= buff[buff_index];
+//						buff_size--;
+//					}
+//					if (x+rad <= chunk_size-1) {
+//						double value = pass1[getIndex(x+rad, y)];
+//						buff_size++;
+//						addedValue += value;
+//						buff[buff_index] = value;
+//						buff_index = (buff_index+1) % radDim;
+//					}
+////					if (i == boxBlurIterations-1)
+////						fluctuance[x][y] = addedValue/buff_size;
+////					else
+//						diff[getIndex(x, y)] = (float) (addedValue/buff_size);
+//				}
+//				buff_index = 0;
+//				buff_size = 0;
+//				addedValue = 0;
+//			}
+//		}
 	}
 	
 	private double replaceNaN(double d) {
@@ -591,5 +595,9 @@ public class Chunk {
 
 	public Grid getGrid() {
 		return grid;
+	}
+
+	public void setRedrawNeeded(boolean b) {
+		drawnStep = -1;
 	}
 }

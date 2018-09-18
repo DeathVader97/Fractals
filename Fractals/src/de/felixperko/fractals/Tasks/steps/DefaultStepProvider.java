@@ -21,47 +21,47 @@ public class DefaultStepProvider implements StepProvider{
 	public DefaultStepProvider(DataDescriptor dataDescriptor) {
 		this.patternProvider = new BasicPatternProvider(100, 10);
 		
-		int size = dataDescriptor.getChunkSize();
-		float sizef  = size;
-		float half_sizef = sizef/2;
-		int[] indices = new int[4];
-		indices[0] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef/3), size);
-		indices[1] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef/3), size);
-		indices[2] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef*2/3), size);
-		indices[3] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef*2/3), size);
-		BitSet bitSet = new BitSet(size*size);
-		for (int i = 0 ; i < indices.length ; i++) {
-			bitSet.set(indices[i]);
-		}
-		IndexMask mask = new IndexMask() {
-			
-			@Override
-			public double getWeight() {
-				return 1;
-			}
-			
-			@Override
-			public int getIndex(int i) {
-				int x = i / size;
-				int y = i % size;
-				if (x < half_sizef) {
-					if (y < half_sizef)
-						return indices[0];
-					return indices[1];
-				}
-				if (y < half_sizef)
-					return indices[2];
-				return indices[3];
-			}
-		};
-		ProcessingStepImpl probeStep = new ProcessingStepImpl(dataDescriptor, mask, bitSet);
-		steps.add(probeStep);
-		
+//		int size = dataDescriptor.getChunkSize();
+//		float sizef  = size;
+//		float half_sizef = sizef/2;
+//		int[] indices = new int[4];
+//		indices[0] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef/3), size);
+//		indices[1] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef/3), size);
+//		indices[2] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef*2/3), size);
+//		indices[3] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef*2/3), size);
+//		BitSet bitSet = new BitSet(size*size);
+//		for (int i = 0 ; i < indices.length ; i++) {
+//			bitSet.set(indices[i]);
+//		}
+//		IndexMask mask = new IndexMask() {
+//			
+//			@Override
+//			public double getWeight() {
+//				return 1;
+//			}
+//			
+//			@Override
+//			public int getIndex(int i) {
+//				int x = i / size;
+//				int y = i % size;
+//				if (x < half_sizef) {
+//					if (y < half_sizef)
+//						return indices[0];
+//					return indices[1];
+//				}
+//				if (y < half_sizef)
+//					return indices[2];
+//				return indices[3];
+//			}
+//		};
+//		ProcessingStepImpl probeStep = new ProcessingStepImpl(dataDescriptor, mask, bitSet);
+//		steps.add(probeStep);
+//		
 		ProcessingStepImpl step1 = getUpsamplingStep(dataDescriptor, 4);
-		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 2);
-		step2.activeIndices.andNot(step1.activeIndices);
+//		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 2);
+//		step2.activeIndices.andNot(step1.activeIndices);
 		steps.add(step1);
-		steps.add(step2);
+//		steps.add(step2);
 		
 		
 		for (Pattern pattern : patternProvider.getPatterns()) {
