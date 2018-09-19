@@ -13,6 +13,7 @@ import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.ProcessingStepState;
 import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
+import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.NumberUtil;
 
 public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
@@ -153,7 +154,18 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 //		log.log("updating priorities...");
 		
 		synchronized (this) {
-			Collections.sort(priorityList, priorityComparator);
+			int tryCount = 0;
+			while (true) {
+				try {
+					Collections.sort(priorityList, priorityComparator);
+					break;
+				} catch (Exception e) {
+					if (tryCount >= 2)
+						throw e;
+					CategoryLogger.ERROR.log("TaskManager", "reoccuring error while sorting the priority list (NewTaskManagerImpl.updatePriorities())");
+					tryCount++;
+				}
+			}
 		}
 	}
 

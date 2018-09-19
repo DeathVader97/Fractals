@@ -92,8 +92,8 @@ public class Chunk {
 		
 		this.startPosition = grid.getSpaceOffset(gridPos);
 		this.delta = new Position(dataDescriptor.getDelta_x()*chunk_size/dataDescriptor.dim_sampled_x, dataDescriptor.getDelta_y()*chunk_size/dataDescriptor.dim_sampled_y);
-		System.out.println("Chunk.new : deltaX = "+delta.getX()+" deltaY = "+delta.getY()+" gridPos: "+gridPos);
-		Thread.dumpStack();
+//		System.out.println("Chunk.new : deltaX = "+delta.getX()+" deltaY = "+delta.getY()+" gridPos: "+gridPos);
+//		Thread.dumpStack();
 		this.grid = grid;
 	}
 

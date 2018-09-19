@@ -146,7 +146,9 @@ public class GridRenderer extends AbstractRendererImpl {
 		//calculate new position
 		int w = canvas.getSize().x;
 		int h = canvas.getSize().y;
-		Position newScreenStart = new Position(mouse_x - w*0.5*spacing_factor, mouse_y - h*0.5*spacing_factor);
+		double factor = (spacing_factor < 1) ? 2./3*spacing_factor : 2./3;
+		double factor_mouse = (spacing_factor < 1) ? 1 : 0;
+		Position newScreenStart = new Position(mouse_x*factor_mouse - w*factor, mouse_y*factor_mouse - h*factor);
 		Position newGridStart = grid.getGridPosition(newScreenStart);//TODO ADJUST FOR ZOOM COPY ALIGNMENT
 		Position newSpaceStart = grid.getSpacePosition(newGridStart);
 		
