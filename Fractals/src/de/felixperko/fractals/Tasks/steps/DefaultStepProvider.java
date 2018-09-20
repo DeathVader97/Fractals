@@ -21,41 +21,8 @@ public class DefaultStepProvider implements StepProvider{
 	public DefaultStepProvider(DataDescriptor dataDescriptor) {
 		this.patternProvider = new BasicPatternProvider(100, 10);
 		
-//		int size = dataDescriptor.getChunkSize();
-//		float sizef  = size;
-//		float half_sizef = sizef/2;
-//		int[] indices = new int[4];
-//		indices[0] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef/3), size);
-//		indices[1] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef/3), size);
-//		indices[2] = Chunk.getIndex(Math.round(sizef/3), Math.round(sizef*2/3), size);
-//		indices[3] = Chunk.getIndex(Math.round(sizef*2/3), Math.round(sizef*2/3), size);
-//		BitSet bitSet = new BitSet(size*size);
-//		for (int i = 0 ; i < indices.length ; i++) {
-//			bitSet.set(indices[i]);
-//		}
-//		IndexMask mask = new IndexMask() {
-//			
-//			@Override
-//			public double getWeight() {
-//				return 1;
-//			}
-//			
-//			@Override
-//			public int getIndex(int i) {
-//				int x = i / size;
-//				int y = i % size;
-//				if (x < half_sizef) {
-//					if (y < half_sizef)
-//						return indices[0];
-//					return indices[1];
-//				}
-//				if (y < half_sizef)
-//					return indices[2];
-//				return indices[3];
-//			}
-//		};
-//		ProcessingStepImpl probeStep = new ProcessingStepImpl(dataDescriptor, mask, bitSet);
-//		steps.add(probeStep);
+		ProcessingStepImpl probeStep = getProbeStep(dataDescriptor, 2);
+		steps.add(probeStep);
 //		
 		ProcessingStepImpl step1 = getUpsamplingStep(dataDescriptor, 4);
 //		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 2);
@@ -69,6 +36,45 @@ public class DefaultStepProvider implements StepProvider{
 		}
 	}
 	
+	private ProcessingStepImpl getProbeStep(DataDescriptor dataDescriptor, int dim) {
+		int size = dataDescriptor.getChunkSize();
+		int count = dim*dim;
+		float step = size/(float)(dim*2);
+		
+		//get and enable active indices
+		int[] indices = new int[count];
+		int index = 0;
+		BitSet bitSet = new BitSet(count);
+		for (float x = step ; x < size-step ; x += step) {
+			for (float y = step ; y < size-step ; y += step) {
+				int val = Chunk.getIndex(Math.round(x), Math.round(y), size);
+				indices[index] = val;
+				bitSet.set(val);
+				index++;
+			}
+		}
+		
+		//configure mask
+		IndexMask mask = new IndexMask() {
+			
+			@Override
+			public double getWeight() {
+				return 1;
+			}
+			
+			@Override
+			public int getIndex(int i) {
+				int x = i / size;
+				int y = i % size;
+				int x2 = (int) Math.floor(0.5*x/step);
+				int y2 = (int) Math.floor(0.5*y/step);
+				int i2 = x2*dim + y2;
+				return indices[i2];
+			}
+		};
+		return new ProcessingStepImpl(dataDescriptor, mask, bitSet);
+	}
+
 	private ProcessingStepImpl getUpsamplingStep(DataDescriptor dataDescriptor, int scaling) {
 		int chunkSize = dataDescriptor.getChunkSize();
 		IndexMask mask = new UpsampleMask(dataDescriptor, scaling);

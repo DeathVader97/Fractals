@@ -49,18 +49,22 @@ public abstract class AbstractCalculator implements SampleCalculator{
 		if (debug) {
 			debug = false;
 		}
+		
 		Pattern pattern = chunk.getProcessingStepState().getProcessingStep().getPattern();
 		int maxSize = pattern.getPositions().length;
 		if (!pattern.isGeneric())
 			return maxSize;
-		double failRatio = chunk.getFailRatio(index);
+
+		int finishedSamples = chunk.getSampleCount(index);
+		double failRatio = chunk.getFailRatio(finishedSamples, index);
 		if (failRatio < 1)
 			failRatio = 0;
 		double diffMultiplier = Math.min(chunk.getDiff(index)*5, 1);
 		if (failRatio == 0 && diffMultiplier == 1)
 			return maxSize;
-		double finishedSamples = chunk.getSampleCount(index);
+		
 		double failRatioMultiplier = (1- (failRatioSampleCountFactor*failRatio));
+		
 		int diff = (int) (Math.ceil(pattern.getSummedCount()*failRatioMultiplier*diffMultiplier) - finishedSamples);
 		if (diff <= 0)
 			return 0;

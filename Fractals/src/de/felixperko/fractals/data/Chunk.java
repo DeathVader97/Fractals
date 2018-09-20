@@ -169,6 +169,13 @@ public class Chunk {
 		return failSampleCount[i]/(float)samples;
 	}
 	
+	public float getFailRatio(int samples, int i) {
+		i = applyGetIndexMasks(i);
+		if (samples == 0)
+			return 0;
+		return failSampleCount[i]/(float)samples;
+	}
+	
 	public float getVariance(int i) {
 		i = applyGetIndexMasks(i);
 		int samples = sampleCount[i];
