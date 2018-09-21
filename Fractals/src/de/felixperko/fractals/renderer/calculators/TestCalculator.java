@@ -1,21 +1,23 @@
-package de.felixperko.fractals.Tasks.calculators;
+package de.felixperko.fractals.renderer.calculators;
 
 import java.util.Random;
 
 import de.felixperko.fractals.Tasks.ChunkTask;
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
 
-public class BurningShipCalculator extends AbstractCalculator{
+public class TestCalculator extends AbstractCalculator{
 	
-	public BurningShipCalculator(DataDescriptor dataDescriptor, Task task) {
+	public TestCalculator(DataDescriptor dataDescriptor, Task task) {
 		super(dataDescriptor, task);
 	}
+	
+	Random r = new Random();
 	
 	@Override
 	public void calculate_samples(int[] sampleIndices, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
@@ -67,8 +69,10 @@ public class BurningShipCalculator extends AbstractCalculator{
 				double realSq = 0;
 				double imagSq = 0;
 				for (int k = 1 ; k < pow ; k++){
-					real = Math.abs(real);
-					imag = Math.abs(imag);
+					if (r.nextBoolean()){
+						real = Math.abs(real);
+						imag = Math.abs(imag);
+					}
 					realSq = real*real;
 					imagSq = imag*imag;
 					imag = 2*real*imag;
@@ -119,7 +123,7 @@ public class BurningShipCalculator extends AbstractCalculator{
 		
 		boolean trackinghelper = false;
 		
-		int newSummedCount = ((BasicPatternProvider)ChunkTask.patternProvider).getSummedSamplesAtState(Integer.min(chunk.getProcessingStepState()+1, ChunkTask.patternProvider.getMaxState()));
+		int newSummedCount = ((BasicPatternProvider)ChunkTask.patternProvider).getSummedSamplesAtState(chunk.getProcessingStepState()+1);
 
 		mainLoop : 
 		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
@@ -179,8 +183,10 @@ public class BurningShipCalculator extends AbstractCalculator{
 					double realSq = 0;
 					double imagSq = 0;
 					for (int l = 1 ; l < pow ; l++){
-						real = Math.abs(real);
-						imag = Math.abs(imag);
+						if (r.nextBoolean()){
+							real = Math.abs(real);
+							imag = Math.abs(imag);
+						}
 						realSq = real*real;
 						imagSq = imag*imag;
 						imag = 2*real*imag;
@@ -221,6 +227,8 @@ public class BurningShipCalculator extends AbstractCalculator{
 		}
 		chunk.finishedIterations = maxiterations;
 	}
+	
+	boolean burning = true;
 
 	@Override
 	public Position getIterationForPosition(Position startPos, Position currentPos){
@@ -236,8 +244,11 @@ public class BurningShipCalculator extends AbstractCalculator{
 		double new_imag = 1;
 		
 		for (int k = 1 ; k < pow ; k++){
-			real = Math.abs(real);
-			imag = Math.abs(imag);
+			if (burning){
+				real = Math.abs(real);
+				imag = Math.abs(imag);
+			}
+			burning = !burning;
 			new_real = (real*real - (imag*imag));
 			new_imag = 2*(real*imag);
 			real = new_real;
@@ -249,4 +260,3 @@ public class BurningShipCalculator extends AbstractCalculator{
 		return new Position(real, imag);
 	}
 }
-

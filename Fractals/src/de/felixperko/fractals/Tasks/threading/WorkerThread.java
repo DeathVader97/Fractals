@@ -9,7 +9,7 @@ import de.felixperko.fractals.Tasks.Task;
 import de.felixperko.fractals.Tasks.TaskProvider;
 import de.felixperko.fractals.Tasks.WorkerPhase;
 import de.felixperko.fractals.Tasks.WorkerPhaseChange;
-import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
+import de.felixperko.fractals.renderer.perf.PerformanceMonitor;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 

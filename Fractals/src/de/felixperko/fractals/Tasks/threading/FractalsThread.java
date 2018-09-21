@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import de.felixperko.fractals.Tasks.WorkerPhase;
 import de.felixperko.fractals.Tasks.WorkerPhaseChange;
-import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
+import de.felixperko.fractals.renderer.perf.PerformanceMonitor;
 import de.felixperko.fractals.util.CategoryLogger;
 
 public class FractalsThread extends Thread {

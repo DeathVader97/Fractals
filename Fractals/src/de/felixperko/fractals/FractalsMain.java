@@ -3,13 +3,13 @@ package de.felixperko.fractals;
 import de.felixperko.fractals.Tasks.LocalTaskProvider;
 import de.felixperko.fractals.Tasks.TaskManager;
 import de.felixperko.fractals.Tasks.TaskProvider;
-import de.felixperko.fractals.Tasks.perf.PerformanceMonitor;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.data.LocationHolder;
 import de.felixperko.fractals.gui.MainWindow;
 import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
-import de.felixperko.fractals.state.stateholders.MainStateHolder;
+import de.felixperko.fractals.renderer.perf.PerformanceMonitor;
+import de.felixperko.fractals.stateholders.MainStateHolder;
 
 public class FractalsMain{
 	

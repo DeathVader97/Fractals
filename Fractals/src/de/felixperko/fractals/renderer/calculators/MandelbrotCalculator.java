@@ -1,23 +1,23 @@
-package de.felixperko.fractals.Tasks.calculators;
+package de.felixperko.fractals.renderer.calculators;
 
-import java.util.Random;
+import java.util.BitSet;
 
 import de.felixperko.fractals.Tasks.ChunkTask;
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
+import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.renderer.steps.patternprovider.Pattern;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
 
-public class TestCalculator extends AbstractCalculator{
+public class MandelbrotCalculator extends AbstractCalculator{
 	
-	public TestCalculator(DataDescriptor dataDescriptor, Task task) {
+	public MandelbrotCalculator(DataDescriptor dataDescriptor, Task task) {
 		super(dataDescriptor, task);
 	}
-	
-	Random r = new Random();
 	
 	@Override
 	public void calculate_samples(int[] sampleIndices, int[] currentIterations, int maxIterations, double[] currentpos_real, double[] currentpos_imag, int[] results) {
@@ -69,10 +69,8 @@ public class TestCalculator extends AbstractCalculator{
 				double realSq = 0;
 				double imagSq = 0;
 				for (int k = 1 ; k < pow ; k++){
-					if (r.nextBoolean()){
-						real = Math.abs(real);
-						imag = Math.abs(imag);
-					}
+//					real = Math.abs(real);
+//					imag = Math.abs(imag);
 					realSq = real*real;
 					imagSq = imag*imag;
 					imag = 2*real*imag;
@@ -100,10 +98,16 @@ public class TestCalculator extends AbstractCalculator{
 			}
 		}
 	}
-	
-	@Override
-	public void calculate_samples(Chunk chunk, int maxiterations, Position[] samplepattern) {
 
+	@Override
+	public void calculate_samples(Chunk chunk, ProcessingStep step) {
+		chunk.setGetIndexMask(step.getIndexMask());
+		Pattern pattern = step.getPattern();
+		BitSet activeIndices = step.getActiveIndices();
+		int maxiterations = step.getMaxIterations();
+		
+		Position[] patternPositions = pattern.getPositions();
+		
 		int dim_x = descriptor.getDim_sampled_x();
 		
 		int pow = descriptor.getFractalPower();
@@ -111,8 +115,8 @@ public class TestCalculator extends AbstractCalculator{
 		double startImag = descriptor.getFractalBias().getY();
 		
 		int chunk_size = chunk.getChunkSize();
-		int xShift = -1;
-		int yShift = 0;
+		int xShift = 0;
+		int yShift = -1;
 		
 		double xPos = 0;
 		double yPos = 0;
@@ -123,36 +127,44 @@ public class TestCalculator extends AbstractCalculator{
 		
 		boolean trackinghelper = false;
 		
-		int newSummedCount = ((BasicPatternProvider)ChunkTask.patternProvider).getSummedSamplesAtState(chunk.getProcessingStepState()+1);
+		int newSummedCount = pattern.getSummedCount();
 
-		mainLoop : 
 		for (int i = 0 ; i < chunk_size*chunk_size ; i++) {
 			
 			//update position
-			xShift++;
+			yShift++;
 			yPos = chunk.getY(yShift);
-			if (xShift >= chunk_size) {
-				xShift = 0;
-				yShift++;
+			if (yShift >= chunk_size) {
+				yShift = 0;
+				xShift++;
 				yPos = chunk.getY(yShift);
 			}
 			xPos = chunk.getX(xShift);
 			
-			if (chunk.isDisposed() || chunk.sampleCount == null) {
+			if (!activeIndices.get(i))
+				continue;
+			
+			if (chunk.isDisposed() || chunk.getSampleCount() == null) {
 				continue;
 			}
 			
-			int sampleCount = chunk.sampleCount[i];
-			if (sampleCount > 0 && sampleCount == chunk.failSampleCount[i] && chunk.sampleCount[i] > 0.1*newSummedCount) {
-				continue;
+			int sampleCount = chunk.getSampleCount(i);
+//			if (sampleCount > 0 && sampleCount == chunk.failSampleCount[i] && chunk.sampleCount[i] > 0.1*newSummedCount) {
+			int requiredSamples = getRequiredSampleCount(chunk, i);
+//			if (isDebug(chunk, i))
+//				System.out.println("state="+chunk.getPatternState().getId()+" required samples="+requiredSamples);
+			
+			boolean debug = isDebug(chunk, i);
+			if (debug){
+				trackinghelper = true;
 			}
 			
 			Position prevsampleoffset = null;
 			
 			sampleLoop:
-			for (int k = 0 ; k < samplepattern.length ; k++) {
+			for (int k = 0 ; k < requiredSamples ; k++) {
 				
-				Position sampleoffset = samplepattern[k];
+				Position sampleoffset = patternPositions[k];
 				xPos += sampleoffset.getX()*delta.getX();
 				yPos += sampleoffset.getY()*delta.getY();
 				if (prevsampleoffset != null) {
@@ -166,12 +178,12 @@ public class TestCalculator extends AbstractCalculator{
 				int j = 0;
 				double real;
 				double imag;
-				if (j == 0 || chunk.getProcessingStepState() > -1){
+				if (j == 0 || !chunk.getProcessingStepState().isDefaultState()){
 					real = startReal;
 					imag = startImag;
 				} else {
-					real = chunk.currentPosX[i];
-					imag = chunk.currentPosY[i];
+					real = chunk.getCurrentPosX(i);
+					imag = chunk.getCurrentPosY(i);
 				}
 				double creal = xPos;
 				double cimag = yPos;
@@ -183,44 +195,38 @@ public class TestCalculator extends AbstractCalculator{
 					double realSq = 0;
 					double imagSq = 0;
 					for (int l = 1 ; l < pow ; l++){
-						if (r.nextBoolean()){
-							real = Math.abs(real);
-							imag = Math.abs(imag);
-						}
+	//					real = Math.abs(real);
+	//					imag = Math.abs(imag);
 						realSq = real*real;
 						imagSq = imag*imag;
 						imag = 2*real*imag;
 						real = realSq - imagSq;
-					}
-					if (chunk.getGridPosition().getX() == 5 && chunk.getGridPosition().getY() == 5 && i == 0){
-						trackinghelper = true;
 					}
 					real += creal;
 					imag += cimag;
 					
 					if (realSq + imagSq > (1 << 16)) {//outside -> done
 						float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  ));
-						chunk.iterationsSum[i] += iterations;
-						chunk.iterationsSumSq[i] += iterations*iterations;
+						chunk.addIterationsSum(i, iterations);
+						chunk.addIterationsSumSq(i, iterations*iterations);
 						if (k == 0) {
-							chunk.currentPosX[i] = (float) real;
-							chunk.currentPosY[i] = (float) imag;
+							chunk.setCurrentPosX(i, (float) real);
+							chunk.setCurrentPosY(i, (float) imag);
 						}
-						chunk.sampleCount[i]++;
+						chunk.addSampleCount(i, 1);
+						logIfDebug(chunk, i);
 						continue sampleLoop;
 					}
 				}
 				
 				//still not outside
 				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
-					chunk.currentPosX[i] = (float) real;
-					chunk.currentPosY[i] = (float) imag;
+					chunk.setCurrentPosX(i, (float) real);
+					chunk.setCurrentPosY(i, (float) imag);
 				} else { //max iterations reached -> declared as in the mandelbrot set
-					chunk.sampleCount[i]++;
-					chunk.failSampleCount[i]++;
-					if (chunk.getGridPosition().getX() == 5 && chunk.getGridPosition().getY() == 5 && i == 0){
-						CategoryLogger.ERROR.log(chunk.sampleCount[i]+": "+real+"/"+imag+" -> "+chunk.iterationsSum[i]);
-					}
+					chunk.addSampleCount(i, 1);
+					chunk.addFailSampleCount(i, 1);
+					logIfDebug(chunk, i);
 				}
 			
 			}
@@ -228,7 +234,9 @@ public class TestCalculator extends AbstractCalculator{
 		chunk.finishedIterations = maxiterations;
 	}
 	
-	boolean burning = true;
+	public Position getDelta(double sizeX, double sizeY){
+		return new Position(descriptor.getDelta_x()*sizeX/descriptor.getDim_goal_x(), descriptor.getDelta_y()*sizeY/descriptor.getDim_goal_y());
+	}
 
 	@Override
 	public Position getIterationForPosition(Position startPos, Position currentPos){
@@ -244,11 +252,8 @@ public class TestCalculator extends AbstractCalculator{
 		double new_imag = 1;
 		
 		for (int k = 1 ; k < pow ; k++){
-			if (burning){
-				real = Math.abs(real);
-				imag = Math.abs(imag);
-			}
-			burning = !burning;
+//			real = Math.abs(real);
+//			imag = Math.abs(imag);
 			new_real = (real*real - (imag*imag));
 			new_imag = 2*(real*imag);
 			real = new_real;

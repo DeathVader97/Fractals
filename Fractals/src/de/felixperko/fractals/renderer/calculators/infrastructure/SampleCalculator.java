@@ -1,9 +1,9 @@
-package de.felixperko.fractals.Tasks.calculators.infra;
+package de.felixperko.fractals.renderer.calculators.infrastructure;
 
-import de.felixperko.fractals.Tasks.steps.ProcessingStep;
-import de.felixperko.fractals.Tasks.steps.patternprovider.Pattern;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
+import de.felixperko.fractals.renderer.steps.patternprovider.Pattern;
 import de.felixperko.fractals.util.Position;
 
 public interface SampleCalculator {

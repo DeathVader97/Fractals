@@ -1,4 +1,4 @@
-package de.felixperko.fractals.state.stateholders;
+package de.felixperko.fractals.stateholders;
 
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.state.DiscreteState;

@@ -2,14 +2,14 @@ package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
 
-import de.felixperko.fractals.Tasks.steps.ProcessingStep;
-import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
-import de.felixperko.fractals.Tasks.steps.patternprovider.Pattern;
-import de.felixperko.fractals.Tasks.steps.patternprovider.PatternProvider;
-import de.felixperko.fractals.Tasks.steps.patternprovider.SinglePatternProvider;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.ProcessingStepState;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
+import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.renderer.steps.patternprovider.Pattern;
+import de.felixperko.fractals.renderer.steps.patternprovider.PatternProvider;
+import de.felixperko.fractals.renderer.steps.patternprovider.SinglePatternProvider;
 import de.felixperko.fractals.util.Position;
 
 public class ChunkTask extends Task {
@@ -80,7 +80,7 @@ public class ChunkTask extends Task {
 				//update surrounding chunk positions
 				for (Position p : chunk.getNeighbourPositions()) {
 					Chunk c = chunk.getGrid().getChunkOrNull(p);
-					if (c != null && c.imageCalculated && c != chunk) {
+					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state) {
 						c.calculateDiff();
 						c.calculatePixels();
 						c.setRedrawNeeded(true);

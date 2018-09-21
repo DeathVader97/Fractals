@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.steps;
+package de.felixperko.fractals.renderer.steps;
 
 import de.felixperko.fractals.data.ProcessingStepState;
 

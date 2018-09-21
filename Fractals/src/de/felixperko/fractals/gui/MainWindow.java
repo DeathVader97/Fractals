@@ -1,5 +1,7 @@
 package de.felixperko.fractals.gui;
 
+import static de.felixperko.fractals.renderer.perf.PerfInstance.*;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
@@ -38,7 +40,6 @@ import de.felixperko.fractals.Controls.Console;
 import de.felixperko.fractals.Controls.KeyListenerControls;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.Task;
-import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.Tasks.threading.IterationPositionThread;
 import de.felixperko.fractals.Tasks.threading.ThreadManager;
 import de.felixperko.fractals.Tasks.threading.WorkerThread;
@@ -47,6 +48,7 @@ import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.Renderer;
+import de.felixperko.fractals.renderer.perf.PerfInstance;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.State;
@@ -54,7 +56,7 @@ import de.felixperko.fractals.state.StateChangeAction;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
 import de.felixperko.fractals.state.SwitchState;
-import de.felixperko.fractals.state.stateholders.MainStateHolder;
+import de.felixperko.fractals.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Logger;
 import de.felixperko.fractals.util.Message;
@@ -75,7 +77,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.events.TraverseEvent;
-import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class MainWindow {
 	

@@ -1,5 +1,7 @@
 package de.felixperko.fractals.renderer;
 
+import static de.felixperko.fractals.renderer.perf.PerfInstance.*;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
@@ -15,15 +17,14 @@ import org.eclipse.swt.widgets.Canvas;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskManager;
-import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.perf.PerfInstance;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.Location;
+import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.renderer.perf.PerfInstance;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
-import static de.felixperko.fractals.Tasks.perf.PerfInstance.*;
 
 public class GridRenderer extends AbstractRendererImpl {
 	

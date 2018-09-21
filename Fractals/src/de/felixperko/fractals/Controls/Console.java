@@ -1,9 +1,9 @@
 package de.felixperko.fractals.Controls;
 
 import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
 import de.felixperko.fractals.renderer.GridRenderer;
-import de.felixperko.fractals.state.stateholders.MainStateHolder;
+import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
 import de.felixperko.fractals.util.Position.SingleOperation;

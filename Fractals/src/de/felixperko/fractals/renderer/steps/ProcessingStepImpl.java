@@ -1,13 +1,13 @@
-package de.felixperko.fractals.Tasks.steps;
+package de.felixperko.fractals.renderer.steps;
 
 import java.util.BitSet;
 
-import de.felixperko.fractals.Tasks.steps.patternprovider.Pattern;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.DefaultMask;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.IndexMask;
+import de.felixperko.fractals.renderer.steps.patternprovider.Pattern;
 import de.felixperko.fractals.util.Position;
 
 public class ProcessingStepImpl implements ProcessingStep {
@@ -20,6 +20,7 @@ public class ProcessingStepImpl implements ProcessingStep {
 	BitSet activeIndices;
 	int maxIterations;
 	boolean render;
+	float diff_scale = 1;
 	
 	public ProcessingStepImpl(DataDescriptor dataDescriptor) {
 		int chunkSize = dataDescriptor.getChunkSize();
@@ -82,6 +83,15 @@ public class ProcessingStepImpl implements ProcessingStep {
 	@Override
 	public int getMaxIterations() {
 		return maxIterations;
+	}
+
+	@Override
+	public float getDiffScale() {
+		return diff_scale;
+	}
+	
+	public void setDiffScale(float diff_scale){
+		this.diff_scale = diff_scale;
 	}
 
 }

@@ -2,7 +2,7 @@ package de.felixperko.fractals.data;
 
 import java.util.Arrays;
 
-import de.felixperko.fractals.Tasks.perf.PerfInstance;
+import de.felixperko.fractals.renderer.perf.PerfInstance;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.NumberUtil;
 

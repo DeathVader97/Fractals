@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.calculators.infra;
+package de.felixperko.fractals.renderer.calculators.infrastructure;
 
 
 import java.lang.reflect.InvocationTargetException;

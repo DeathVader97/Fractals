@@ -16,7 +16,7 @@ import de.felixperko.fractals.renderer.painter.FailRatioPainter;
 import de.felixperko.fractals.renderer.painter.Painter;
 import de.felixperko.fractals.renderer.painter.SamplesPainter;
 import de.felixperko.fractals.renderer.painter.StandardPainter;
-import de.felixperko.fractals.state.stateholders.MainStateHolder;
+import de.felixperko.fractals.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.Position;
 
 public class Chunk {
@@ -54,7 +54,7 @@ public class Chunk {
 	
 	double distanceToMid;
 	double priorityMultiplier = 1;
-	double stepPriorityOffset = 200;
+	double stepPriorityOffset = 20;
 	
 	boolean disposed = false;
 	boolean arraysInstantiated = false;
@@ -204,7 +204,7 @@ public class Chunk {
 	private float getAvgIterationsGlobal(int x, int y) {
 		Chunk c = getGlobalChunk(x,y);
 		if (c == null || !c.arraysInstantiated)
-			return Float.NaN;
+			return -2;
 		int s = getChunkSize();
 		if (x < 0)
 			x += s;
@@ -367,13 +367,13 @@ public class Chunk {
 
 	public void calculateDiff() {
 		int rad = 0;
-		int boxBlurIterations = 1;
+//		int boxBlurIterations = 1;
 		int radDim = rad*2+1;
 		
 		float[] otherValues = new float[4];
-		int c = 0;
+		float factor = processingStepState.getProcessingStep().getDiffScale();
 				
-		double[] pass1 = new double[arr_size];
+//		double[] pass1 = new double[arr_size];
 		int index = 0;
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
@@ -384,24 +384,24 @@ public class Chunk {
 				otherValues[1] = getAvgIterationsGlobal(x, y-1);
 				otherValues[2] = getAvgIterationsGlobal(x+1, y);
 				otherValues[3] = getAvgIterationsGlobal(x, y+1);
+				int c = 0;
 				for (int i = 0 ; i < otherValues.length ; i++) {
 					float v = otherValues[i];
-					if (!Float.isNaN(v) && v != 0) {
+					if (!Float.isNaN(c) && v > 0) {
 						delta += Math.abs(value - v);
 						c++;
 					}
 				}
 				if (c > 0)
-					diff[index] = (float) (delta/c);
-				c = 0;
+					diff[index] = (float) (delta/c)*factor;
 				index++;
 			}
 		}
 		
-		double[] buff = new double[radDim];
-		double addedValue = 0;
-		int buff_index = 0;
-		int buff_size = 0;
+//		double[] buff = new double[radDim];
+//		double addedValue = 0;
+//		int buff_index = 0;
+//		int buff_size = 0;
 		
 //		for (int i = 0 ; i < boxBlurIterations ; i++) {
 //			//vertical box blur

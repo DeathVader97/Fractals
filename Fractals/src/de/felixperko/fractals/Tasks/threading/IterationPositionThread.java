@@ -2,8 +2,8 @@ package de.felixperko.fractals.Tasks.threading;
 
 import java.util.ArrayList;
 
-import de.felixperko.fractals.Tasks.calculators.infra.SampleCalculator;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.calculators.infrastructure.SampleCalculator;
 import de.felixperko.fractals.util.Position;
 
 public class IterationPositionThread extends FractalsThread {

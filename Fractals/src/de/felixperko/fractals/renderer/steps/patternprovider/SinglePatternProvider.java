@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.steps.patternprovider;
+package de.felixperko.fractals.renderer.steps.patternprovider;
 
 import java.util.List;
 

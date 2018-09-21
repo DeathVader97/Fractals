@@ -1,7 +1,7 @@
 package de.felixperko.fractals.data;
 
-import de.felixperko.fractals.Tasks.steps.ProcessingStep;
-import de.felixperko.fractals.Tasks.steps.StepProvider;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
+import de.felixperko.fractals.renderer.steps.StepProvider;
 
 public class ProcessingStepState {
 	

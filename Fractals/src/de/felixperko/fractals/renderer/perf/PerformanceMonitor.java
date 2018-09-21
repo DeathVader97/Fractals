@@ -1,4 +1,4 @@
-package de.felixperko.fractals.Tasks.perf;
+package de.felixperko.fractals.renderer.perf;
 
 import java.awt.Color;
 import java.util.ArrayList;

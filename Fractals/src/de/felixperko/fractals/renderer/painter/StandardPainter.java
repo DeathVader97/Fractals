@@ -14,6 +14,8 @@ public class StandardPainter implements Painter {
 
 	@Override
 	public void paint(ImageData imageData, Chunk chunk, int index, int x, int y) {
+		if (chunk.isDisposed())
+			return;
 		if (chunk.getSampleCount(index) == 0)
 			imageData.setPixel(x, y, color);
 		else {

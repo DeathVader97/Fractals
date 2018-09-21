@@ -2,7 +2,7 @@ package de.felixperko.fractals.renderer;
 
 import de.felixperko.fractals.data.DataContainer;
 import de.felixperko.fractals.data.DataDescriptor;
-import de.felixperko.fractals.state.stateholders.RendererStateHolder;
+import de.felixperko.fractals.stateholders.RendererStateHolder;
 
 public abstract class AbstractRendererImpl implements Renderer {
 	

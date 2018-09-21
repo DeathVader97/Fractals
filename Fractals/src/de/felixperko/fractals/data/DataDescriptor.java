@@ -1,17 +1,17 @@
 package de.felixperko.fractals.data;
 
-import de.felixperko.fractals.Tasks.calculators.BurningShipCalculator;
-import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
-import de.felixperko.fractals.Tasks.calculators.TestCalculator;
-import de.felixperko.fractals.Tasks.calculators.infra.CalculatorFactory;
-import de.felixperko.fractals.Tasks.steps.DefaultStepProvider;
-import de.felixperko.fractals.Tasks.steps.StepProvider;
-import de.felixperko.fractals.Tasks.steps.patternprovider.BasicPatternProvider;
-import de.felixperko.fractals.Tasks.steps.patternprovider.PatternProvider;
+import de.felixperko.fractals.renderer.calculators.BurningShipCalculator;
+import de.felixperko.fractals.renderer.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.renderer.calculators.TestCalculator;
+import de.felixperko.fractals.renderer.calculators.infrastructure.CalculatorFactory;
+import de.felixperko.fractals.renderer.steps.DefaultStepProvider;
+import de.felixperko.fractals.renderer.steps.StepProvider;
+import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;
+import de.felixperko.fractals.renderer.steps.patternprovider.PatternProvider;
 import de.felixperko.fractals.state.State;
 import de.felixperko.fractals.state.StateChangeListener;
 import de.felixperko.fractals.state.StateListener;
-import de.felixperko.fractals.state.stateholders.RendererStateHolder;
+import de.felixperko.fractals.stateholders.RendererStateHolder;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
 

@@ -3,11 +3,11 @@ package de.felixperko.fractals.Tasks;
 import java.util.ArrayList;
 
 import de.felixperko.fractals.FractalsMain;
-import de.felixperko.fractals.Tasks.calculators.MandelbrotCalculator;
-import de.felixperko.fractals.Tasks.calculators.infra.AbstractCalculator;
-import de.felixperko.fractals.Tasks.calculators.infra.SampleCalculator;
 import de.felixperko.fractals.data.DataContainer;
 import de.felixperko.fractals.data.DataDescriptor;
+import de.felixperko.fractals.renderer.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.renderer.calculators.infrastructure.SampleCalculator;
 
 public abstract class Task {
 	
