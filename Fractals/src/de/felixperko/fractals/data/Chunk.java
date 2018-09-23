@@ -54,7 +54,7 @@ public class Chunk {
 	
 	double distanceToMid;
 	double priorityMultiplier = 1;
-	double stepPriorityOffset = 20;
+	double stepPriorityOffset = 200;
 	
 	boolean disposed = false;
 	boolean arraysInstantiated = false;
@@ -82,10 +82,10 @@ public class Chunk {
 		this.gridPos = gridPos;
 		
 		int i = 0;
-		int gridX = (int) gridPos.getX();
-		int gridY = (int) gridPos.getY();
-		for (int x = gridX-1 ; x <= gridX+1 ; x++){
-			for (int y = gridY-1 ; y <= gridY+1 ; y++){
+		long gridX = (long) gridPos.getX();
+		long gridY = (long) gridPos.getY();
+		for (long x = gridX-1 ; x <= gridX+1 ; x++){
+			for (long y = gridY-1 ; y <= gridY+1 ; y++){
 				neigbourPositions[i++] = new Position(x, y);
 			}
 		}
