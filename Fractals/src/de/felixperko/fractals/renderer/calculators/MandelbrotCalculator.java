@@ -104,7 +104,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 		chunk.setGetIndexMask(step.getIndexMask());
 		Pattern pattern = step.getPattern();
 		BitSet activeIndices = step.getActiveIndices();
-		int maxiterations = step.getMaxIterations();
+		int maxiterations = Integer.min(step.getMaxIterations(), chunk.getMaxIterations());
 		
 		Position[] patternPositions = pattern.getPositions();
 		
@@ -148,7 +148,7 @@ public class MandelbrotCalculator extends AbstractCalculator{
 				continue;
 			}
 			
-			int sampleCount = chunk.getSampleCount(i);
+//			int sampleCount = chunk.getSampleCount(i);
 //			if (sampleCount > 0 && sampleCount == chunk.failSampleCount[i] && chunk.sampleCount[i] > 0.1*newSummedCount) {
 			int requiredSamples = getRequiredSampleCount(chunk, i);
 //			if (isDebug(chunk, i))
@@ -219,15 +219,16 @@ public class MandelbrotCalculator extends AbstractCalculator{
 					}
 				}
 				
-				//still not outside
-				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
-					chunk.setCurrentPosX(i, (float) real);
-					chunk.setCurrentPosY(i, (float) imag);
-				} else { //max iterations reached -> declared as in the mandelbrot set
+//				//still not outside
+//				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
+//					chunk.setCurrentPosX(i, (float) real);
+//					chunk.setCurrentPosY(i, (float) imag);
+//				}
+//				else { //max iterations reached -> declared as in the mandelbrot set
 					chunk.addSampleCount(i, 1);
 					chunk.addFailSampleCount(i, 1);
 					logIfDebug(chunk, i);
-				}
+//				}
 			
 			}
 		}

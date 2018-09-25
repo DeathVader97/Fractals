@@ -6,7 +6,7 @@ import org.eclipse.swt.graphics.ImageData;
 
 import de.felixperko.fractals.data.Chunk;
 
-public class SamplesPainter implements Painter {
+public class SamplesPainter extends AbstractPainterImpl {
 	
 	float sampleOffset = 1f/100;
 	

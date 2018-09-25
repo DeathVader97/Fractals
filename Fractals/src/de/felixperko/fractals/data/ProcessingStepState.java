@@ -46,4 +46,8 @@ public class ProcessingStepState {
 	public void setStateNumber(int stateNumber) {
 		this.stateNumber = stateNumber;
 	}
+
+	public StepProvider getStepProvider() {
+		return stepProvider;
+	}
 }

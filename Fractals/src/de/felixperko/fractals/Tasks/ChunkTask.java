@@ -2,9 +2,11 @@ package de.felixperko.fractals.Tasks;
 
 import java.util.ArrayList;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.ProcessingStepState;
+import de.felixperko.fractals.renderer.GridRenderer;
 import de.felixperko.fractals.renderer.steps.ProcessingStep;
 import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;
 import de.felixperko.fractals.renderer.steps.patternprovider.Pattern;
@@ -74,7 +76,32 @@ public class ChunkTask extends Task {
 			sampleCalculator.calculate_samples(chunk, processingStep);
 //			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
 			chunk.calculateDiff();
-			chunk.calculatePixels();
+			
+			//set max iterations according to probing if configured
+			if (processingStep.isProbeStep()) {
+				float max = 0;
+				float avg = 0;
+				int index;
+				int lastIndex = 0;
+				int finishedCount = 0;
+				int totalCount = processingStep.getActiveCount();
+				while ((index = processingStep.getActiveIndices().nextSetBit(lastIndex+1)) > -1) {
+					float avgIt = chunk.getAvgIterations(index);
+					if (avgIt > 0) {
+						finishedCount++;
+						avg += avgIt;
+						if (avgIt > max)
+							max = avgIt;
+					}
+					lastIndex = index;
+				}
+//				if (finishedCount <= totalCount/2){
+//					chunk.setMaxIterations(0);
+//				} else {
+//					avg /= finishedCount;
+//					chunk.setMaxIterations(10000);
+//				}
+			}
 			
 			try {
 				//update surrounding chunk positions
@@ -82,7 +109,7 @@ public class ChunkTask extends Task {
 					Chunk c = chunk.getGrid().getChunkOrNull(p);
 					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state) {
 						c.calculateDiff();
-						c.calculatePixels();
+						((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread().addChunk(c);
 						c.setRedrawNeeded(true);
 					}
 				}
@@ -92,9 +119,9 @@ public class ChunkTask extends Task {
 			
 			chunk.setReadyToDraw(true);
 //			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
-		} catch (NullPointerException e) {
+		} catch (Exception e) {
 			if (!chunk.isDisposed()) {
-//				System.err.println("NPE at non-disposed chunk task calculation.");
+				System.err.println("NPE at non-disposed chunk task calculation.");
 				throw e;
 			}
 		}

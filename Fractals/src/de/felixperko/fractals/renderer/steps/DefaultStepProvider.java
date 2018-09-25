@@ -21,9 +21,9 @@ public class DefaultStepProvider implements StepProvider{
 	public DefaultStepProvider(DataDescriptor dataDescriptor) {
 		this.patternProvider = new BasicPatternProvider(100, 10);
 		
-//		ProcessingStepImpl probeStep = getProbeStep(dataDescriptor, 2);
+//		ProcessingStepImpl probeStep = getProbeStep(dataDescriptor, 8);
 //		steps.add(probeStep);
-//		
+		
 		ProcessingStepImpl step1 = getUpsamplingStep(dataDescriptor, 8);
 		steps.add(step1);
 //		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 4);
@@ -76,7 +76,11 @@ public class DefaultStepProvider implements StepProvider{
 			}
 		};
 		ProcessingStepImpl processingStep = new ProcessingStepImpl(dataDescriptor, mask, bitSet);
-		processingStep.setDiffScale(dim);
+		processingStep.setDiffScale(1/(float)dim);
+		processingStep.setNeigbourOffset(Math.round(step*2));
+		processingStep.setDrawable(false);
+		processingStep.setProbeStep(true);
+		processingStep.setActiveCount(dim*dim);
 		return processingStep;
 	}
 
@@ -93,14 +97,16 @@ public class DefaultStepProvider implements StepProvider{
 			}
 		}
 		ProcessingStepImpl processingStep = new ProcessingStepImpl(dataDescriptor, mask, bitSet);
-		processingStep.setDiffScale(1/(float)Math.pow(scaling,0.66666666));
+		processingStep.setDiffScale(1/(float)scaling);
+		processingStep.setNeigbourOffset(scaling);
+		processingStep.setActiveCount(chunkSize*chunkSize/(scaling*scaling));
 		return processingStep;
 	}
 
 	@Override
 	public ProcessingStep getStep(int state) {
 		if (state < 0 || state > getMaxState())
-			throw new IllegalArgumentException("Out of bounds");
+			throw new IllegalArgumentException("Out of bounds "+state);
 		return steps.get(state);
 	}
 	

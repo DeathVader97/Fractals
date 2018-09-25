@@ -16,6 +16,7 @@ import de.felixperko.fractals.renderer.painter.FailRatioPainter;
 import de.felixperko.fractals.renderer.painter.Painter;
 import de.felixperko.fractals.renderer.painter.SamplesPainter;
 import de.felixperko.fractals.renderer.painter.StandardPainter;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
 import de.felixperko.fractals.stateholders.MainStateHolder;
 import de.felixperko.fractals.util.Position;
 
@@ -63,7 +64,7 @@ public class Chunk {
 	
 	protected final Position[] neigbourPositions = new Position[9];
 	
-	Painter painter = new StandardPainter();
+	Painter painter;
 	
 	float colorOffset = 0; //TODO move to painter
 
@@ -74,6 +75,8 @@ public class Chunk {
 	
 	IndexMask setIndexMask = DefaultMask.instance;
 	IndexMask getIndexMask = DefaultMask.instance;
+	
+	int maxIterations = 10000;
 	
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
@@ -95,6 +98,7 @@ public class Chunk {
 //		System.out.println("Chunk.new : deltaX = "+delta.getX()+" deltaY = "+delta.getY()+" gridPos: "+gridPos);
 //		Thread.dumpStack();
 		this.grid = grid;
+		this.painter = grid.getRenderer().getPainter();
 	}
 
 	private int applySetIndexMasks(int i) {
@@ -371,7 +375,9 @@ public class Chunk {
 		int radDim = rad*2+1;
 		
 		float[] otherValues = new float[4];
-		float factor = processingStepState.getProcessingStep().getDiffScale();
+		ProcessingStep step = processingStepState.getProcessingStep();
+		float factor = step.getDiffScale();
+		int neighbourOffset = step.getNeigbourOffset();
 				
 //		double[] pass1 = new double[arr_size];
 		int index = 0;
@@ -380,10 +386,10 @@ public class Chunk {
 
 				double value = replaceNaN(getAvgIterations(x,y));
 				double delta = 0;
-				otherValues[0] = getAvgIterationsGlobal(x-1, y);
-				otherValues[1] = getAvgIterationsGlobal(x, y-1);
-				otherValues[2] = getAvgIterationsGlobal(x+1, y);
-				otherValues[3] = getAvgIterationsGlobal(x, y+1);
+				otherValues[0] = getAvgIterationsGlobal(x-neighbourOffset, y);
+				otherValues[1] = getAvgIterationsGlobal(x, y-neighbourOffset);
+				otherValues[2] = getAvgIterationsGlobal(x+neighbourOffset, y);
+				otherValues[3] = getAvgIterationsGlobal(x, y+neighbourOffset);
 				int c = 0;
 				for (int i = 0 ; i < otherValues.length ; i++) {
 					float v = otherValues[i];
@@ -392,8 +398,10 @@ public class Chunk {
 						c++;
 					}
 				}
-				if (c > 0)
-					diff[index] = (float) (delta/c)*factor;
+				float result = (c > 0) ? (float) (delta/c)*factor : 1;
+				if (c > 0) {
+					diff[index] = result;
+				}
 				index++;
 			}
 		}
@@ -606,5 +614,22 @@ public class Chunk {
 
 	public void setRedrawNeeded(boolean b) {
 		drawnStep = -1;
+	}
+
+	public ProcessingStep getProcessingStep() {
+		if (processingStepState == null)
+			return null;
+		int num = processingStepState.getStateNumber();
+		if (num == -1 || num >= processingStepState.getStepProvider().getMaxState())
+			return null;
+		return processingStepState.getProcessingStep();
+	}
+
+	public int getMaxIterations() {
+		return maxIterations;
+	}
+
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
 	}
 }

@@ -1,6 +1,8 @@
 package de.felixperko.fractals.stateholders;
 
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.renderer.AbstractRendererImpl;
+import de.felixperko.fractals.renderer.Renderer;
 import de.felixperko.fractals.state.DiscreteState;
 import de.felixperko.fractals.state.RangeState;
 import de.felixperko.fractals.state.StateHolder;
@@ -13,21 +15,71 @@ public class RendererStateHolder extends StateHolder{
 	public static final String NAME_BIAS_REAL = "fractal bias real";
 	public static final String NAME_BIAS_IMAG = "fractal bias imag";
 	
+	Renderer renderer;
+	
 	DiscreteState<Integer> statePower;
 	RangeState stateBiasReal;
 	RangeState stateBiasImag;
+	RangeState stateColorScale;
+	RangeState stateColorShift;
 	
+	public RendererStateHolder(Renderer renderer) {
+		this.renderer = renderer;
+	}
+
 	@Override
 	protected void stateSetup() {
+		configureColorScale();
+		configureColorShift();
 		configurePower();
 		configureBiasReal();
 		configureBiasImag();
-		
+
+		addState(stateColorScale);
+		addState(stateColorShift);
 		addState(statePower);
 		addState(stateBiasReal);
 		addState(stateBiasImag);
 	}
 	
+	private void configureColorScale() {
+		int steps = 20;
+		float shiftPerStep = 0.1f;
+		stateColorScale = new RangeState("color scale", steps/2) {
+			@Override
+			public Object getOutput() {
+				return 1 + (getValue() - steps/2)*shiftPerStep;
+			}
+		};
+		stateColorScale.setProperties(0, steps, 1);
+		stateColorScale.setConfigurable(true);
+		stateColorScale.addStateListener(new StateListener<Integer>() {
+			@Override
+			public void valueChanged(Integer oldValue, Integer newValue) {
+				float scale = 1 + (newValue - steps/2)*shiftPerStep;
+				renderer.setColorScale(scale);
+			}
+		});
+	}
+
+	private void configureColorShift() {
+		int steps = 100;
+		stateColorShift = new RangeState("color shift", 0) {
+			@Override
+			public Object getOutput() {
+				return getValue()/(float)steps;
+			}
+		};
+		stateColorShift.setProperties(0, steps, 1);
+		stateColorShift.setConfigurable(true);
+		stateColorShift.addStateListener(new StateListener<Integer>() {
+			@Override
+			public void valueChanged(Integer oldValue, Integer newValue) {
+				renderer.setColorOffset(newValue/(float)steps);
+			}
+		});
+	}
+
 	private void configurePower() {
 		statePower = new DiscreteState<Integer>(NAME_POWER, 2) {
 			@Override

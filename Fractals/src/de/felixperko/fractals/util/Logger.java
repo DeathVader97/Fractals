@@ -31,6 +31,8 @@ public class Logger {
 		Iterator<Message> it = addMessages.iterator();
 		while (it.hasNext()) {
 			Message message = it.next();
+			if (message == null)
+				continue;
 			String catName = message
 					.getCategory()
 					.getName();

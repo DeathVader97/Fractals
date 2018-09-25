@@ -17,18 +17,27 @@ import org.eclipse.swt.widgets.Canvas;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskManager;
+import de.felixperko.fractals.Tasks.threading.CalcPixelThread;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
 import de.felixperko.fractals.data.Grid;
 import de.felixperko.fractals.data.Location;
 import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalculator;
+import de.felixperko.fractals.renderer.painter.Painter;
+import de.felixperko.fractals.renderer.painter.StandardPainter;
 import de.felixperko.fractals.renderer.perf.PerfInstance;
+import de.felixperko.fractals.renderer.steps.ProcessingStep;
 import de.felixperko.fractals.util.CategoryLogger;
 import de.felixperko.fractals.util.Position;
 
 public class GridRenderer extends AbstractRendererImpl {
 	
 	CategoryLogger log = new CategoryLogger("renderer", Color.BLUE);
+	
+	Painter painter = new StandardPainter();
+	
+	//TODO move to threadmanger
+	CalcPixelThread calcPixelThread = new CalcPixelThread("calcpixel");
 	
 	Canvas canvas;
 	
@@ -54,6 +63,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	public GridRenderer() {
 		grid = new Grid(this);
+		calcPixelThread.start();
 	}
 	
 	public void setTaskManager(TaskManager taskManager){
@@ -214,15 +224,19 @@ public class GridRenderer extends AbstractRendererImpl {
 				Chunk chunk = grid.getChunk(gridX, gridY);
 				get.end();
 				
-				if (!chunk.imageCalculated) {
-					PerfInstance calculate = createNewSubInstanceAndBegin("calculate", renderPerf);
-					chunk.calculatePixels();
-					chunk.refreshImage(e.display);
-					calculate.end();
-				}
+				ProcessingStep step = chunk.getProcessingStep();
+				if (step == null || !chunk.getProcessingStep().isDrawable())
+					continue;
+				
+//				if (!chunk.imageCalculated) {
+//					PerfInstance calculate = createNewSubInstanceAndBegin("calculate", renderPerf);
+//					chunk.calculatePixels();
+//					chunk.refreshImage(e.display);
+//					calculate.end();
+//				}
 				
 				if (chunk.isReadyToDraw()) {
-					if (chunk.refreshNeeded()) {
+					if ((chunk.refreshNeeded() || !chunk.imageCalculated) && calcPixelThread.isFinished(chunk, true)) {
 						PerfInstance refreshImage = createNewSubInstanceAndBegin("refreshImage", renderPerf);
 						chunk.refreshImage(e.display);
 						refreshImage.end();
@@ -380,6 +394,43 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	public Grid getGrid() {
 		return grid;
+	}
+	
+	@Override
+	public Painter getPainter() {
+		return painter;
+	}
+
+	@Override
+	public float getColorOffset() {
+		return painter.getColorOffset();
+	}
+
+	@Override
+	public void setColorOffset(float colorOffset) {
+		painter.setColorOffset(colorOffset);
+		redrawChunks();
+	}
+
+	@Override
+	public float getColorScale() {
+		return painter.getColorScale();
+	}
+
+	@Override
+	public void setColorScale(float colorScale) {
+		painter.setColorScale(colorScale);
+		redrawChunks();
+	}
+	
+	protected void redrawChunks() {
+		for (Chunk c : grid.map.values())
+			c.imageCalculated = false;
+		FractalsMain.mainWindow.setRedraw(true);
+	}
+
+	public CalcPixelThread getCalcThread() {
+		return calcPixelThread;
 	}
 
 }

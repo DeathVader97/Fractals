@@ -12,8 +12,8 @@ public class BasicPatternProvider extends AbstractPatternProviderImpl {
 	public BasicPatternProvider(int maxCount, int stepSize) {
 		
 		addPattern(false, new Position(0,0));
-		addPattern(false, new Position(-0.25, -0.25), new Position(0.25, 0.25));
-		addPattern(false, new Position(0.25, -0.25), new Position(-0.25, 0.25));
+//		addPattern(false, new Position(-0.25, -0.25), new Position(0.25, 0.25));
+//		addPattern(false, new Position(0.25, -0.25), new Position(-0.25, 0.25));
 		if (stepSize > 0){
 			int count = (maxCount-totalCount)/stepSize;
 			for (int i = 0 ; i < count ; i++) {

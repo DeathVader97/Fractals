@@ -21,9 +21,14 @@ public class ProcessingStepImpl implements ProcessingStep {
 	int maxIterations;
 	boolean render;
 	float diff_scale = 1;
+	int neighbourOffset = 1;
+	boolean drawable = true;
+	boolean probeStep = false;
+	int activeCount;
 	
 	public ProcessingStepImpl(DataDescriptor dataDescriptor) {
 		int chunkSize = dataDescriptor.getChunkSize();
+		this.activeCount = chunkSize*chunkSize;
 		BitSet activeIndices = new BitSet(chunkSize*chunkSize);
 		activeIndices.set(0, activeIndices.size());
 		configure(defaultPattern, defaultIndexMask, activeIndices, dataDescriptor.getMaxIterations());
@@ -31,6 +36,7 @@ public class ProcessingStepImpl implements ProcessingStep {
 	
 	public ProcessingStepImpl(DataDescriptor dataDescriptor, Pattern pattern) {
 		int chunkSize = dataDescriptor.getChunkSize();
+		this.activeCount = chunkSize*chunkSize;
 		BitSet activeIndices = new BitSet(chunkSize*chunkSize);
 		activeIndices.set(0, activeIndices.size());
 		configure(pattern, defaultIndexMask, activeIndices, dataDescriptor.getMaxIterations());
@@ -38,6 +44,7 @@ public class ProcessingStepImpl implements ProcessingStep {
 	
 	public ProcessingStepImpl(DataDescriptor dataDescriptor, IndexMask mask) {
 		int chunkSize = dataDescriptor.getChunkSize();
+		this.activeCount = chunkSize*chunkSize;
 		BitSet activeIndices = new BitSet(chunkSize*chunkSize);
 		activeIndices.set(0, activeIndices.size());
 		configure(defaultPattern, mask, activeIndices, dataDescriptor.getMaxIterations());
@@ -92,6 +99,41 @@ public class ProcessingStepImpl implements ProcessingStep {
 	
 	public void setDiffScale(float diff_scale){
 		this.diff_scale = diff_scale;
+	}
+	
+	public int getNeigbourOffset() {
+		return neighbourOffset;
+	}
+	
+	public void setNeigbourOffset(int neighbourOffset) {
+		this.neighbourOffset = neighbourOffset;
+	}
+
+	@Override
+	public boolean isDrawable() {
+		return drawable;
+	}
+	
+	public void setDrawable(boolean drawable) {
+		this.drawable = drawable;
+	}
+	
+	@Override
+	public boolean isProbeStep() {
+		return probeStep;
+	}
+
+	public void setProbeStep(boolean probeStep) {
+		this.probeStep = probeStep;
+	}
+	
+	public void setActiveCount(int activeCount) {
+		this.activeCount = activeCount;
+	}
+
+	@Override
+	public int getActiveCount() {
+		return activeCount;
 	}
 
 }

@@ -75,40 +75,43 @@ public class KeyListenerControls implements KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 //		System.out.println(e.toString());
+		shift.setX(0);
+		shift.setY(0);
 		if (e.character == 'l') {
 			System.out.println("jump");
 			mainWindow.jumpToSavedLocation(false);
 		}
-		
-		else if (e.keyCode == SWT.ARROW_LEFT && !left) {
+		else if (e.keyCode == SWT.ARROW_LEFT) {
 			shift.addX(-shiftSensitivity);
 			left = true;
-		} else if (e.keyCode == SWT.ARROW_RIGHT && !right) {
+		} else if (e.keyCode == SWT.ARROW_RIGHT) {
 			shift.addX(shiftSensitivity);
 			right = true;
-		} else if (e.keyCode == SWT.ARROW_UP && !up) {
+		} else if (e.keyCode == SWT.ARROW_UP) {
 			shift.addY(-shiftSensitivity);
 			up = true;
-		} else if (e.keyCode == SWT.ARROW_DOWN && !down) {
+		} else if (e.keyCode == SWT.ARROW_DOWN) {
 			shift.addY(shiftSensitivity);
 			down = true;
 		}
 	}
-
+	
 	@Override
 	public void keyReleased(KeyEvent e) {
-		if (e.keyCode == SWT.ARROW_LEFT && left) {
-			shift.addX(shiftSensitivity);
-			left = false;
-		} else if (e.keyCode == SWT.ARROW_RIGHT && right) {
-			shift.addX(-shiftSensitivity);
-			right = false;
-		} else if (e.keyCode == SWT.ARROW_UP && up) {
-			shift.addY(shiftSensitivity);
-			up = false;
-		} else if (e.keyCode == SWT.ARROW_DOWN && down) {
-			shift.addY(-shiftSensitivity);
-			down = false;
-		}
+		shift.setX(0);
+		shift.setY(0);
+//		if (e.keyCode == SWT.ARROW_LEFT && left) {
+//			shift.addX(shiftSensitivity);
+//			left = false;
+//		} else if (e.keyCode == SWT.ARROW_RIGHT && right) {
+//			shift.addX(-shiftSensitivity);
+//			right = false;
+//		} else if (e.keyCode == SWT.ARROW_UP && up) {
+//			shift.addY(shiftSensitivity);
+//			up = false;
+//		} else if (e.keyCode == SWT.ARROW_DOWN && down) {
+//			shift.addY(-shiftSensitivity);
+//			down = false;
+//		}
 	}
 }

@@ -6,11 +6,10 @@ import org.eclipse.swt.graphics.ImageData;
 
 import de.felixperko.fractals.data.Chunk;
 
-public class StandardPainter implements Painter {
+public class StandardPainter extends AbstractPainterImpl {
 
 	int color = Color.GRAY.getRGB();
 	
-	float colorOffset = 0;
 
 	@Override
 	public void paint(ImageData imageData, Chunk chunk, int index, int x, int y) {
@@ -30,7 +29,7 @@ public class StandardPainter implements Painter {
 				b *= it;
 			if (b > 1)
 				b = 1;
-			imageData.setPixel(x, y, Color.HSBtoRGB((float) (colorOffset+hue), 0.4f, b));
+			imageData.setPixel(x, y, Color.HSBtoRGB((float) (colorOffset+hue*colorScale), 0.4f, b));
 		}
 	}
 

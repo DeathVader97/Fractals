@@ -4,6 +4,7 @@ import de.felixperko.fractals.renderer.calculators.BurningShipCalculator;
 import de.felixperko.fractals.renderer.calculators.MandelbrotCalculator;
 import de.felixperko.fractals.renderer.calculators.TestCalculator;
 import de.felixperko.fractals.renderer.calculators.infrastructure.CalculatorFactory;
+import de.felixperko.fractals.renderer.painter.Painter;
 import de.felixperko.fractals.renderer.steps.DefaultStepProvider;
 import de.felixperko.fractals.renderer.steps.StepProvider;
 import de.felixperko.fractals.renderer.steps.patternprovider.BasicPatternProvider;

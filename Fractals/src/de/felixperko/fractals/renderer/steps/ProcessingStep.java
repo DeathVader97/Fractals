@@ -12,4 +12,8 @@ public interface ProcessingStep {
 	public BitSet getActiveIndices();
 	public int getMaxIterations();
 	public float getDiffScale();
+	public int getNeigbourOffset();
+	public boolean isDrawable();
+	public boolean isProbeStep();
+	public int getActiveCount();
 }

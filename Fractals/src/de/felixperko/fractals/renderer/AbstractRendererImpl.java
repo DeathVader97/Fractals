@@ -7,7 +7,7 @@ import de.felixperko.fractals.stateholders.RendererStateHolder;
 public abstract class AbstractRendererImpl implements Renderer {
 	
 	DataDescriptor dataDescriptor;
-	RendererStateHolder rendererStateHolder = new RendererStateHolder();
+	RendererStateHolder rendererStateHolder = new RendererStateHolder(this);
 	
 	public AbstractRendererImpl() {
 	}

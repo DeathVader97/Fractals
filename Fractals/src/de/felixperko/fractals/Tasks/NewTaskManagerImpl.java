@@ -3,9 +3,11 @@ package de.felixperko.fractals.Tasks;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import de.felixperko.fractals.FractalsMain;
+import de.felixperko.fractals.Tasks.threading.CalcPixelThread;
 import de.felixperko.fractals.Tasks.threading.FractalsThread;
 import de.felixperko.fractals.data.Chunk;
 import de.felixperko.fractals.data.DataDescriptor;
@@ -67,11 +69,16 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		//Task Manager loop
 		//TODO replace sleep with reentrant lock
 		while (!Thread.interrupted()) {
+//			long t1 = System.nanoTime();
+			
 			idle = true;
 			
 			generateTasks();
+//			long t2 = System.nanoTime();
 			updatePriorities();
+//			long t3 = System.nanoTime();
 			finishTasks();
+//			long t4 = System.nanoTime();
 
 			setPhase(FractalsThread.PHASE_IDLE);
 			if (idle) {//nothing has been done, save some time
@@ -81,6 +88,13 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 					e.printStackTrace();
 				}
 			}
+//			else {
+//				double time = NumberUtil.getRoundedDouble(NumberUtil.NS_TO_MS*(System.nanoTime() - t1), 1);
+//				double time_genTasks = NumberUtil.getRoundedDouble(NumberUtil.NS_TO_MS*(t2-t1), 1);
+//				double time_updatePrios = NumberUtil.getRoundedDouble(NumberUtil.NS_TO_MS*(t3-t2), 1);
+//				double time_finishTasks = NumberUtil.getRoundedDouble(NumberUtil.NS_TO_MS*(t4-t3), 1);
+//				System.out.println("TaskManager Tick: "+time_genTasks+"ms, "+time_updatePrios+"ms, "+time_finishTasks+"ms	Total: "+time+"ms");
+//			}
 		}
 		setPhase(FractalsThread.PHASE_STOPPED);
 	}
@@ -93,11 +107,13 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		int newlyAdded = 0;
 		
 		synchronized (finishedTaskList) {
-			FractalsMain.mainWindow.canvas.getDisplay().syncExec(() -> FractalsMain.mainWindow.setRedraw(true));
+			Iterator<ChunkTask> it = finishedTaskList.iterator();
+			FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 			
 			int maxState = dataDescriptor.getStepProvider().getMaxState();
-			boolean refresh = false;
+			CalcPixelThread calcThread = ((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread();
 			for (ChunkTask finishedTask : finishedTaskList) {
+				calcThread.addChunk(finishedTask.chunk);
 				ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
 				if (state.getStateNumber() < maxState) {
 					addTask(finishedTask);
