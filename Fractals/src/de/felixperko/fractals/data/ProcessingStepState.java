@@ -25,8 +25,14 @@ public class ProcessingStepState {
 	public ProcessingStep getProcessingStep() {
 		return stepProvider.getStep(stateNumber);
 	}
+
+	public ProcessingStep getNextProcessingStep() {
+		return stepProvider.getStep(stateNumber+1);
+	}
 	
 	public ProcessingStepState increment() {
+		if (stateNumber == stepProvider.getMaxState())
+			throw new IllegalStateException("The final state can't be incremented!");
 		stepProvider.incrementStepState(this);
 		return this;
 	}

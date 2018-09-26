@@ -26,8 +26,10 @@ import de.felixperko.fractals.renderer.calculators.infrastructure.AbstractCalcul
 import de.felixperko.fractals.renderer.painter.Painter;
 import de.felixperko.fractals.renderer.painter.StandardPainter;
 import de.felixperko.fractals.renderer.perf.PerfInstance;
+import de.felixperko.fractals.renderer.perf.PerformanceMonitor;
 import de.felixperko.fractals.renderer.steps.ProcessingStep;
 import de.felixperko.fractals.util.CategoryLogger;
+import de.felixperko.fractals.util.NumberUtil;
 import de.felixperko.fractals.util.Position;
 
 public class GridRenderer extends AbstractRendererImpl {
@@ -205,15 +207,20 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 	
 	PerfInstance renderPerf;
-
+	
+	long time_renderStart;
+	long time_maxRenderTime = (long)((1/60.)/NumberUtil.NS_TO_S);
+	
 	@Override
 	public void render(PaintEvent e, boolean save) {
+		time_renderStart = System.nanoTime();
 //		log.log("render");
 		renderGrid(e);
 //		renderMinimap(e);
 	}
 
 	private void renderGrid(PaintEvent e) {
+//		PerformanceMonitor
 		for (long gridX = (long) minGridX ; gridX < maxGridX ; gridX++) {
 			for (long gridY = (long) minGridY ; gridY < maxGridY ; gridY++) {
 				renderPerf = createNewAndBegin("renderChunk");
@@ -225,8 +232,9 @@ public class GridRenderer extends AbstractRendererImpl {
 				get.end();
 				
 				ProcessingStep step = chunk.getProcessingStep();
-				if (step == null || !chunk.getProcessingStep().isDrawable())
+				if (step == null) {
 					continue;
+				}
 				
 //				if (!chunk.imageCalculated) {
 //					PerfInstance calculate = createNewSubInstanceAndBegin("calculate", renderPerf);
@@ -235,25 +243,31 @@ public class GridRenderer extends AbstractRendererImpl {
 //					calculate.end();
 //				}
 				
-				if (chunk.isReadyToDraw()) {
-					if ((chunk.refreshNeeded() || !chunk.imageCalculated) && calcPixelThread.isFinished(chunk, true)) {
+				if (chunk.isReadyToDraw() && chunk.imageData != null && (chunk.refreshNeeded() || !chunk.imageCalculated)) {
+					if (isTimeLeft()) {
 						PerfInstance refreshImage = createNewSubInstanceAndBegin("refreshImage", renderPerf);
 						chunk.refreshImage(e.display);
 						refreshImage.end();
+					} else {
+						FractalsMain.mainWindow.setRedraw(true);
 					}
 				}
 					
 //					Position offset = grid.getScreenOffset(new Position(gridX, gridY));
 				
-				if (!chunk.isDisposed() && chunk.image != null){
+				if (!chunk.isDisposed() && chunk.image != null && step.isDrawable()){
 					PerfInstance drawImage = createNewSubInstanceAndBegin("drawImage", renderPerf);
 					e.gc.drawImage(chunk.image, (int) shiftX, (int) shiftY);
 					drawImage.end();
 				}
 				renderPerf.end();
-				renderPerf.printSecondsToLog(3, true, 0.01);
+				renderPerf.printSecondsToLog(3, true, 0.1);
 			}
 		}
+	}
+
+	private boolean isTimeLeft() {
+		return System.nanoTime() - time_renderStart < time_maxRenderTime;
 	}
 
 	private void renderMinimap(PaintEvent e) {
@@ -295,7 +309,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	}
 	
 	public void shiftViewGrid(Position gridShift) {
-		System.out.println("GridRenderer.shiftViewGrid(): "+gridShift);
+//		System.out.println("GridRenderer.shiftViewGrid(): "+gridShift);
 		minGridX += gridShift.getX();
 		minGridY += gridShift.getY();
 		maxGridX += gridShift.getX();

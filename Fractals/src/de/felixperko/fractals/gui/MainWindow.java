@@ -166,13 +166,11 @@ public class MainWindow {
 	long lastTime = 0;
 	
 	private void tick() {
-//		PerfInstance perf = new PerfInstance("windowloop").start();
+		PerfInstance perf = new PerfInstance("windowloop").start();
 		
-//		System.out.println(Chunk.count_active);
-		
-//		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
+		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
-//		listeners.end();
+		listeners.end();
 		
 		boolean updateTime = true;
 		if (!KeyListenerControls.shift.equals(KeyListenerControls.nullPos)) {
@@ -182,19 +180,19 @@ public class MainWindow {
 			if (dt < 0.01)
 				updateTime = false;
 			else {
-//				PerfInstance shift = createNewSubInstanceAndBegin("shift", perf);;
+				PerfInstance shift = createNewSubInstanceAndBegin("shift", perf);;
 				FractalsMain.mainWindow.shiftScaled(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
-//				shift.end();
+				shift.end();
 			}
 		}
 		if (updateTime)
 			lastTime = System.nanoTime();
 		
 		if (isRedrawAndReset()) {
-//			PerfInstance redraw = createNewSubInstanceAndBegin("redraw", perf);;
+			PerfInstance redraw = createNewSubInstanceAndBegin("redraw", perf);
 			canvas.redraw();
 			canvas.update();
-//			redraw.end();
+			redraw.end();
 		}
 //		IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //		int it = ips.getIterations();
@@ -210,7 +208,7 @@ public class MainWindow {
 //		setText(lbl_disp_dim, mainRenderer.disp_img.getBounds().width+"x"+mainRenderer.disp_img.getBounds().height);
 //		setText(lbl_draw_dim, mainRenderer.draw_img.getBounds().width+"x"+mainRenderer.draw_img.getBounds().height);
 		lblStatus.setText(FractalsMain.taskManager.getStateText());
-//		perf.end();
+		perf.end();
 //		perf.printSecondsToLog(3, true, 0.1);
 	}
 

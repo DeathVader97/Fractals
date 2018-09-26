@@ -50,7 +50,7 @@ public abstract class AbstractCalculator implements SampleCalculator{
 			debug = false;
 		}
 		
-		Pattern pattern = chunk.getProcessingStepState().getProcessingStep().getPattern();
+		Pattern pattern = chunk.getProcessingStepState().getNextProcessingStep().getPattern();
 		int maxSize = pattern.getPositions().length;
 		if (!pattern.isGeneric())
 			return maxSize;

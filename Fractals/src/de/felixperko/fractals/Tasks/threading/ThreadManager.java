@@ -1,5 +1,6 @@
 package de.felixperko.fractals.Tasks.threading;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,9 +12,9 @@ import java.util.Map.Entry;
 import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.Tasks.NewTaskManagerImpl;
 import de.felixperko.fractals.Tasks.TaskProvider;
-import de.felixperko.fractals.network.ClientThread;
+import de.felixperko.fractals.network.ClientWriteThread;
 import de.felixperko.fractals.network.ServerConnectThread;
-import de.felixperko.fractals.network.ServerThread;
+import de.felixperko.fractals.network.ServerWriteThread;
 
 public class ThreadManager {
 	
@@ -26,8 +27,8 @@ public class ThreadManager {
 	List<TaskProvider> providers = new ArrayList<>();
 	
 	ServerConnectThread serverConnectThread = null;
-	ArrayList<ServerThread> serverThreads = new ArrayList<>();
-	ClientThread clientThread = null;
+	ArrayList<ServerWriteThread> serverThreads = new ArrayList<>();
+	ClientWriteThread clientThread = null;
 	
 	public ThreadManager() {
 	}
@@ -123,16 +124,21 @@ public class ThreadManager {
 		serverConnectThread.start();
 	}
 	
-	public void startServerSocket(Socket socket) {
-		ServerThread thread = new ServerThread(socket);
+	public ServerWriteThread startServerSocket(Socket socket) {
+		ServerWriteThread thread = new ServerWriteThread(socket);
 		serverThreads.add(thread);
 		thread.start();
+		return thread;
 	}
 	
 	public void startClient() {
 		if (clientThread != null)
 			return;
-		clientThread = new ClientThread();
+		try {
+			clientThread = new ClientWriteThread();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		clientThread.start();
 	}
 

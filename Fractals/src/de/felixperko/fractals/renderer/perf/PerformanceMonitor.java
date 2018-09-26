@@ -32,10 +32,13 @@ public class PerformanceMonitor {
 	}
 	
 	public void startPhase() throws IllegalStateException{
-		if (threadManager == null)
+		
+		if (threadManager == null) {
 			threadManager = FractalsMain.threadManager;
-		if (threadManager == null)
-			throw new IllegalStateException("PerformanceMonitor can't start: ThreadManager not set.");
+			if (threadManager == null)
+				throw new IllegalStateException("PerformanceMonitor can't start: ThreadManager not set.");
+		}
+		
 		for (WorkerThread thread : threadManager.getThreads()) {
 			thread.resetPerformanceMonitor(this);
 		}
@@ -47,11 +50,14 @@ public class PerformanceMonitor {
 		long totalTime = endTime-startTime;
 		logger.log("");
 		logger.log("----Performance Review---- Total Time: "+NumberUtil.getRoundedDouble(NumberUtil.NS_TO_S*totalTime, 2)+"s");
+		
 		for (WorkerThread thread : threadManager.getThreads()) {
+			
 			HashMap<WorkerPhase, Long> phaseTimes = new HashMap<>();
 			WorkerPhase currentPhase = PHASE_UNDEFINED;
 			long lastTime = 0;
 			boolean first = true;
+			
 			for (WorkerPhaseChange change : thread.getPerformanceData()) {
 				if (!first) {
 					phaseTimes.put(currentPhase, phaseTimes.getOrDefault(currentPhase,0L) + (change.getTime()-lastTime));
@@ -60,6 +66,7 @@ public class PerformanceMonitor {
 				currentPhase = change.getPhase();
 				lastTime = change.getTime();
 			}
+			
 			phaseTimes.put(currentPhase, (phaseTimes.containsKey(currentPhase) ? phaseTimes.get(currentPhase) : 0) + (endTime - lastTime));
 			HashMap<WorkerPhase, Long> sortedMap = phaseTimes.entrySet().stream().sorted(Entry.comparingByValue(Comparator.reverseOrder()))
 					.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));

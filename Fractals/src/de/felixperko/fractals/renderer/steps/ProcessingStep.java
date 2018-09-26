@@ -16,4 +16,5 @@ public interface ProcessingStep {
 	public boolean isDrawable();
 	public boolean isProbeStep();
 	public int getActiveCount();
+	public boolean isDefault();
 }

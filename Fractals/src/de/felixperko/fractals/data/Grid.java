@@ -122,7 +122,7 @@ public class Grid {
 	}
 	
 	public double getScaleY(){
-		return renderer.getDataDescriptor().getDelta_x()/renderer.getDataDescriptor().getDim_goal_x();
+		return renderer.getDataDescriptor().getDelta_y()/renderer.getDataDescriptor().getDim_goal_y();
 	}
 
 	private Position getPosition(long gridX, long gridY) {

@@ -15,6 +15,8 @@ import de.felixperko.fractals.data.ProcessingStepState;
 
 public class DefaultStepProvider implements StepProvider{
 	
+	static ProcessingStep DEFAULT_STEP = new DefaultProcessingStep();
+	
 	PatternProvider patternProvider;
 	List<ProcessingStep> steps = new ArrayList<>();
 	
@@ -105,8 +107,10 @@ public class DefaultStepProvider implements StepProvider{
 
 	@Override
 	public ProcessingStep getStep(int state) {
-		if (state < 0 || state > getMaxState())
+		if (state > getMaxState())
 			throw new IllegalArgumentException("Out of bounds "+state);
+		if (state == -1)
+			return DEFAULT_STEP;
 		return steps.get(state);
 	}
 	

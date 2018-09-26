@@ -136,4 +136,9 @@ public class ProcessingStepImpl implements ProcessingStep {
 		return activeCount;
 	}
 
+	@Override
+	public boolean isDefault() {
+		return false;
+	}
+
 }

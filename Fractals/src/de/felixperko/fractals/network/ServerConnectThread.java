@@ -2,6 +2,7 @@ package de.felixperko.fractals.network;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 
 import de.felixperko.fractals.FractalsMain;
 
@@ -13,7 +14,8 @@ public class ServerConnectThread extends Thread{
 		try {
 			ServerSocket server = new ServerSocket(3141);
 			while (!Thread.interrupted()) {
-				FractalsMain.threadManager.startServerSocket(server.accept());
+				//TODO manage write threads to send messages effortlessly
+				ServerWriteThread serverWriteThread = FractalsMain.threadManager.startServerSocket(server.accept());
 			}
 			server.close();
 		} catch (IOException e) {

@@ -69,13 +69,15 @@ public class ChunkTask extends Task {
 	protected void calculate() {
 		int depth = dataDescriptor.getMaxIterations();
 		try {
+			chunk.setReadyToDraw(false);
 			if (!chunk.arraysInstantiated())
 				chunk.instantiateArrays();
-			ProcessingStep processingStep = chunk.getProcessingStepState().increment().getProcessingStep();
-			chunk.setReadyToDraw(false);
+			ProcessingStep processingStep = chunk.getProcessingStepState().getNextProcessingStep();
 			sampleCalculator.calculate_samples(chunk, processingStep);
 //			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
+			chunk.getProcessingStepState().increment();
 			chunk.calculateDiff();
+			chunk.setReadyToCalculate(true);
 			
 			//set max iterations according to probing if configured
 			if (processingStep.isProbeStep()) {
@@ -107,22 +109,21 @@ public class ChunkTask extends Task {
 				//update surrounding chunk positions
 				for (Position p : chunk.getNeighbourPositions()) {
 					Chunk c = chunk.getGrid().getChunkOrNull(p);
-					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state) {
+					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state && c.arraysInstantiated()) {
+						c.setReadyToDraw(false);
 						c.calculateDiff();
 						((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread().addChunk(c);
-						c.setRedrawNeeded(true);
 					}
 				}
 			} catch (Exception e){
 				throw e;
 			}
 			
-			chunk.setReadyToDraw(true);
 //			chunk.setStepPriorityMultiplier(chunk.getStepPriorityMultiplier()*2);
 		} catch (Exception e) {
 			if (!chunk.isDisposed()) {
-				System.err.println("NPE at non-disposed chunk task calculation.");
-				throw e;
+				System.err.println(e.getClass().getSimpleName()+" at non-disposed chunk task calculation.");
+				e.printStackTrace();
 			}
 		}
 	}

@@ -43,7 +43,7 @@ public class Chunk {
 	Grid grid;
 	DataDescriptor dataDescriptor;
 	
-	ImageData imageData;
+	public ImageData imageData;
 	public Image image;
 	
 	boolean redraw = false;
@@ -72,6 +72,7 @@ public class Chunk {
 	int drawnStep = -1;
 
 	private boolean readyToDraw = false;
+	private boolean readyToCalculate = false;
 	
 	IndexMask setIndexMask = DefaultMask.instance;
 	IndexMask getIndexMask = DefaultMask.instance;
@@ -498,6 +499,14 @@ public class Chunk {
 		this.readyToDraw = readyToDraw;
 	}
 	
+	public boolean isReadyToCalculate() {
+		return readyToCalculate;
+	}
+
+	public void setReadyToCalculate(boolean readyToCalculate) {
+		this.readyToCalculate = readyToCalculate;
+	}
+
 	public float getIterationsSum(int i) {
 		i = applyGetIndexMasks(i);
 		return iterationsSum[i];
@@ -620,7 +629,7 @@ public class Chunk {
 		if (processingStepState == null)
 			return null;
 		int num = processingStepState.getStateNumber();
-		if (num == -1 || num >= processingStepState.getStepProvider().getMaxState())
+		if (num == -1 || num > processingStepState.getStepProvider().getMaxState())
 			return null;
 		return processingStepState.getProcessingStep();
 	}

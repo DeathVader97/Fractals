@@ -53,11 +53,13 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	 * @param c
 	 */
 	public void addChunk(Chunk c) {
+//		long t1 = System.nanoTime();
 		synchronized (addChunkList) {
 			addChunkList.add(c);
 			generateTasks = true;
 			updatePriorities = true;
 		}
+//		long t2 = System.nanoTime();
 	}
 	long debug_t = 0;
 	@Override
@@ -107,9 +109,6 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 		int newlyAdded = 0;
 		
 		synchronized (finishedTaskList) {
-			Iterator<ChunkTask> it = finishedTaskList.iterator();
-			FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
-			
 			int maxState = dataDescriptor.getStepProvider().getMaxState();
 			CalcPixelThread calcThread = ((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread();
 			for (ChunkTask finishedTask : finishedTaskList) {

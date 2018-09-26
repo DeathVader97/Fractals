@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import de.felixperko.fractals.FractalsMain;
 import de.felixperko.fractals.data.Chunk;
 
 public class CalcPixelThread extends FractalsThread {
@@ -27,14 +28,25 @@ public class CalcPixelThread extends FractalsThread {
 		while (true) {
 			while (!waitingChunks.isEmpty()) {
 				synchronized (this) {
+					
 					Chunk c = waitingChunks.poll();
+					if (c == null)
+						continue;
+					if (!c.isReadyToCalculate()) {
+						waitingChunks.add(c);
+						continue;
+					}
+					
 					try {
 						waitingChunkSet.remove(c);
 						c.calculatePixels();
-						finishedChunks.add(c);
+						c.setReadyToDraw(true);
+						c.setRedrawNeeded(true);
+//						finishedChunks.add(c);
+						FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 					} catch (Exception e) {
 						if (c != null && !c.isDisposed())
-							throw e;
+							e.printStackTrace();
 					}
 				}
 			}
