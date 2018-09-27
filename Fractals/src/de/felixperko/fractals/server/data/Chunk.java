@@ -288,14 +288,14 @@ public class Chunk {
 			image.dispose();
 		imageData = null;
 		
-		arr_size = 0;
-		iterationsSum = null;
-		iterationsSumSq = null;
-		currentPosX = null;
-		currentPosY = null;
-		diff = null;
-		sampleCount = null;
-		failSampleCount = null;
+//		arr_size = 0;
+//		iterationsSum = null;
+//		iterationsSumSq = null;
+//		currentPosX = null;
+//		currentPosY = null;
+//		diff = null;
+//		sampleCount = null;
+//		failSampleCount = null;
 	}
 
 	public boolean isDisposed() {

@@ -7,7 +7,7 @@ import de.felixperko.fractals.server.util.Position;
 
 public class Grid {
 	
-	int chunk_size = 128;
+	int chunk_size = 256;
 	
 	GridRenderer renderer;
 	

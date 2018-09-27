@@ -16,6 +16,7 @@ import de.felixperko.fractals.server.data.Grid;
 import de.felixperko.fractals.server.data.ProcessingStepState;
 import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
+import de.felixperko.fractals.server.util.Position;
 
 public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	
@@ -172,7 +173,9 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			for (ChunkTask finishedTask : finishedTaskList) {
 				calcThread.addChunk(finishedTask.chunk);
 				ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
-				if (state.getStateNumber() < maxState) {
+				Position gridPos = finishedTask.getChunk().getGridPosition();
+				double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
+				if (state.getStateNumber() < maxState && viewDist < 1) {
 					addTask(finishedTask);
 					newlyAdded++;
 				} else {
