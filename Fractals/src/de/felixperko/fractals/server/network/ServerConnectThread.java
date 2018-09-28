@@ -26,6 +26,11 @@ public class ServerConnectThread extends Thread{
 			while (!Thread.interrupted()) {
 				//TODO manage write threads to send messages effortlessly
 				ServerWriteThread serverWriteThread = FractalsMain.threadManager.startServerSocket(server.accept());
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 				serverWriteThread.setClientInfo(networkManager.createNewClient(serverWriteThread));
 			}
 			server.close();

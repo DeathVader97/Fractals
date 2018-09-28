@@ -19,6 +19,7 @@ public class ConnectedMessage extends Message {
 	protected void process() {
 		FractalsMain.clientStateHolder.stateClientInfo.setValue(clientInfo);
 		log.log("Got client info!");
+		answer(new ConnectedAckMessage());
 	}
 
 }

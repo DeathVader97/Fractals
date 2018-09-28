@@ -283,7 +283,7 @@ public class MainWindow {
 			Rectangle shellBounds = shell.getBounds();
 			shell.setLocation(monitorBounds.x+monitorBounds.width-shellBounds.width, monitorBounds.y+monitorBounds.height-shellBounds.height);
 		}
-		shell.setMaximized(true);
+//		shell.setMaximized(true);
 //		shell.setSize(497, 405);
 		shell.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {

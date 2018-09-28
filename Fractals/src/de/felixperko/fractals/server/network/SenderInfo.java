@@ -1,6 +1,10 @@
 package de.felixperko.fractals.server.network;
 
-public class SenderInfo {
+import java.io.Serializable;
+
+public class SenderInfo implements Serializable{
+	
+	private static final long serialVersionUID = 3901678919826037748L;
 	
 	String name;
 	int clientId;

@@ -1,7 +1,7 @@
 package de.felixperko.fractals.server.network;
 
-import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -16,7 +16,7 @@ public class WriteThread extends FractalsThread {
 	
 	static int ID_COUNTER = 0;
 	
-	CategoryLogger log = new CategoryLogger("com/server", Color.MAGENTA);
+	CategoryLogger log;
 	
 	ListenThread listenThread;
 	boolean closeConnection = false;
@@ -26,6 +26,8 @@ public class WriteThread extends FractalsThread {
 	private ObjectOutputStream out;
 	protected Socket socket;
 	
+	private CategoryLogger listenLogger; //used to buffer logger for listen thread until its creation
+	
 	public WriteThread(Socket socket) {
 		super("writeThread_"+ID_COUNTER++, 5);
 		this.socket = socket;
@@ -33,19 +35,24 @@ public class WriteThread extends FractalsThread {
 
 	public void run() {
 		try {
-			in = new ObjectInputStream(socket.getInputStream());
+			InputStream inStream = socket.getInputStream();
 			out = new ObjectOutputStream(socket.getOutputStream());
+			in = new ObjectInputStream(inStream);
 			listenThread = new ListenThread(this, in);
+			if (listenLogger != null)
+				listenThread.setLogger(listenLogger);
 			listenThread.start();
 			
 			while (!Thread.interrupted()) {
 				
-				while (pendingMessages.isEmpty()) {
+				while (pendingMessages.isEmpty() && !Thread.interrupted()) {
+					tick();
 					setPhase(PHASE_IDLE);
 					try {
 						Thread.sleep(1);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						if (!closeConnection)
+							e.printStackTrace();
 					}
 				}
 				
@@ -69,11 +76,26 @@ public class WriteThread extends FractalsThread {
 		}
 	}
 	
+	protected void tick() {
+	}
+
 	public void writeMessage(Message msg) {
 		pendingMessages.add(msg);
 	}
 	
 	public void closeConnection() {
+		closeConnection = true;
 		interrupt();
+	}
+
+	public boolean isCloseConnection() {
+		return closeConnection;
 	};
+	
+	public void setListenLogger(CategoryLogger log) {
+		if (listenThread == null)
+			listenLogger = log;
+		else
+			listenThread.setLogger(listenLogger);
+	}
 }

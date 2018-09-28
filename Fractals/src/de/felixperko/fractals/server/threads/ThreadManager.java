@@ -116,7 +116,7 @@ public class ThreadManager {
 	}
 	
 	public void startServer() {
-		if (serverConnectThread != null)
+		if (serverConnectThread != null && serverConnectThread.isAlive())
 			return;
 		serverConnectThread = new ServerConnectThread();
 		serverConnectThread.start();
@@ -130,7 +130,7 @@ public class ThreadManager {
 	}
 	
 	public void startClient() {
-		if (clientThread != null)
+		if (clientThread != null && !clientThread.isCloseConnection())
 			return;
 		try {
 			clientThread = new ClientWriteThread();
