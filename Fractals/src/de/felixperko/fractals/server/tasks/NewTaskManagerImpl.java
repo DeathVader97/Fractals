@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
@@ -31,13 +33,13 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	
 	boolean generateTasks;
 	boolean updatePriorities;
-	List<Chunk> addChunkList = new ArrayList<>();
-	List<ChunkTask> finishedTaskList = new ArrayList<>();
+	List<Chunk> addChunkList = new CopyOnWriteArrayList<>();
+	List<ChunkTask> finishedTaskList = new CopyOnWriteArrayList<>();
 	
 	boolean idle = true;
 	
 	public List<ChunkTask> priorityList = new ArrayList<>();
-	Map<Chunk, ChunkTask> taskMap = new HashMap<>();
+	Map<Chunk, ChunkTask> taskMap = new ConcurrentHashMap<>();
 	public Comparator<ChunkTask> priorityComparator = new Comparator<ChunkTask>() {
 		@Override
 		public int compare(ChunkTask arg0, ChunkTask arg1) {
@@ -55,13 +57,14 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	 */
 	public void addChunk(Chunk c) {
 //		long t1 = System.nanoTime();
-		synchronized (addChunkList) {
+//		synchronized (addChunkList) {
 			addChunkList.add(c);
 			generateTasks = true;
 			updatePriorities = true;
-		}
+//		}
 //		long t2 = System.nanoTime();
 	}
+	
 	long debug_t = 0;
 	@Override
 	public void run() {
@@ -113,8 +116,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 
 //		log.log("generating tasks...");
 		
-		synchronized (addChunkList) {
-			if (!addChunkList.isEmpty()){
+//		synchronized (addChunkList) {
+//			if (!addChunkList.isEmpty()){
 				setUpdatePriorities();
 				dataDescriptor = renderer.getDataDescriptor();
 				for (Chunk add : addChunkList) {
@@ -124,8 +127,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 				}
 				log.log("generated "+addChunkList.size()+" tasks");
 				addChunkList.clear();
-			}
-		}
+//			}
+//		}
 	}
 
 	private void addTask(ChunkTask task) {
@@ -144,7 +147,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 
 //		log.log("updating priorities...");
 		
-		synchronized (this) {
+//		synchronized (this) {
 			int tryCount = 0;
 			while (true) {
 				try {
@@ -157,7 +160,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 					tryCount++;
 				}
 			}
-		}
+//		}
 	}
 	
 	private void finishTasks() {
@@ -167,7 +170,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 //		log.log("finishing tasks...");
 		int newlyAdded = 0;
 		
-		synchronized (finishedTaskList) {
+//		synchronized (finishedTaskList) {
 			int maxState = dataDescriptor.getStepProvider().getMaxState();
 			CalcPixelThread calcThread = ((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread();
 			for (ChunkTask finishedTask : finishedTaskList) {
@@ -184,7 +187,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 			}
 			
 			finishedTaskList.clear();
-		}
+//		}
 		
 		if (newlyAdded > 0) {
 			updatePriorities = true;
