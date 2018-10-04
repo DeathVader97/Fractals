@@ -34,6 +34,10 @@ public class StateChangeListener<T> extends StateListener<T> {
 			return;
 		if (resetChanged)
 			changed = false;
+		update();
+	}
+	
+	protected void update() {
 		actions.forEach(a -> a.update());
 	}
 	

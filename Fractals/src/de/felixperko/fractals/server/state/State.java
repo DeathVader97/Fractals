@@ -1,13 +1,16 @@
 package de.felixperko.fractals.server.state;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class State<T> {
+public class State<T> implements Serializable{
+	
+	private static final long serialVersionUID = -1427056838575413682L;
 
 	//TODO introduce UI interfaces to separate state value restrictions from ui restrictions
 	
-	List<StateListener<T>> listeners = new ArrayList<>();
+	transient List<StateListener<T>> listeners = new ArrayList<>();
 	
 	String name;
 	
