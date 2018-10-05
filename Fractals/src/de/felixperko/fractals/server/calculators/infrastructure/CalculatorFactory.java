@@ -24,4 +24,8 @@ public class CalculatorFactory {
 		}
 		return null;
 	}
+
+	public Class<? extends SampleCalculator> getCalculatorClass() {
+		return calculatorClass;
+	}
 }

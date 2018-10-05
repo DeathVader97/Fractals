@@ -22,6 +22,17 @@ public class ServerWriteThread extends WriteThread {
 		lastReachableTime = System.nanoTime();
 	}
 	
+	@Override
+	public void writeMessage(Message msg) {
+		if (clientInfo != null) {
+			if (msg.getSender() == null)
+				msg.setSender(clientInfo.getSenderInfo());
+			else if (!msg.getSender().equals(clientInfo.getSenderInfo())){
+				throw new IllegalStateException("Wrong thread to send message to client");
+			}
+		}
+		super.writeMessage(msg);
+	}
 	
 	@Override
 	protected void tick() {
