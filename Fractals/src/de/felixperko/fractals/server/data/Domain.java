@@ -6,12 +6,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import de.felixperko.fractals.server.tasks.TaskManager;
 import de.felixperko.fractals.server.util.Position;
 
 /**
  * The Domain contains the associated Views and Chunks.
  */
 public class Domain {
+	
+	int dispose_distance_limit = 5;
 	
 	Instance instance;
 
@@ -20,6 +23,8 @@ public class Domain {
 	
 	List<View> views = new ArrayList<>();
 	Map<Position, Chunk> chunks = new HashMap<>();
+	
+	TaskManager taskManager;
 	
 	public Domain(int chunkSize, double chunkDimensions) {
 		this.chunkSize = chunkSize;
@@ -56,7 +61,7 @@ public class Domain {
 			Chunk c = chunks.get(pos);
 			//if still contained in a view -> continue with next chunk
 			for (View v : views) {
-				if (v.contains(c))
+				if (v.contains(c, dispose_distance_limit))
 					continue next;
 			}
 			//not contained in any active views -> dispose
@@ -78,5 +83,31 @@ public class Domain {
 	
 	public boolean isApplicable(int chunkSize, double chunkDimensions) {
 		return this.chunkDimensions == chunkDimensions && this.chunkSize == chunkSize;
+	}
+
+	public void updateChunks() {
+		
+		Iterator<Chunk> it = chunks.values().iterator();
+		//update distances and remove out of bounds chunks
+		while (it.hasNext()) {
+			Chunk c = it.next();
+			Position spacePos = c.getStartPosition();
+			double lowestDistance = Double.MAX_VALUE;
+			for (View v : views) {
+				if (!v.contains(c, dispose_distance_limit))
+					continue;
+				double distance = spacePos.distance(v.getMidSpacePosition());
+				if (distance < lowestDistance)
+					lowestDistance = distance;
+			}
+			if (lowestDistance == Double.MAX_VALUE) { //not in any view (anymore) -> dispose
+				//TODO delay of removal necessary?
+				c.dispose();
+				it.remove();
+			} else { //is in view, set distance
+				c.setDistanceToMid(lowestDistance);
+			}
+		}
+		taskManager.setUpdatePriorities();
 	}
 }

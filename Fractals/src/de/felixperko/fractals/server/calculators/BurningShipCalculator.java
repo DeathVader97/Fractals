@@ -14,10 +14,15 @@ public class BurningShipCalculator extends AbstractMandelbrotCalculator{
 	protected void innerLoop() {
 		real = Math.abs(real);
 		imag = Math.abs(imag);
-		realSq = real*real;
-		imagSq = imag*imag;
-		imag = 2*real*imag;
-		real = realSq - imagSq;
+		double real_t = real*real_start - imag*imag_start;
+		imag = real*imag_start + real_start*imag;
+		real = real_t;
+	}
+	
+	@Override
+	protected void prepareLoop() {
+		real_start = Math.abs(real_start);
+		imag_start = Math.abs(imag_start);
 	}
 
 	@Override

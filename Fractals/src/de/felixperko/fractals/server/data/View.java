@@ -16,11 +16,18 @@ public class View {
 	Grid grid;
 	boolean disposed;
 	
+	Position midPos;
+	
 	public View(Position min, Position max) {
-		this.min = min;
-		this.max = max;
+		setParameters(min, max);
 	}
 	
+	private void setParameters(Position min, Position max) {
+		this.min = min;
+		this.max = max;
+		this.midPos = max.addNew(min).mult(0.5);
+	}
+
 	public void addClientId(int id) {
 		this.clientIds.add(id);
 	}
@@ -47,9 +54,6 @@ public class View {
 		return clientIds.size();
 	}
 	
-	public void setParameters(Position min, Position max) {
-	}
-	
 	public boolean isDisposed() {
 		return disposed;
 	}
@@ -59,23 +63,37 @@ public class View {
 		domain.viewDisposed(this);
 	}
 
-	public boolean contains(Chunk c) {
-		// TODO
-		return false;
+	public boolean contains(Chunk c, int distanceLimit) {
+		Position chunkPos = c.getStartPosition();
+		Position delta = c.getDelta();
+		return    (chunkPos.getX()-(delta.getX()*distanceLimit) <= max.getX()
+				&& chunkPos.getX()+(delta.getX()*(distanceLimit+1)) >= min.getX()
+				&& chunkPos.getY()-(delta.getY()*distanceLimit) <= max.getY()
+			 	&& chunkPos.getY()+(delta.getY()*(distanceLimit+1)) >= min.getY());
 	}
 
 	public void addClient(Client client) {
 		addClientId(client.getId());
 	}
 
-	public void setParameters(ClientConfiguration configuration) {
-		this.min = configuration.getSpaceMin();
-		this.max = configuration.getSpaceMax();
+	public void updateParameters(Client client) {
+		setParameters(client.config.getSpaceMin(), client.config.getSpaceMax());
+		
 		//TODO update clients and chunks
 		for (int id : clientIds) {
-			Client c = domain.instance.dataContainer.getClient(id);
+			if (id == client.id)
+				continue;
+			Client c = getClient(id);
 			c.updatePosition(min, max);
 		}
 		domain.updateChunks();
+	}
+	
+	private Client getClient(int id) {
+		return domain.instance.dataContainer.getClient(id);
+	}
+
+	public Position getMidSpacePosition() {
+		return midPos;
 	}
 }

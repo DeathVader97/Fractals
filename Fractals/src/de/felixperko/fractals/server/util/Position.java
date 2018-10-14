@@ -82,7 +82,7 @@ public class Position {
 	public double lengthSq() {
 		return x*x + y*y;
 	}
-	
+		
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -99,12 +99,20 @@ public class Position {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null || getClass() != obj.getClass())
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
 			return false;
 		Position other = (Position) obj;
-		return (x == other.x || y == other.y);
+		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
+			return false;
+		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
+			return false;
+		return true;
 	}
-	
+
+
+
 	interface BiOperation {
 		Position operation(Position p1, Position p2);
 	}
@@ -202,6 +210,12 @@ public class Position {
 		newPos.x /= factor;
 		newPos.y /= factor;
 		return newPos;
+	}
+	
+	public double distance(Position other) {
+		double dx = x - other.x;
+		double dy = y - other.y;
+		return Math.sqrt(dx*dx + dy*dy);
 	}
 	
 	public Position copy() {

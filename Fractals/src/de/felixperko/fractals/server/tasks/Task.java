@@ -21,23 +21,26 @@ public abstract class Task {
 	private int samplesPerMs;
 	
 	SampleCalculator sampleCalculator;
-	
-	int jobId;
+
+	int taskManagerId;
+	int jobId; //TODO needed?
 	
 	public ArrayList<Integer> changedIndices = new ArrayList<>();
 
 	private int previousMaxIterations = -1;
 	
-	public Task(int maxIterations, DataDescriptor dataDescriptor) {
+	public Task(int maxIterations, DataDescriptor dataDescriptor, int taskManagerId) {
 		this.maxIterations = maxIterations;
 		this.sampleCalculator = dataDescriptor.getCalculatorFactory().createCalculator(this);
+		this.taskManagerId = taskManagerId;
 	}
 	
 //	public Task(int maxIterations, int jobId) {
 //	}
 
-	public Task(DataDescriptor dataDescriptor) {
+	public Task(DataDescriptor dataDescriptor, int taskManagerId) {
 		this.sampleCalculator = dataDescriptor.getCalculatorFactory().createCalculator(this);
+		this.taskManagerId = taskManagerId;
 	}
 
 	public void run(DataDescriptor dataDescriptor) {
@@ -81,4 +84,10 @@ public abstract class Task {
 	public long getEnd_Sample_Count() {
 		return end_sample_count;
 	}
+
+	public int getTaskManagerId() {
+		return taskManagerId;
+	}
+
+	public abstract double getPriority();
 }

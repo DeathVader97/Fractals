@@ -11,10 +11,11 @@ public class MandelbrotCalculator extends AbstractMandelbrotCalculator{
 
 	@Override
 	protected void innerLoop() {
-		realSq = real*real;
-		imagSq = imag*imag;
-		imag = 2*real*imag;
-		real = realSq - imagSq;
+		double real_t = real*real_start - imag*imag_start;
+		imag = real*imag_start + real_start*imag;
+		real = real_t;
+//		realSq = real*real;
+//		imagSq = imag*imag;
 	}
 
 	@Override

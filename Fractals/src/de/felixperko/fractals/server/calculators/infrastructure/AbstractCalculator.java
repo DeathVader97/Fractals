@@ -1,6 +1,7 @@
 package de.felixperko.fractals.server.calculators.infrastructure;
 
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ChunkAccessType;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.steps.patternprovider.Pattern;
 import de.felixperko.fractals.server.tasks.Task;
@@ -57,11 +58,11 @@ public abstract class AbstractCalculator implements SampleCalculator{
 		if (!pattern.isGeneric())
 			return maxSize;
 
-		int finishedSamples = chunk.getSampleCount(index);
-		double failRatio = chunk.getFailRatio(finishedSamples, index);
+		int finishedSamples = chunk.getSampleCount(index, ChunkAccessType.CALCULATION);
+		double failRatio = chunk.getFailRatio(finishedSamples, index, ChunkAccessType.CALCULATION);
 		if (failRatio < 1)
 			failRatio = 0;
-		double diffMultiplier = Math.min(chunk.getDiff(index)*5, 1);
+		double diffMultiplier = Math.min(chunk.getDiff(index, ChunkAccessType.CALCULATION)*5, 1);
 		if (failRatio == 0 && diffMultiplier == 1)
 			return maxSize;
 		
@@ -76,7 +77,9 @@ public abstract class AbstractCalculator implements SampleCalculator{
 	protected void logIfDebug(Chunk chunk, int index) {
 		if (!isDebug(chunk, index))
 			return;
-		logDebug.log(chunk.getSampleCount(index)+": "+chunk.getAvgIterations(index)+" \u00B1 "+chunk.getStandardDeviation(index));
+		logDebug.log(chunk.getSampleCount(index, ChunkAccessType.CALCULATION)+": "
+			+chunk.getAvgIterations(index, ChunkAccessType.CALCULATION)+" \u00B1 "
+			+chunk.getStandardDeviation(index, ChunkAccessType.CALCULATION));
 	}
 
 	public static boolean isDebug(Chunk chunk, int index) {

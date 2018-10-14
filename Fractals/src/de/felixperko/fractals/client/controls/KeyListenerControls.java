@@ -83,16 +83,16 @@ public class KeyListenerControls implements KeyListener {
 		}
 		else if (e.keyCode == SWT.ARROW_LEFT) {
 			shift.addX(-shiftSensitivity);
-			left = true;
+//			left = true;
 		} else if (e.keyCode == SWT.ARROW_RIGHT) {
 			shift.addX(shiftSensitivity);
-			right = true;
+//			right = true;
 		} else if (e.keyCode == SWT.ARROW_UP) {
 			shift.addY(-shiftSensitivity);
-			up = true;
+//			up = true;
 		} else if (e.keyCode == SWT.ARROW_DOWN) {
 			shift.addY(shiftSensitivity);
-			down = true;
+//			down = true;
 		}
 	}
 	

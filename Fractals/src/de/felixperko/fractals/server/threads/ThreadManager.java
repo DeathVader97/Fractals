@@ -11,14 +11,14 @@ import de.felixperko.fractals.client.threads.IterationPositionThread;
 import de.felixperko.fractals.server.network.ClientWriteThread;
 import de.felixperko.fractals.server.network.ServerConnectThread;
 import de.felixperko.fractals.server.network.ServerWriteThread;
-import de.felixperko.fractals.server.tasks.NewTaskManagerImpl;
+import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
 import de.felixperko.fractals.server.tasks.TaskProvider;
 
 public class ThreadManager {
 	
 	WorkerThread[] workerThreads;
 	IterationPositionThread iterationWorkerThread;
-	NewTaskManagerImpl taskManagerThread;
+	ArrayListBatchTaskManager taskManagerThread;
 	
 	TaskProvider taskProvider;
 	
@@ -70,7 +70,7 @@ public class ThreadManager {
 		iterationWorkerThread = new IterationPositionThread();
 		iterationWorkerThread.start();
 		
-		taskManagerThread = (NewTaskManagerImpl) FractalsMain.taskManager;
+		taskManagerThread = (ArrayListBatchTaskManager) FractalsMain.taskManager;
 		
 		updateProviders();
 	}

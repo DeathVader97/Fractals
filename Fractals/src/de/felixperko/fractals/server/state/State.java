@@ -42,8 +42,8 @@ public class State<T> implements Serializable{
 	}
 
 	public void setValue(T value) {
-		listeners.forEach(l -> l.valueChanged(this.value, value));
 		this.value = value;
+		listeners.forEach(l -> l.valueChanged(this.value, value));
 	}
 
 	public String getName() {

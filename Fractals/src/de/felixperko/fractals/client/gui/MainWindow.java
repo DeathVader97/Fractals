@@ -1,6 +1,7 @@
 package de.felixperko.fractals.client.gui;
 
 import static de.felixperko.fractals.server.util.performance.PerfInstance.createNewSubInstanceAndBegin;
+import static de.felixperko.fractals.client.controls.KeyListenerControls.*;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Point;
@@ -31,6 +33,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -78,25 +81,20 @@ public class MainWindow {
 	CategoryLogger log = new CategoryLogger("GUI/window", Color.BLUE);
 
 	public Shell shell;
+	private Display display;
 	
 	Label lbl_disp_dim;
+	private Label lblStatus;
+	private Label lbl_draw_dim;
 	
 	double quality = 1;
-
 	private Label qualitylbl;
-	
-	Renderer mainRenderer;
-
-	private Display display;
 
 	public Canvas canvas;
+	Renderer mainRenderer;
 	
 	public boolean save = false;
 	boolean redraw = false;
-
-	private Label lblStatus;
-
-	private Label lbl_draw_dim;
 
 	private ArrayList<StateChangeListener<?>> stateChangeListeners = new ArrayList<>();
 
@@ -164,16 +162,16 @@ public class MainWindow {
 		listeners.end();
 		
 		boolean updateTime = true;
-		if (!KeyListenerControls.shift.equals(KeyListenerControls.nullPos)) {
+		if (!shift.equals(nullPos)) {
 			double dt = (System.nanoTime() - lastTime)*NumberUtil.NS_TO_S;
 			if (dt > 0.05)
 				dt = 0.05;
 			if (dt < 0.01)
 				updateTime = false;
 			else {
-				PerfInstance shift = createNewSubInstanceAndBegin("shift", perf);;
-				FractalsMain.mainWindow.shiftScaled(new Position(KeyListenerControls.shift.getX()*dt, KeyListenerControls.shift.getY()*dt));
-				shift.end();
+				PerfInstance shiftPerf = createNewSubInstanceAndBegin("shift", perf);
+				FractalsMain.mainWindow.shiftScaled(new Position(shift.getX()*dt, shift.getY()*dt));
+				shiftPerf.end();
 			}
 		}
 		if (updateTime)
@@ -593,6 +591,26 @@ public class MainWindow {
 						}
 					});
 				}
+			}
+			if (state instanceof SelectionState) {
+				SelectionState sstate = (SelectionState)state;
+				Combo combo = new Combo(stateComposite, SWT.DROP_DOWN | SWT.READ_ONLY);
+				combo.setItems(sstate.getOptionNames());
+				combo.select(sstate.getCurrentSelectionIndex());
+				combo.addSelectionListener(new SelectionListener() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						setStateValue(e);
+					}
+					@Override
+					public void widgetDefaultSelected(SelectionEvent e) {
+						setStateValue(e);
+					}
+					
+					private void setStateValue(SelectionEvent e) {
+						sstate.setValue(sstate.getOption(combo.getSelectionIndex()));
+					}
+				});
 			}
 		}
 	}

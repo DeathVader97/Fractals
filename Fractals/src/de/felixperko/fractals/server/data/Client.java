@@ -1,6 +1,7 @@
 package de.felixperko.fractals.server.data;
 
 import de.felixperko.fractals.server.network.ClientInfo;
+import de.felixperko.fractals.server.util.Position;
 
 public class Client {
 
@@ -53,7 +54,7 @@ public class Client {
 	}
 
 	private void updateView() {
-		view.setParameters(config);
+		view.updateParameters(this);
 		config.update_view = false;
 	}
 
@@ -75,5 +76,9 @@ public class Client {
 
 	public void setView(View view) {
 		this.view = view;
+	}
+
+	public void updatePosition(Position min, Position max) {
+		//TODO update client position
 	}
 }

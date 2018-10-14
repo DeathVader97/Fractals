@@ -5,6 +5,7 @@ import java.awt.Color;
 import org.eclipse.swt.graphics.ImageData;
 
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ChunkAccessType;
 
 public class FailRatioPainter extends AbstractPainterImpl {
 	
@@ -13,7 +14,7 @@ public class FailRatioPainter extends AbstractPainterImpl {
 	@Override
 	public void paint(ImageData imageData, Chunk chunk, int index, int x, int y) {
 		
-		float failRatio = chunk.getFailRatio(index);
+		float failRatio = chunk.getFailRatio(index, ChunkAccessType.RENDERING);
 		float hue = failRatio;
 		
 		float b = 1;

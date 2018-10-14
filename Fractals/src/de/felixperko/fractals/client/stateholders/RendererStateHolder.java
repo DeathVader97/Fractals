@@ -1,7 +1,12 @@
 package de.felixperko.fractals.client.stateholders;
 
+import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.gui.SelectionState;
 import de.felixperko.fractals.client.rendering.renderer.Renderer;
+import de.felixperko.fractals.server.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.server.calculators.infrastructure.SampleCalculator;
 import de.felixperko.fractals.server.state.RangeState;
+import de.felixperko.fractals.server.state.StateChangeListener;
 import de.felixperko.fractals.server.state.StateHolder;
 import de.felixperko.fractals.server.state.StateListener;
 
@@ -24,7 +29,7 @@ public class RendererStateHolder extends StateHolder {
 		addState(stateColorScale);
 		addState(stateColorShift);
 	}
-	
+
 	private void configureColorScale() {
 		int steps = 20;
 		float shiftPerStep = 0.1f;

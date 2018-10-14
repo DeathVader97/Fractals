@@ -4,6 +4,7 @@ import java.util.BitSet;
 
 import de.felixperko.fractals.server.calculators.infrastructure.AbstractCalculator;
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ChunkAccessType;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.steps.ProcessingStep;
 import de.felixperko.fractals.server.steps.patternprovider.Pattern;
@@ -13,7 +14,9 @@ import de.felixperko.fractals.server.util.Position;
 public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 
 	protected double real;
+	protected double real_start; //to allow higher powers
 	protected double imag;
+	protected double imag_start;
 	protected double realSq = 0;
 	protected double imagSq = 0;
 	double new_real;
@@ -25,7 +28,7 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 	
 	@Override
 	public void calculate_samples(Chunk chunk, ProcessingStep step) {
-		chunk.setGetIndexMask(step.getIndexMask());
+		chunk.setGetIndexMask(step.getIndexMask(), ChunkAccessType.CALCULATION);
 		Pattern pattern = step.getPattern();
 		BitSet activeIndices = step.getActiveIndices();
 		int maxiterations = Integer.min(step.getMaxIterations(), chunk.getMaxIterations());
@@ -104,8 +107,8 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 					real = startReal;
 					imag = startImag;
 				} else {
-					real = chunk.getCurrentPosX(i);
-					imag = chunk.getCurrentPosY(i);
+					real = chunk.getCurrentPosX(i, ChunkAccessType.CALCULATION);
+					imag = chunk.getCurrentPosY(i, ChunkAccessType.CALCULATION);
 				}
 				double creal = xPos;
 				double cimag = yPos;
@@ -116,21 +119,24 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 					run_iterations++;
 					realSq = 0;
 					imagSq = 0;
+					real_start = real;
+					imag_start = imag;
+					prepareLoop();
 					for (int l = 1 ; l < pow ; l++){
 						innerLoop();
 					}
 					real += creal;
 					imag += cimag;
 					
-					if (realSq + imagSq > (1 << 16)) {//outside -> done
-						float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(2)  ));
-						chunk.addIterationsSum(i, iterations);
-						chunk.addIterationsSumSq(i, iterations*iterations);
+					if (real*real + imag*imag > (1 << 16)) {//outside -> done
+						float iterations = (float) (j < 0 ? j : Math.sqrt( j + 1 -  Math.log( Math.log(real*real+imag*imag)*0.5 / Math.log(2) ) / Math.log(pow)  ));
+						chunk.addIterationsSum(i, iterations, ChunkAccessType.CALCULATION);
+						chunk.addIterationsSumSq(i, iterations*iterations, ChunkAccessType.CALCULATION);
 						if (k == 0) {
-							chunk.setCurrentPosX(i, (float) real);
-							chunk.setCurrentPosY(i, (float) imag);
+							chunk.setCurrentPosX(i, (float) real, ChunkAccessType.CALCULATION);
+							chunk.setCurrentPosY(i, (float) imag, ChunkAccessType.CALCULATION);
 						}
-						chunk.addSampleCount(i, 1);
+						chunk.addSampleCount(i, 1, ChunkAccessType.CALCULATION);
 						logIfDebug(chunk, i);
 						continue sampleLoop;
 					}
@@ -142,14 +148,21 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 //					chunk.setCurrentPosY(i, (float) imag);
 //				}
 //				else { //max iterations reached -> declared as in the mandelbrot set
-					chunk.addSampleCount(i, 1);
-					chunk.addFailSampleCount(i, 1);
+					chunk.addSampleCount(i, 1, ChunkAccessType.CALCULATION);
+					chunk.addFailSampleCount(i, 1, ChunkAccessType.CALCULATION);
 					logIfDebug(chunk, i);
 //				}
 			
 			}
 		}
 		chunk.finishedIterations = maxiterations;
+		chunk.setGetIndexMask(step.getIndexMask(), ChunkAccessType.RENDERING);
+	}
+	
+	/**
+	 * can be overridden to prepare values for the loop
+	 */
+	protected void prepareLoop() {
 	}
 
 	@Override

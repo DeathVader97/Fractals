@@ -3,57 +3,18 @@ package de.felixperko.fractals.server.tasks;
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ChunkAccessType;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.steps.ProcessingStep;
 import de.felixperko.fractals.server.util.Position;
 
 public class ChunkTask extends Task {
 	
-//	static Position[] samplepattern = new Position[] {
-//			new Position(0,0)
-//			,new Position(0.25, 0.25)
-//			,new Position(-0.25, -0.25)
-//			,new Position(-0.25, 0.25)
-//			,new Position(0.25, -0.25)
-//			,new Position(+0.25 + 0.25*0.25, +0.25 + 0.25*0.25)
-//			,new Position(-0.25 - 0.25*0.25, -0.25 - 0.25*0.25)
-//			,new Position(-0.25 - 0.25*0.25, +0.25 + 0.25*0.25)
-//			,new Position(+0.25 + 0.25*0.25, -0.25 - 0.25*0.25)
-//			};
-	
-//	public static PatternProvider patternProvider = new SinglePatternProvider(10);
-	
-//	static int sampleDim = 5;
-//	static Position[] samplepattern = new Position[sampleDim*sampleDim];
-//	static {
-//		double dimD = Math.sqrt(samplepattern.length);
-//		int dim = (int) dimD;
-//		if (dimD > dim)
-//			throw new IllegalStateException("the squareroot of samplepattern.length has to be integer.");
-//		
-//		double start = -0.5;
-//		double totalDelta = 1;
-//		double stepDelta = totalDelta/dim;
-//		int i = 0;
-//		for (int x = 0 ; x < dim ; x++){
-//			for (int y = 0 ; y < dim ; y++){
-//				samplepattern[i] = new Position(start+stepDelta*x, start+stepDelta*y);
-//				i++;
-//			}
-//		}
-//	}
-
-//	static Position[] samplepattern = new Position[100];
-//	static {
-//		for (int i = 0 ; i < samplepattern.length ; i++)
-//			samplepattern[i] = new Position(Math.random()-0.5, Math.random()-0.5);
-//	}
-	
 	Chunk chunk;
 	DataDescriptor dataDescriptor;
 	
-	public ChunkTask(Chunk chunk, DataDescriptor dataDescriptor) {
-		super(dataDescriptor);
+	public ChunkTask(Chunk chunk, DataDescriptor dataDescriptor, int taskManagerId) {
+		super(dataDescriptor, taskManagerId);
 		this.chunk = chunk;
 		this.dataDescriptor = dataDescriptor;
 	}
@@ -81,7 +42,7 @@ public class ChunkTask extends Task {
 				int finishedCount = 0;
 				int totalCount = processingStep.getActiveCount();
 				while ((index = processingStep.getActiveIndices().nextSetBit(lastIndex+1)) > -1) {
-					float avgIt = chunk.getAvgIterations(index);
+					float avgIt = chunk.getAvgIterations(index, ChunkAccessType.CALCULATION);
 					if (avgIt > 0) {
 						finishedCount++;
 						avg += avgIt;

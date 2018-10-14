@@ -14,4 +14,7 @@ public interface TaskManager {
 
 	String getStateText();
 
+	public void setUpdatePriorities();
+	
+	public int getTaskManagerId();
 }

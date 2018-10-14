@@ -5,6 +5,7 @@ import java.awt.Color;
 import org.eclipse.swt.graphics.ImageData;
 
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ChunkAccessType;
 
 public class StandardPainter extends AbstractPainterImpl {
 
@@ -15,16 +16,16 @@ public class StandardPainter extends AbstractPainterImpl {
 	public void paint(ImageData imageData, Chunk chunk, int index, int x, int y) {
 		if (chunk.isDisposed())
 			return;
-		if (chunk.getSampleCount(index) == 0)
+		if (chunk.getSampleCount(index, ChunkAccessType.RENDERING) == 0)
 			imageData.setPixel(x, y, color);
 		else {
-			float it = chunk.getAvgIterations(index);
+			float it = chunk.getAvgIterations(index, ChunkAccessType.RENDERING);
 //			sat2 = (float) Math.log10(sat2);
 			float hue = (float) Math.log(it);
 			
-			float b = it > 0 ? (chunk.getDiff() == null ? 1 : (float)Math.pow(chunk.getDiff(index),0.15)*0.9f) : 0;
+			float b = it > 0 ? (chunk.getDiff() == null ? 1 : (float)Math.pow(chunk.getDiff(index, ChunkAccessType.RENDERING),0.15)*0.9f) : 0;
 			
-			b *= 1 - chunk.getFailRatio(index);
+			b *= 1 - chunk.getFailRatio(index, ChunkAccessType.RENDERING);
 			if (it < 1)
 				b *= it;
 			if (b > 1)

@@ -1,5 +1,7 @@
 package de.felixperko.fractals.server.data;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Device;
@@ -68,8 +70,8 @@ public class Chunk {
 	private boolean readyToDraw = false;
 	private boolean readyToCalculate = false;
 	
-	IndexMask setIndexMask = DefaultMask.instance;
-	IndexMask getIndexMask = DefaultMask.instance;
+	Map<ChunkAccessType, IndexMask> setIndexMasks = new HashMap<>();
+	Map<ChunkAccessType, IndexMask> getIndexMasks = new HashMap<>();
 	
 	int maxIterations = 10000;
 	
@@ -95,13 +97,27 @@ public class Chunk {
 		this.grid = grid;
 		this.painter = grid.getRenderer().getPainter();
 	}
-
-	private int applySetIndexMasks(int i) {
-		return setIndexMask.getIndex(i);
+	
+	public IndexMask getGetIndexMask(ChunkAccessType accessType) {
+		IndexMask mask = getIndexMasks.get(accessType);
+		if (mask == null)
+			return DefaultMask.instance;
+		return mask;
+	}
+	
+	public IndexMask getSetIndexMask(ChunkAccessType accessType) {
+		IndexMask mask = setIndexMasks.get(accessType);
+		if (mask == null)
+			return DefaultMask.instance;
+		return mask;
 	}
 
-	private int applyGetIndexMasks(int i) {
-		return getIndexMask.getIndex(i);
+	private int applySetIndexMasks(int i, ChunkAccessType accessType) {
+		return getSetIndexMask(accessType).getIndex(i);
+	}
+
+	private int applyGetIndexMasks(int i, ChunkAccessType accessType) {
+		return getGetIndexMask(accessType).getIndex(i);
 	}
 	
 	public void instantiateArrays() {
@@ -165,47 +181,47 @@ public class Chunk {
 		redraw = true;
 	}
 	
-	public float getFailRatio(int i) {
-		i = applyGetIndexMasks(i);
+	public float getFailRatio(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		int samples = sampleCount[i];
 		if (samples == 0)
 			return 0;
 		return failSampleCount[i]/(float)samples;
 	}
 	
-	public float getFailRatio(int samples, int i) {
-		i = applyGetIndexMasks(i);
+	public float getFailRatio(int samples, int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		if (samples == 0)
 			return 0;
 		return failSampleCount[i]/(float)samples;
 	}
 	
-	public float getVariance(int i) {
-		i = applyGetIndexMasks(i);
+	public float getVariance(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		int samples = sampleCount[i];
 		float sumSqAvg = iterationsSumSq[i]/samples;
 		float sumAvg = iterationsSum[i]/samples;
 		return sumSqAvg - (sumAvg * sumAvg);
 	}
 	
-	public float getStandardDeviation(int i) {
-		i = applyGetIndexMasks(i);
-		return (float) Math.sqrt(getVariance(i));
+	public float getStandardDeviation(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
+		return (float) Math.sqrt(getVariance(i, accessType));
 	}
 	
-	public float getAvgIterations(int i) {
-		i = applyGetIndexMasks(i);
+	public float getAvgIterations(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
 		if (sucessfulIterations == 0)
 			return -1;
 		return iterationsSum[i]/sucessfulIterations;
 	}
 
-	private float getAvgIterations(int x, int y) {
-		return getAvgIterations(getIndex(x,y));
+	private float getAvgIterations(int x, int y, ChunkAccessType accessType) {
+		return getAvgIterations(getIndex(x,y), accessType);
 	}
 	
-	private float getAvgIterationsGlobal(int x, int y) {
+	private float getAvgIterationsGlobal(int x, int y, ChunkAccessType accessType) {
 		Chunk c = getGlobalChunk(x,y);
 		if (c == null || !c.arraysInstantiated)
 			return -2;
@@ -218,7 +234,7 @@ public class Chunk {
 			y += s;
 		else if (y >= s)
 			y -= s;
-		return c.getAvgIterations(x, y);
+		return c.getAvgIterations(x, y, accessType);
 	}
 
 	private Chunk getGlobalChunk(int x, int y) {
@@ -379,12 +395,12 @@ public class Chunk {
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
 
-				double value = replaceNaN(getAvgIterations(x,y));
+				double value = replaceNaN(getAvgIterations(x, y, ChunkAccessType.RENDERING));
 				double delta = 0;
-				otherValues[0] = getAvgIterationsGlobal(x-neighbourOffset, y);
-				otherValues[1] = getAvgIterationsGlobal(x, y-neighbourOffset);
-				otherValues[2] = getAvgIterationsGlobal(x+neighbourOffset, y);
-				otherValues[3] = getAvgIterationsGlobal(x, y+neighbourOffset);
+				otherValues[0] = getAvgIterationsGlobal(x-neighbourOffset, y, ChunkAccessType.RENDERING);
+				otherValues[1] = getAvgIterationsGlobal(x, y-neighbourOffset, ChunkAccessType.RENDERING);
+				otherValues[2] = getAvgIterationsGlobal(x+neighbourOffset, y, ChunkAccessType.RENDERING);
+				otherValues[3] = getAvgIterationsGlobal(x, y+neighbourOffset, ChunkAccessType.RENDERING);
 				int c = 0;
 				for (int i = 0 ; i < otherValues.length ; i++) {
 					float v = otherValues[i];
@@ -501,33 +517,33 @@ public class Chunk {
 		this.readyToCalculate = readyToCalculate;
 	}
 
-	public float getIterationsSum(int i) {
-		i = applyGetIndexMasks(i);
+	public float getIterationsSum(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return iterationsSum[i];
 	}
 
-	public void setIterationsSum(int i, float value) {
-		i = applySetIndexMasks(i);
+	public void setIterationsSum(int i, float value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.iterationsSum[i] = value;
 	}
 	
-	public void addIterationsSum(int i, float add) {
-		i = applySetIndexMasks(i);
+	public void addIterationsSum(int i, float add, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.iterationsSum[i] += add;
 	}
 
-	public float getIterationsSumSq(int i) {
-		i = applyGetIndexMasks(i);
+	public float getIterationsSumSq(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return iterationsSumSq[i];
 	}
 
-	public void setIterationsSumSq(int i, float value) {
-		i = applySetIndexMasks(i);
+	public void setIterationsSumSq(int i, float value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.iterationsSumSq[i] = value;
 	}
 	
-	public void addIterationsSumSq(int i, float add) {
-		i = applySetIndexMasks(i);
+	public void addIterationsSumSq(int i, float add, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.iterationsSumSq[i] += add;
 	}
 
@@ -535,63 +551,63 @@ public class Chunk {
 		return diff;
 	}
 
-	public float getDiff(int i) {
-		i = applyGetIndexMasks(i);
+	public float getDiff(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return diff[i];
 	}
 
-	public void setDiff(int i, float value) {
-		i = applySetIndexMasks(i);
+	public void setDiff(int i, float value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.diff[i] = value;
 	}
 
-	public float getCurrentPosX(int i) {
-		i = applyGetIndexMasks(i);
+	public float getCurrentPosX(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return currentPosX[i];
 	}
 
-	public void setCurrentPosX(int i, float value) {
-		i = applySetIndexMasks(i);
+	public void setCurrentPosX(int i, float value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.currentPosX[i] = value;
 	}
 
-	public float getCurrentPosY(int i) {
-		i = applyGetIndexMasks(i);
+	public float getCurrentPosY(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return currentPosY[i];
 	}
 
-	public void setCurrentPosY(int i, float value) {
-		i = applySetIndexMasks(i);
+	public void setCurrentPosY(int i, float value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.currentPosY[i] = value;
 	}
 
-	public int getSampleCount(int i) {
-		i = applyGetIndexMasks(i);
+	public int getSampleCount(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return sampleCount[i];
 	}
 
-	public void setSampleCount(int i, int value) {
-		i = applySetIndexMasks(i);
+	public void setSampleCount(int i, int value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.sampleCount[i] = value;
 	}
 
-	public void addSampleCount(int i, int add) {
-		i = applySetIndexMasks(i);
+	public void addSampleCount(int i, int add, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.sampleCount[i] += add;
 	}
 
-	public int getFailSampleCount(int i) {
-		i = applyGetIndexMasks(i);
+	public int getFailSampleCount(int i, ChunkAccessType accessType) {
+		i = applyGetIndexMasks(i, accessType);
 		return failSampleCount[i];
 	}
 
-	public void setFailSampleCount(int i, int value) {
-		i = applySetIndexMasks(i);
+	public void setFailSampleCount(int i, int value, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.failSampleCount[i] = value;
 	}
 
-	public void addFailSampleCount(int i, int add) {
-		i = applySetIndexMasks(i);
+	public void addFailSampleCount(int i, int add, ChunkAccessType accessType) {
+		i = applySetIndexMasks(i, accessType);
 		this.failSampleCount[i] += add;
 	}
 
@@ -599,12 +615,12 @@ public class Chunk {
 		return sampleCount;
 	}
 
-	public void setSetIndexMask(IndexMask setIndexMask) {
-		this.setIndexMask = setIndexMask;
+	public void setSetIndexMask(IndexMask setIndexMask, ChunkAccessType accessType) {
+		this.setIndexMasks.put(accessType, setIndexMask);
 	}
 
-	public void setGetIndexMask(IndexMask getIndexMask) {
-		this.getIndexMask = getIndexMask;
+	public void setGetIndexMask(IndexMask getIndexMask, ChunkAccessType accessType) {
+		this.getIndexMasks.put(accessType, getIndexMask);
 	}
 
 	public Position[] getNeighbourPositions() {

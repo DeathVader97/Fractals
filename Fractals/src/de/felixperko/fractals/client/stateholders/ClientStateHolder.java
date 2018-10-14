@@ -105,7 +105,7 @@ public class ClientStateHolder extends StateHolder {
 //				return NumberUtil.getRoundedDouble(p.getX(), 5)+", "+NumberUtil.getRoundedDouble(p.getY(), 5);
 				return p.toString();
 			}
-		}.setVisible(true);
+		}.setVisible(false);
 	}
 
 	private void configureCursorGridPosition() {

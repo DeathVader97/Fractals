@@ -7,9 +7,7 @@ public class MouseControls implements MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent arg0) {
-		//TODO can be deleted?
-//		Point p = arg0.getPoint();
-//		FractalsMain.getWindowHandler().clickedMouse(p.x, p.y);
+		
 	}
 
 	@Override

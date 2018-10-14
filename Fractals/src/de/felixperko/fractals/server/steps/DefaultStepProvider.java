@@ -28,8 +28,8 @@ public class DefaultStepProvider implements StepProvider{
 		
 		ProcessingStepImpl step1 = getUpsamplingStep(dataDescriptor, 8);
 		steps.add(step1);
-//		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 4);
-//		steps.add(step2)
+		ProcessingStepImpl step2 = getUpsamplingStep(dataDescriptor, 4);
+		steps.add(step2);
 //		ProcessingStepImpl step3 = getUpsamplingStep(dataDescriptor, 2);;
 //		steps.add(step3);
 		

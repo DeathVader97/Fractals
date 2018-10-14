@@ -4,6 +4,7 @@ import java.awt.Graphics;
 
 import org.eclipse.swt.events.PaintEvent;
 
+import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
 import de.felixperko.fractals.client.rendering.painter.Painter;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Location;
@@ -53,4 +54,6 @@ public interface Renderer {
 	
 	public float getColorScale();
 	public void setColorScale(float scale);
+	
+	public void setChunkProvider(ChunkProvider chunkProvider);
 }

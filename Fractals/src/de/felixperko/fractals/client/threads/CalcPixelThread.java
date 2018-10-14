@@ -8,6 +8,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
+import de.felixperko.fractals.client.rendering.chunkprovider.LocalChunkProvider;
 import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.threads.FractalsThread;
 
@@ -18,6 +20,8 @@ public class CalcPixelThread extends FractalsThread {
 	Queue<Chunk> waitingChunks = new LinkedList<>();
 	Set<Chunk> waitingChunkSet = new HashSet<>();
 	Set<Chunk> finishedChunks = new HashSet<>();
+	
+	LocalChunkProvider localChunkProvider;
 	
 	public CalcPixelThread(String name) {
 		super(name, 5);
@@ -43,6 +47,8 @@ public class CalcPixelThread extends FractalsThread {
 						c.setReadyToDraw(true);
 						c.setRedrawNeeded(true);
 //						finishedChunks.add(c);
+						if (localChunkProvider != null)
+							localChunkProvider.addChunk(c);
 						FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
 					} catch (Exception e) {
 						if (c != null && !c.isDisposed())
@@ -72,6 +78,10 @@ public class CalcPixelThread extends FractalsThread {
 		if (finished && reset)
 			finishedChunks.remove(c);
 		return finished;
+	}
+
+	public void setLocalChunkProvider(LocalChunkProvider chunkProvider) {
+		this.localChunkProvider = chunkProvider;
 	}
 
 }

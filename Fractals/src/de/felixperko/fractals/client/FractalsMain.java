@@ -9,7 +9,7 @@ import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.data.LocationHolder;
 import de.felixperko.fractals.server.network.Messenger;
 import de.felixperko.fractals.server.tasks.LocalTaskProvider;
-import de.felixperko.fractals.server.tasks.NewTaskManagerImpl;
+import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
 import de.felixperko.fractals.server.tasks.TaskManager;
 import de.felixperko.fractals.server.tasks.TaskProvider;
 import de.felixperko.fractals.server.threads.ThreadManager;
@@ -61,9 +61,9 @@ public class FractalsMain{
 		threadManager.setThreadCount(HELPER_THREAD_COUNT);
 		threadManager.addTaskProvider(taskProvider);
 		taskProvider.setDataDescriptor(renderer.getDataDescriptor());
-		taskManager = new NewTaskManagerImpl((GridRenderer) renderer);
+		taskManager = new ArrayListBatchTaskManager((GridRenderer) renderer);
 		taskManager.generateTasks();
-		((NewTaskManagerImpl)taskManager).start();
+		((ArrayListBatchTaskManager)taskManager).start();
 		performanceMonitor.startPhase();
 		
 		mainWindow.windowLoop();

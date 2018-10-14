@@ -1,10 +1,19 @@
 package de.felixperko.fractals.server.stateholders;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.gui.SelectionState;
 import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.client.util.NumberUtil;
+import de.felixperko.fractals.server.calculators.BurningShipCalculator;
+import de.felixperko.fractals.server.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.server.calculators.TestCalculator;
+import de.felixperko.fractals.server.calculators.infrastructure.SampleCalculator;
 import de.felixperko.fractals.server.state.DiscreteState;
 import de.felixperko.fractals.server.state.RangeState;
+import de.felixperko.fractals.server.state.StateChangeListener;
 import de.felixperko.fractals.server.state.StateHolder;
 import de.felixperko.fractals.server.state.StateListener;
 import de.felixperko.fractals.server.util.Position;
@@ -16,6 +25,7 @@ public class JobStateHolder extends StateHolder{
 	public DiscreteState<Integer> statePower;
 	public RangeState stateBiasReal;
 	public RangeState stateBiasImag;
+	public SelectionState<Class<? extends SampleCalculator>> stateCalculator;
 	
 	public JobStateHolder(Renderer renderer) {
 		this.renderer = renderer;
@@ -23,13 +33,42 @@ public class JobStateHolder extends StateHolder{
 
 	@Override
 	protected void stateSetup() {
+		configureCalculator();
 		configurePower();
 		configureBiasReal();
 		configureBiasImag();
-		
+
+		addState(stateCalculator);
 		addState(statePower);
 		addState(stateBiasReal);
 		addState(stateBiasImag);
+	}
+	
+	private void configureCalculator() {
+		stateCalculator = new SelectionState<Class<? extends SampleCalculator>>("calculator", MandelbrotCalculator.class) {
+			@Override
+			public String getName(Class<? extends SampleCalculator> obj) {
+				return obj.getSimpleName();
+			}
+			@Override
+			public String getValueString() {
+				return getValue().getSimpleName();
+			}
+		};
+		stateCalculator.addStateListener(new StateChangeListener<Class<? extends SampleCalculator>>(stateCalculator){
+			@Override
+			public void valueChanged(Class<? extends SampleCalculator> oldValue,
+					Class<? extends SampleCalculator> newValue) {
+				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.mainWindow.setRedraw(true);
+				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
+			}
+		});
+		List<Class<? extends SampleCalculator>> options = new ArrayList<>();
+		options.add(MandelbrotCalculator.class);
+		options.add(BurningShipCalculator.class);
+		options.add(TestCalculator.class);
+		stateCalculator.setOptions(options);
 	}
 
 	private void configurePower() {

@@ -15,6 +15,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
+import de.felixperko.fractals.client.rendering.chunkprovider.LocalChunkProvider;
 import de.felixperko.fractals.client.rendering.painter.Painter;
 import de.felixperko.fractals.client.rendering.painter.StandardPainter;
 import de.felixperko.fractals.client.threads.CalcPixelThread;
@@ -25,7 +27,7 @@ import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Grid;
 import de.felixperko.fractals.server.data.Location;
 import de.felixperko.fractals.server.steps.ProcessingStep;
-import de.felixperko.fractals.server.tasks.NewTaskManagerImpl;
+import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
 import de.felixperko.fractals.server.tasks.TaskManager;
 import de.felixperko.fractals.server.util.CategoryLogger;
 import de.felixperko.fractals.server.util.Position;
@@ -42,7 +44,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	Canvas canvas;
 	
-	NewTaskManagerImpl taskManager;
+	ArrayListBatchTaskManager taskManager;
 	Grid grid;
 	
 	double maxViewDistance = 5;
@@ -60,17 +62,21 @@ public class GridRenderer extends AbstractRendererImpl {
 	double insidePriorityMultiplier = 1;
 	double outsidePriorityMultiplier = 5;
 	
+	ChunkProvider chunkProvider;
+	
 	boolean redraw = true;
 	
 	public GridRenderer() {
 		grid = new Grid(this);
+		chunkProvider = new LocalChunkProvider();
+		calcPixelThread.setLocalChunkProvider((LocalChunkProvider)chunkProvider);
 		calcPixelThread.start();
 	}
 	
 	public void setTaskManager(TaskManager taskManager){
-		if (!(taskManager instanceof NewTaskManagerImpl))
+		if (!(taskManager instanceof ArrayListBatchTaskManager))
 			throw new IllegalArgumentException();
-		this.taskManager = (NewTaskManagerImpl) taskManager;
+		this.taskManager = (ArrayListBatchTaskManager) taskManager;
 	}
 	
 	public void setGridMin(Position min) {
@@ -227,7 +233,9 @@ public class GridRenderer extends AbstractRendererImpl {
 				PerfInstance get = createNewSubInstanceAndBegin("getChunk", renderPerf);
 				double shiftX = (gridX-minGridX-1)*grid.getChunkSize();
 				double shiftY = (gridY-minGridY-1)*grid.getChunkSize();
-				Chunk chunk = grid.getChunk(gridX, gridY);
+				Chunk chunk = chunkProvider.getChunk(new Position(gridX, gridY));
+				if (chunk == null)
+					continue;
 				get.end();
 				
 				ProcessingStep step = chunk.getProcessingStep();
@@ -297,8 +305,10 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
-		
+		taskManager.clearTasks();
+		grid.reset();
+		chunkProvider.reset();
+		taskManager.setGenerateTasks();
 	}
 	
 	@Override
@@ -359,8 +369,8 @@ public class GridRenderer extends AbstractRendererImpl {
 			int loop = 0;
 			for (long gridY = (long) minGridY ; gridY < maxGridY ; gridY++) {
 				Chunk c = grid.getChunk(gridX, gridY);
-				if (loop++ > 100)
-					System.out.println("GridRenderer.boundsChanged() : loop(y)= "+loop);
+//				if (loop++ > 100)
+//					System.out.println("GridRenderer.boundsChanged() : loop(y)= "+loop);
 //				if (!c.imageCalculated)
 //					c.calculatePixels();
 			}
@@ -401,7 +411,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		setGridMax(getGridMax().performOperation(Position.sub, min).scaleBy(scaleBy, false).performOperation(Position.add, min));
 	}
 
-	public NewTaskManagerImpl getTaskManager() {
+	public ArrayListBatchTaskManager getTaskManager() {
 		return taskManager;
 	}
 
@@ -444,6 +454,13 @@ public class GridRenderer extends AbstractRendererImpl {
 
 	public CalcPixelThread getCalcThread() {
 		return calcPixelThread;
+	}
+
+	@Override
+	public void setChunkProvider(ChunkProvider chunkProvider) {
+		if (chunkProvider != null)
+			chunkProvider.reset();
+		this.chunkProvider = chunkProvider;
 	}
 
 }

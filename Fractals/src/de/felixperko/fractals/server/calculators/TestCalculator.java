@@ -25,6 +25,14 @@ public class TestCalculator extends AbstractMandelbrotCalculator{
 		imag = 2*real*imag;
 		real = realSq - imagSq;
 	}
+	
+	@Override
+	protected void prepareLoop() {
+		if (r.nextBoolean()){
+			real_start = Math.abs(real_start);
+			imag_start = Math.abs(imag_start);
+		}
+	}
 
 	@Override
 	protected void innerLoopPosition() {

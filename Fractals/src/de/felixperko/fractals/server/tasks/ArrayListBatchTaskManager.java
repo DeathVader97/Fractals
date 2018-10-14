@@ -20,10 +20,14 @@ import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
 import de.felixperko.fractals.server.util.Position;
 
-public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
+public class ArrayListBatchTaskManager extends FractalsThread implements TaskManager {
 	
-	public NewTaskManagerImpl(GridRenderer renderer) {
+	static int ID_COUNTER = 0;
+	int id;
+	
+	public ArrayListBatchTaskManager(GridRenderer renderer) {
 		super("TaskManager", 5);
+		this.id = ID_COUNTER++;
 		this.renderer = renderer;
 	}
 
@@ -122,7 +126,7 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 				dataDescriptor = renderer.getDataDescriptor();
 				for (Chunk add : addChunkList) {
 					if (!add.isDisposed()) {
-						addTask(new ChunkTask(add, dataDescriptor));
+						addTask(new ChunkTask(add, dataDescriptor, id));
 					}
 				}
 				log.log("generated "+addChunkList.size()+" tasks");
@@ -232,7 +236,8 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 	public String getStateText() {
 		return getPhase().getName();
 	}
-
+	
+	@Override
 	public void setUpdatePriorities() {
 		updatePriorities = true;
 	}
@@ -249,6 +254,11 @@ public class NewTaskManagerImpl extends FractalsThread implements TaskManager {
 					finishedTaskList.remove(task);
 			}
 		}
+	}
+
+	@Override
+	public int getTaskManagerId() {
+		return id;
 	}
 
 }

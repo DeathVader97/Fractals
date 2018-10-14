@@ -1,6 +1,8 @@
 package de.felixperko.fractals.server.data;
 
+import de.felixperko.fractals.server.calculators.BurningShipCalculator;
 import de.felixperko.fractals.server.calculators.MandelbrotCalculator;
+import de.felixperko.fractals.server.calculators.TestCalculator;
 import de.felixperko.fractals.server.calculators.infrastructure.CalculatorFactory;
 import de.felixperko.fractals.server.stateholders.JobStateHolder;
 import de.felixperko.fractals.server.steps.DefaultStepProvider;
@@ -221,6 +223,7 @@ public class DataDescriptor{
 	public void refreshStateParams() {
 		this.fractalPower = (int) rendererStateHolder.statePower.getOutput();
 		this.fractalBias = rendererStateHolder.getBias();
+		this.calculatorFactory = new CalculatorFactory(rendererStateHolder.stateCalculator.getValue(), this);
 	}
 
 	public StepProvider getStepProvider() {
