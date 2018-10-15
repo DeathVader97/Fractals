@@ -11,7 +11,7 @@ public class ServerStateChangeListener<T> extends StateChangeListener<T> {
 	
 	@Override
 	public void valueChanged(T oldValue, T newValue) {
-		FractalsMain.messenger.writeMessageToServer(new StateChangedMessage<T>(FractalsMain.clientStateHolder.stateClientInfo.getValue(), null, actions, oldValue, newValue));
+		FractalsMain.serverConnection.writeMessageToServer(new StateChangedMessage<T>(FractalsMain.clientStateHolder.stateClientInfo.getValue(), null, actions, oldValue, newValue));
 		super.valueChanged(oldValue, newValue);
 	}
 

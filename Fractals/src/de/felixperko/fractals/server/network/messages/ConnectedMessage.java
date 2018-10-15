@@ -1,7 +1,7 @@
 package de.felixperko.fractals.server.network.messages;
 
 import de.felixperko.fractals.client.FractalsMain;
-import de.felixperko.fractals.server.network.ClientInfo;
+import de.felixperko.fractals.server.network.ClientConnection;
 import de.felixperko.fractals.server.network.Message;
 import de.felixperko.fractals.server.network.SenderInfo;
 
@@ -11,7 +11,7 @@ public class ConnectedMessage extends Message {
 	
 	SenderInfo clientInfo;
 
-	public ConnectedMessage(ClientInfo clientInfo) {
+	public ConnectedMessage(ClientConnection clientInfo) {
 		this.clientInfo = clientInfo.getSenderInfo();
 	}
 

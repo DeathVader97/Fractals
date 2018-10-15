@@ -2,7 +2,7 @@ package de.felixperko.fractals.client.stateholders;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.util.NumberUtil;
-import de.felixperko.fractals.server.network.ClientInfo;
+import de.felixperko.fractals.server.network.ClientConnection;
 import de.felixperko.fractals.server.network.SenderInfo;
 import de.felixperko.fractals.server.state.DiscreteState;
 import de.felixperko.fractals.server.state.State;

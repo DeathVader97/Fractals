@@ -19,6 +19,7 @@ public class State<T> implements Serializable{
 	boolean setable;
 	boolean configurable;
 	boolean visible = true;
+	boolean showValueLabel = true;
 	
 	public State(String name, T value) {
 		this.name = name;
@@ -97,5 +98,13 @@ public class State<T> implements Serializable{
 	public State<T> setVisible(boolean visible) {
 		this.visible = visible;
 		return this;
+	}
+
+	public boolean isShowValueLabel() {
+		return showValueLabel;
+	}
+
+	public void setShowValueLabel(boolean showValueLabel) {
+		this.showValueLabel = showValueLabel;
 	}
 }

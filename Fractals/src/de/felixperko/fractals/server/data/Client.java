@@ -1,17 +1,16 @@
 package de.felixperko.fractals.server.data;
 
-import de.felixperko.fractals.server.network.ClientInfo;
+import de.felixperko.fractals.server.network.ClientConnection;
 import de.felixperko.fractals.server.util.Position;
 
 public class Client {
 
-	int id;
 	ClientConfiguration config;
-	ClientInfo info;
+	ClientConnection connection;
 	View view;
 	
-	public Client(int id, ClientConfiguration configuration) {
-		this.id = id;
+	public Client(ClientConnection connection, ClientConfiguration configuration) {
+		this.connection = connection;
 		this.config = configuration;
 	}
 	
@@ -28,7 +27,7 @@ public class Client {
 	private void updateInstance() {
 		DataContainer container = view.domain.instance.dataContainer;
 		
-		view.removeClientId(id);
+		view.removeClientId(getId());
 		view = null;
 		
 		Instance instance = container.getApplicableInstance(config);
@@ -43,7 +42,7 @@ public class Client {
 	private void updateDomain() {
 		Instance instance = view.domain.instance;
 		
-		view.removeClientId(id);
+		view.removeClientId(getId());
 		view = null;
 		
 		Domain domain = instance.getApplicableDomain(config);
@@ -59,15 +58,15 @@ public class Client {
 	}
 
 	public int getId() {
-		return id;
+		return connection.getSenderInfo().getClientId();
 	}
 
 	public ClientConfiguration getConfig() {
 		return config;
 	}
 	
-	public ClientInfo getClientInfo() {
-		return info;
+	public ClientConnection getConnection() {
+		return connection;
 	}
 	
 	public View getView() {

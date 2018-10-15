@@ -31,7 +31,8 @@ public class ServerConnectThread extends Thread{
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				serverWriteThread.setClientInfo(networkManager.createNewClient(serverWriteThread));
+				ClientConnection connection = networkManager.createNewClient(serverWriteThread);
+				serverWriteThread.setClientConnection(connection);
 			}
 			server.close();
 		} catch (IOException e) {

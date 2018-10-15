@@ -133,8 +133,11 @@ public class ThreadManager {
 		if (clientThread != null && !clientThread.isCloseConnection())
 			return;
 		try {
-			clientThread = new ClientWriteThread();
-			FractalsMain.messenger.setWriteToServer(clientThread);
+			//TODO make configurable
+			String host = "localhost";
+			int port = 3141;
+			clientThread = new ClientWriteThread(new Socket(host, port));
+			FractalsMain.serverConnection.setWriteToServer(clientThread);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

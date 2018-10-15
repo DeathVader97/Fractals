@@ -7,7 +7,7 @@ import de.felixperko.fractals.client.stateholders.ClientStateHolder;
 import de.felixperko.fractals.client.stateholders.RendererStateHolder;
 import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.data.LocationHolder;
-import de.felixperko.fractals.server.network.Messenger;
+import de.felixperko.fractals.server.network.ServerConnection;
 import de.felixperko.fractals.server.tasks.LocalTaskProvider;
 import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
 import de.felixperko.fractals.server.tasks.TaskManager;
@@ -34,12 +34,12 @@ public class FractalsMain{
 	
 	public static LocationHolder locationHolder;
 	
-	public static Messenger messenger;
+	public static ServerConnection serverConnection;
 	
 	public static void main(String[] args) {
 		
 		main = new FractalsMain();
-		messenger = new Messenger();
+		serverConnection = new ServerConnection();
 		
 		FractalsServerMain.main(args);
 		clientStateHolder = new ClientStateHolder();

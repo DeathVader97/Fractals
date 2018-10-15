@@ -26,6 +26,8 @@ public class WriteThread extends FractalsThread {
 	private ObjectOutputStream out;
 	protected Socket socket;
 	
+	Connection connection;
+	
 	private CategoryLogger listenLogger; //used to buffer logger for listen thread until its creation
 	
 	public WriteThread(Socket socket) {
@@ -59,6 +61,8 @@ public class WriteThread extends FractalsThread {
 				setPhase(PHASE_WORKING);
 				Iterator<Message> it = pendingMessages.iterator();
 				while (it.hasNext()) {
+					if (closeConnection)
+						break;
 					Message msg = it.next();
 					msg.setSentTime();
 					out.writeObject(msg);
@@ -97,5 +101,13 @@ public class WriteThread extends FractalsThread {
 			listenLogger = log;
 		else
 			listenThread.setLogger(listenLogger);
+	}
+	
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
+	
+	public Connection getConnection() {
+		return connection;
 	}
 }

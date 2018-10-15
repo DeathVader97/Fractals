@@ -81,7 +81,7 @@ public class View {
 		
 		//TODO update clients and chunks
 		for (int id : clientIds) {
-			if (id == client.id)
+			if (id == client.getId())
 				continue;
 			Client c = getClient(id);
 			c.updatePosition(min, max);

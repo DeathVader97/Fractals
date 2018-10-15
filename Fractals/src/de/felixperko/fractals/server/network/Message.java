@@ -2,7 +2,6 @@ package de.felixperko.fractals.server.network;
 
 import java.io.Serializable;
 
-import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.util.CategoryLogger;
 
@@ -20,6 +19,8 @@ public abstract class Message implements Serializable{
 	
 	protected transient CategoryLogger log;
 	
+	protected transient Connection connection;
+	
 	public Message() {
 		
 	}
@@ -31,18 +32,21 @@ public abstract class Message implements Serializable{
 			setLastMessageTime(lastMessage.getLatency());
 	}
 	
-	protected abstract void process();
+	void setComLogger(CategoryLogger comLogger) {
+		log = comLogger;
+	}
+
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
 	
-	public void received(CategoryLogger comLogger) {
+	public void received() {
 		this.latency = System.nanoTime()-sentTime;
-		setComLogger(comLogger);
 		log.log("received "+getClass().getSimpleName()+" ("+getLatencyInMs(1)+"ms)");
 		process();
 	}
 	
-	private void setComLogger(CategoryLogger comLogger) {
-		log = comLogger;
-	}
+	protected abstract void process();
 
 	public long getLatency() {
 		return latency;
@@ -81,7 +85,6 @@ public abstract class Message implements Serializable{
 	}
 	
 	protected void answer(Message message) {
-		//TODO how to answer if server?
-		FractalsMain.messenger.writeMessageToServer(message);
+		connection.writeMessage(message);
 	}
 }

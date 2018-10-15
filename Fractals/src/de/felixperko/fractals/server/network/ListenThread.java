@@ -33,7 +33,9 @@ public class ListenThread extends FractalsThread {
 				setPhase(PHASE_WAITING);
 				Message msg = (Message) in.readObject();
 				setPhase(PHASE_WORKING);
-				msg.received(log);
+				msg.setConnection(writeThread.getConnection());
+				msg.setComLogger(log);
+				msg.received();
 			} catch (SocketException e) {
 				log.log("lost connection");
 				setCloseConnection(true);

@@ -15,9 +15,10 @@ public class SelectionState<T> extends State<T> {
 
 	public SelectionState(String name, T value) {
 		super(name, value);
+		setShowValueLabel(false);
 	}
 	
-	public void setOptions(List<T> options) {
+	public void addOptions(List<T> options) {
 		this.options.addAll(options);
 	}
 

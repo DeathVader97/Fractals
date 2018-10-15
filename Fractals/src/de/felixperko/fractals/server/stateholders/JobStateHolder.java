@@ -68,7 +68,7 @@ public class JobStateHolder extends StateHolder{
 		options.add(MandelbrotCalculator.class);
 		options.add(BurningShipCalculator.class);
 		options.add(TestCalculator.class);
-		stateCalculator.setOptions(options);
+		stateCalculator.addOptions(options);
 	}
 
 	private void configurePower() {

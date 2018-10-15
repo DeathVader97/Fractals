@@ -36,13 +36,12 @@ public class Chunk {
 	int[] sampleCount;
 	int[] failSampleCount;
 	
-	Grid grid;
-	DataDescriptor dataDescriptor;
+	transient Grid grid; //required to access adjacent chunks in calculateDiff
+	transient public ImageData imageData;
+	transient public Image image;
+//	DataDescriptor dataDescriptor;
 	
-	public ImageData imageData;
-	public Image image;
-	
-	boolean redraw = false;
+//	boolean redraw = false;
 	
 	public boolean imageCalculated = false;
 	
@@ -77,7 +76,7 @@ public class Chunk {
 	
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
 		this.chunk_size = chunk_size;
-		this.dataDescriptor = dataDescriptor;
+//		this.dataDescriptor = dataDescriptor;
 		this.processingStepState = new ProcessingStepState(dataDescriptor.getStepProvider());
 		this.gridPos = gridPos;
 		
@@ -178,7 +177,7 @@ public class Chunk {
 
 	private void setRedrawFlags() {
 		imageCalculated = true;
-		redraw = true;
+//		redraw = true;
 	}
 	
 	public float getFailRatio(int i, ChunkAccessType accessType) {

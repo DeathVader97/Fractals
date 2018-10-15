@@ -66,7 +66,6 @@ import de.felixperko.fractals.server.state.StateChangeAction;
 import de.felixperko.fractals.server.state.StateChangeListener;
 import de.felixperko.fractals.server.state.StateListener;
 import de.felixperko.fractals.server.state.SwitchState;
-import de.felixperko.fractals.server.stateholders.MainStateHolder;
 import de.felixperko.fractals.server.threads.ThreadManager;
 import de.felixperko.fractals.server.threads.WorkerThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
@@ -128,11 +127,11 @@ public class MainWindow {
 		
 		while (!shell.isDisposed()) {
 			
-			long t1 = System.nanoTime();
+//			long t1 = System.nanoTime();
 			
 			tick();
 			
-			long t2 = System.nanoTime();
+//			long t2 = System.nanoTime();
 //			System.out.println("FRAMETIME: "+NumberUtil.getRoundedDouble((t2-t1)*NumberUtil.NS_TO_S, 3));
 			
 			while (true) {
@@ -207,15 +206,15 @@ public class MainWindow {
 		return redraw;
 	}
 
-	boolean firstRedraw = true;
-	
-	private boolean needsFirstRedraw() {
-		if (firstRedraw) {
-			firstRedraw = false;
-			return true;
-		}
-		return false;
-	}
+//	boolean firstRedraw = true;
+//	
+//	private boolean needsFirstRedraw() {
+//		if (firstRedraw) {
+//			firstRedraw = false;
+//			return true;
+//		}
+//		return false;
+//	}
 
 //	private void testProgressBar(ProgressBar pb) {
 //		int s = pb.getSelection()+ ((Math.random() > 0.5) ? 1 : -1);
@@ -240,9 +239,9 @@ public class MainWindow {
 	
 	int finishedDrawingTimer = 0;
 
-	private ProgressBar progressBar;
+//	private ProgressBar progressBar;
 
-	private ProgressBar progressBar_1;
+//	private ProgressBar progressBar_1;
 	private Text text_commandline;
 	private Text text_filter;
 
@@ -339,7 +338,7 @@ public class MainWindow {
 				
 				//Mouse moved on canvas of MainRenderer
 				DataDescriptor dd = mainRenderer.getDataDescriptor();
-				MainStateHolder mainStateHolder = FractalsServerMain.mainStateHolder;
+//				MainStateHolder mainStateHolder = FractalsServerMain.mainStateHolder;
 				ClientStateHolder clientStateHolder = FractalsMain.clientStateHolder;
 				GridRenderer gridRenderer = ((GridRenderer)mainRenderer);
 				Grid grid = gridRenderer.getGrid();
@@ -354,7 +353,7 @@ public class MainWindow {
 				
 				//timing of visualization refreshs
 				//TODO implement "buffered completion scheduling" (cooldown,...)
-				long t = System.nanoTime();
+//				long t = System.nanoTime();
 				IterationPositionThread ips = FractalsMain.threadManager.getIterationWorkerThread();
 //				if (ips.getIterations() == ips.getMaxIterations())
 //					finishedDrawingTimer++;
@@ -512,14 +511,17 @@ public class MainWindow {
 			stateNameLabel.setText(state.getName()+": ");
 			
 			Label stateValueLabel = new Label(composite_7, SWT.NONE);
-			stateValueLabel.setText(state.getValueString());
+
+			if (state.isShowValueLabel())
+				stateValueLabel.setText(state.getValueString());
 			
 			StateChangeListener<?> changeListener = new StateChangeListener<>(state);
 			state.addStateListener(addStateChangeListener(changeListener));
 			changeListener.addStateChangeAction(new StateChangeAction() {
 				@Override
 				public void update() {
-					stateValueLabel.setText(state.getValueString());
+					if (state.isShowValueLabel())
+						stateValueLabel.setText(state.getValueString());
 					stateValueLabel.requestLayout();
 				}
 			});
@@ -593,7 +595,8 @@ public class MainWindow {
 				}
 			}
 			if (state instanceof SelectionState) {
-				SelectionState sstate = (SelectionState)state;
+				@SuppressWarnings("rawtypes")
+				SelectionState sstate = (SelectionState<?>)state;
 				Combo combo = new Combo(stateComposite, SWT.DROP_DOWN | SWT.READ_ONLY);
 				combo.setItems(sstate.getOptionNames());
 				combo.select(sstate.getCurrentSelectionIndex());
@@ -607,6 +610,7 @@ public class MainWindow {
 						setStateValue(e);
 					}
 					
+					@SuppressWarnings("unchecked")
 					private void setStateValue(SelectionEvent e) {
 						sstate.setValue(sstate.getOption(combo.getSelectionIndex()));
 					}

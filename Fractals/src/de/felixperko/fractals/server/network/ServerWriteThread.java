@@ -12,7 +12,7 @@ public class ServerWriteThread extends WriteThread {
 	
 	final static CategoryLogger superLog = new CategoryLogger("com/server", Color.MAGENTA);
 	
-	ClientInfo clientInfo;
+	ClientConnection clientConnection;
 	
 	long reachableRequestInterval = (long) (1/NumberUtil.NS_TO_S);
 	long lastReachableTime;
@@ -24,13 +24,14 @@ public class ServerWriteThread extends WriteThread {
 	
 	@Override
 	public void writeMessage(Message msg) {
-		if (clientInfo != null) {
-			if (msg.getSender() == null)
-				msg.setSender(clientInfo.getSenderInfo());
-			else if (!msg.getSender().equals(clientInfo.getSenderInfo())){
-				throw new IllegalStateException("Wrong thread to send message to client");
-			}
-		}
+		//TODO seems to be wrong (messages from server don't have a SenderInfo, right?)
+//		if (clientConnection != null) {
+//			if (msg.getSender() == null)
+//				msg.setSender(clientConnection.getSenderInfo());
+//			else if (!msg.getSender().equals(clientConnection.getSenderInfo())){
+//				throw new IllegalStateException("Wrong thread to send message to client");
+//			}
+//		}
 		super.writeMessage(msg);
 	}
 	
@@ -42,10 +43,11 @@ public class ServerWriteThread extends WriteThread {
 		}
 	}
 
-	public void setClientInfo(ClientInfo clientInfo) {
-		this.clientInfo = clientInfo;
-		setListenLogger(superLog.createSubLogger(clientInfo.getSenderInfo().getClientId()+"/in"));
-		this.log = superLog.createSubLogger(clientInfo.getSenderInfo().getClientId()+"/out");
-		writeMessage(new ConnectedMessage(clientInfo));
+	public void setClientConnection(ClientConnection clientConnection) {
+		this.clientConnection = clientConnection;
+		super.setConnection(clientConnection);
+		setListenLogger(superLog.createSubLogger(clientConnection.getSenderInfo().getClientId()+"/in"));
+		this.log = superLog.createSubLogger(clientConnection.getSenderInfo().getClientId()+"/out");
+		writeMessage(new ConnectedMessage(clientConnection));
 	}
 }
