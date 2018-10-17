@@ -49,7 +49,8 @@ public class FractalsMain{
 		locationHolder = new LocationHolder();
 		
 		performanceMonitor = new PerformanceMonitor();
-		
+
+		threadManager = new ThreadManager();
 		Renderer renderer = new GridRenderer();
 		rendererStateHolder = new RendererStateHolder(renderer);
 		
@@ -57,13 +58,13 @@ public class FractalsMain{
 
 		mainWindow.open(renderer);
 		
-		threadManager = new ThreadManager();
 		threadManager.setThreadCount(HELPER_THREAD_COUNT);
 		threadManager.addTaskProvider(taskProvider);
 		taskProvider.setDataDescriptor(renderer.getDataDescriptor());
 		taskManager = new ArrayListBatchTaskManager((GridRenderer) renderer);
-		taskManager.generateTasks();
-		((ArrayListBatchTaskManager)taskManager).start();
+		taskManager.start();
+		((GridRenderer) renderer).setTaskManager(FractalsMain.taskManager);
+		((GridRenderer) renderer).boundsChanged();
 		performanceMonitor.startPhase();
 		
 		mainWindow.windowLoop();

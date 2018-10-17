@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.threads.CalcPixelThread;
 import de.felixperko.fractals.client.threads.IterationPositionThread;
 import de.felixperko.fractals.server.network.ClientWriteThread;
 import de.felixperko.fractals.server.network.ServerConnectThread;
@@ -19,6 +20,7 @@ public class ThreadManager {
 	WorkerThread[] workerThreads;
 	IterationPositionThread iterationWorkerThread;
 	ArrayListBatchTaskManager taskManagerThread;
+	CalcPixelThread calcPixelThread = new CalcPixelThread("calcpixel");
 	
 	TaskProvider taskProvider;
 	
@@ -29,6 +31,10 @@ public class ThreadManager {
 	ClientWriteThread clientThread = null;
 	
 	public ThreadManager() {
+	}
+	
+	public CalcPixelThread getCalcPixelThread() {
+		return calcPixelThread;
 	}
 	
 	public void setThreadCount(int threadCount) {
@@ -67,6 +73,8 @@ public class ThreadManager {
 		}
 		this.workerThreads = newThreads;
 		
+		if (iterationWorkerThread != null)
+			iterationWorkerThread.interrupt();
 		iterationWorkerThread = new IterationPositionThread();
 		iterationWorkerThread.start();
 		

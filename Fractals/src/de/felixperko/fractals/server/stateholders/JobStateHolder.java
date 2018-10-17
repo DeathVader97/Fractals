@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.gui.SelectionState;
+import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
 import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.calculators.BurningShipCalculator;
@@ -26,6 +27,7 @@ public class JobStateHolder extends StateHolder{
 	public RangeState stateBiasReal;
 	public RangeState stateBiasImag;
 	public SelectionState<Class<? extends SampleCalculator>> stateCalculator;
+	public DiscreteState<Integer> stateChunkSize;
 	
 	public JobStateHolder(Renderer renderer) {
 		this.renderer = renderer;
@@ -33,17 +35,44 @@ public class JobStateHolder extends StateHolder{
 
 	@Override
 	protected void stateSetup() {
+		configureChunkSize();
 		configureCalculator();
 		configurePower();
 		configureBiasReal();
 		configureBiasImag();
-
+		
+		addState(stateChunkSize);
 		addState(stateCalculator);
 		addState(statePower);
 		addState(stateBiasReal);
 		addState(stateBiasImag);
 	}
 	
+	private void configureChunkSize() {
+		stateChunkSize = new DiscreteState<Integer>("chunk size", 128) {
+			
+			@Override
+			public Integer getPrevious() {
+				if (getValue() <= 32)
+					return null;
+				return getValue()/2;
+			}
+			
+			@Override
+			public Integer getNext() {
+				return getValue()*2;
+			}
+		};
+		stateChunkSize.addStateListener(new StateChangeListener<Integer>(stateChunkSize){
+			@Override
+			public void valueChanged(Integer oldValue, Integer newValue) {
+				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getGrid().setChunkSize(stateChunkSize.getValue());
+			}
+		});
+		stateChunkSize.setIncrementable(true).setDecrementable(true);
+	}
+
 	private void configureCalculator() {
 		stateCalculator = new SelectionState<Class<? extends SampleCalculator>>("calculator", MandelbrotCalculator.class) {
 			@Override
@@ -60,6 +89,7 @@ public class JobStateHolder extends StateHolder{
 			public void valueChanged(Class<? extends SampleCalculator> oldValue,
 					Class<? extends SampleCalculator> newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.mainWindow.getMainRenderer().reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}

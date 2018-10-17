@@ -66,7 +66,7 @@ public class CalcPixelThread extends FractalsThread {
 	
 	public void addChunk(Chunk c) {
 		if (!waitingChunkSet.contains(c)) {
-			finishedChunks.remove(c);
+//			finishedChunks.remove(c);
 			waitingChunks.add(c);
 			waitingChunkSet.add(c);
 			interrupt();

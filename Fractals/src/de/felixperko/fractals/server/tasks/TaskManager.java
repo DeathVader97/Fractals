@@ -17,4 +17,6 @@ public interface TaskManager {
 	public void setUpdatePriorities();
 	
 	public int getTaskManagerId();
+	
+	void start();
 }

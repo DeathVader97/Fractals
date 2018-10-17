@@ -224,6 +224,7 @@ public class DataDescriptor{
 		this.fractalPower = (int) rendererStateHolder.statePower.getOutput();
 		this.fractalBias = rendererStateHolder.getBias();
 		this.calculatorFactory = new CalculatorFactory(rendererStateHolder.stateCalculator.getValue(), this);
+		this.chunkSize = rendererStateHolder.stateChunkSize.getValue();
 	}
 
 	public StepProvider getStepProvider() {

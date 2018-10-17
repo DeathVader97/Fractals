@@ -60,13 +60,9 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	 * @param c
 	 */
 	public void addChunk(Chunk c) {
-//		long t1 = System.nanoTime();
-//		synchronized (addChunkList) {
-			addChunkList.add(c);
-			generateTasks = true;
-			updatePriorities = true;
-//		}
-//		long t2 = System.nanoTime();
+		addChunkList.add(c);
+		generateTasks = true;
+		updatePriorities = true;
 	}
 	
 	long debug_t = 0;
@@ -174,24 +170,24 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 //		log.log("finishing tasks...");
 		int newlyAdded = 0;
 		
-//		synchronized (finishedTaskList) {
-			int maxState = dataDescriptor.getStepProvider().getMaxState();
-			CalcPixelThread calcThread = ((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread();
-			for (ChunkTask finishedTask : finishedTaskList) {
-				calcThread.addChunk(finishedTask.chunk);
-				ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
-				Position gridPos = finishedTask.getChunk().getGridPosition();
-				double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
-				if (state.getStateNumber() < maxState && viewDist < 1) {
-					addTask(finishedTask);
-					newlyAdded++;
-				} else {
-					taskMap.remove(finishedTask.getChunk());
-				}
+		int maxState = dataDescriptor.getStepProvider().getMaxState();
+		CalcPixelThread calcThread = FractalsMain.threadManager.getCalcPixelThread();
+		
+		for (ChunkTask finishedTask : finishedTaskList) {
+			//TODO remote chunk handling
+			calcThread.addChunk(finishedTask.chunk);
+			ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
+			Position gridPos = finishedTask.getChunk().getGridPosition();
+			double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
+			if (state.getStateNumber() < maxState && viewDist < 1) {
+				addTask(finishedTask);
+				newlyAdded++;
+			} else {
+				taskMap.remove(finishedTask.getChunk());
 			}
-			
-			finishedTaskList.clear();
-//		}
+		}
+		
+		finishedTaskList.clear();
 		
 		if (newlyAdded > 0) {
 			updatePriorities = true;
@@ -242,6 +238,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 		updatePriorities = true;
 	}
 	
+	@Override
 	public void setGenerateTasks() {
 		generateTasks = true;
 	}

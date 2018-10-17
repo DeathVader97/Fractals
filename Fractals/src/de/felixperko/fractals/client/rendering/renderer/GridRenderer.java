@@ -40,7 +40,6 @@ public class GridRenderer extends AbstractRendererImpl {
 	Painter painter = new StandardPainter();
 	
 	//TODO move to threadmanger
-	CalcPixelThread calcPixelThread = new CalcPixelThread("calcpixel");
 	
 	Canvas canvas;
 	
@@ -69,6 +68,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	public GridRenderer() {
 		grid = new Grid(this);
 		chunkProvider = new LocalChunkProvider();
+		CalcPixelThread calcPixelThread = FractalsMain.threadManager.getCalcPixelThread();
 		calcPixelThread.setLocalChunkProvider((LocalChunkProvider)chunkProvider);
 		calcPixelThread.start();
 	}
@@ -308,7 +308,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		taskManager.clearTasks();
 		grid.reset();
 		chunkProvider.reset();
-		taskManager.setGenerateTasks();
+		boundsChanged();
 	}
 	
 	@Override
@@ -329,7 +329,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	List<Position> tempDeleteChunks = new ArrayList<>();
 	
-	private void boundsChanged() {
+	public void boundsChanged() {
 		//update positions
 //		updateRendererPositions();
 		
@@ -450,10 +450,6 @@ public class GridRenderer extends AbstractRendererImpl {
 		for (Chunk c : grid.map.values())
 			c.imageCalculated = false;
 		FractalsMain.mainWindow.setRedraw(true);
-	}
-
-	public CalcPixelThread getCalcThread() {
-		return calcPixelThread;
 	}
 
 	@Override

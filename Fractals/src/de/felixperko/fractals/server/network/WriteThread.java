@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
 
@@ -64,7 +66,7 @@ public class WriteThread extends FractalsThread {
 					if (closeConnection)
 						break;
 					Message msg = it.next();
-					msg.setSentTime();
+					prepareMessage(msg);
 					out.writeObject(msg);
 					it.remove();
 				}
@@ -80,6 +82,10 @@ public class WriteThread extends FractalsThread {
 		}
 	}
 	
+	protected void prepareMessage(Message msg) {
+		msg.setSentTime();
+	}
+
 	protected void tick() {
 	}
 

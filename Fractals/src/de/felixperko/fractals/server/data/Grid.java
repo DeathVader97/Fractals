@@ -211,4 +211,9 @@ public class Grid {
 		int yi = (int) (y);
 		return xindex*chunk_size + yi;
 	}
+
+	public void setChunkSize(int chunkSize) {
+		this.chunk_size = chunkSize;
+		reset();
+	}
 }

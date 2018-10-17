@@ -121,30 +121,20 @@ public class MainWindow {
 	
 	public void windowLoop() {
 		
-		((GridRenderer)mainRenderer).setTaskManager(FractalsMain.taskManager);
 		mainRenderer.startIterationPositionThread();
 		setRedraw(true);
 		
 		while (!shell.isDisposed()) {
 			
 //			long t1 = System.nanoTime();
-			
+
+			while (display.readAndDispatch()) {}
 			tick();
 			
 //			long t2 = System.nanoTime();
 //			System.out.println("FRAMETIME: "+NumberUtil.getRoundedDouble((t2-t1)*NumberUtil.NS_TO_S, 3));
 			
-			while (true) {
-				if (!display.readAndDispatch()) {
-					display.sleep();
-					break;
-				}
-			}
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			display.sleep();
 		}
 	}
 	
@@ -176,7 +166,7 @@ public class MainWindow {
 		if (updateTime)
 			lastTime = System.nanoTime();
 		
-		if (isRedrawAndReset()) {
+		if (isRedrawReset()) {
 			PerfInstance redraw = createNewSubInstanceAndBegin("redraw", perf);
 			canvas.redraw();
 			canvas.update();
@@ -200,7 +190,7 @@ public class MainWindow {
 //		perf.printSecondsToLog(3, true, 0.1);
 	}
 
-	public boolean isRedrawAndReset() {
+	public boolean isRedrawReset() {
 		boolean redraw = isRedraw();
 		this.redraw = false;
 		return redraw;
@@ -520,8 +510,10 @@ public class MainWindow {
 			changeListener.addStateChangeAction(new StateChangeAction() {
 				@Override
 				public void update() {
-					if (state.isShowValueLabel())
-						stateValueLabel.setText(state.getValueString());
+					canvas.setFocus();
+					if (!state.isShowValueLabel())
+						return;
+					stateValueLabel.setText(state.getValueString());
 					stateValueLabel.requestLayout();
 				}
 			});
@@ -541,6 +533,7 @@ public class MainWindow {
 					@Override
 					public void mouseDown(MouseEvent e) {
 						switchState.flip();
+						canvas.setFocus();
 					}
 				});
 			}
@@ -555,6 +548,7 @@ public class MainWindow {
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						rangeState.setValue(scale.getSelection());
+						canvas.setFocus();
 					}
 				});
 			}
@@ -567,6 +561,7 @@ public class MainWindow {
 						@Override
 						public void mouseDown(MouseEvent e) {
 							discreteState.setNext();
+							canvas.setFocus();
 						}
 					});
 					changeListener.addStateChangeAction(new StateChangeAction() {
@@ -584,6 +579,7 @@ public class MainWindow {
 						@Override
 						public void mouseDown(MouseEvent e) {
 							discreteState.setPrevious();
+							canvas.setFocus();
 						}
 					});
 					changeListener.addStateChangeAction(new StateChangeAction() {
@@ -604,10 +600,12 @@ public class MainWindow {
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						setStateValue(e);
+						canvas.setFocus();
 					}
 					@Override
 					public void widgetDefaultSelected(SelectionEvent e) {
 						setStateValue(e);
+						canvas.setFocus();
 					}
 					
 					@SuppressWarnings("unchecked")

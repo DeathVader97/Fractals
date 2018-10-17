@@ -18,4 +18,15 @@ public class ClientWriteThread extends WriteThread{
 		setListenLogger(new CategoryLogger("com/client/in", Color.MAGENTA));
 		setConnection(FractalsMain.serverConnection);
 	}
+	
+	@Override
+	protected void prepareMessage(Message msg) {
+		if (msg.getSender() == null) {
+			SenderInfo info = FractalsMain.clientStateHolder.stateClientInfo.getValue();
+			if (info == null)
+				throw new IllegalStateException("message can't be adressed");
+			msg.setSender(info);
+		}
+		super.prepareMessage(msg);
+	}
 }

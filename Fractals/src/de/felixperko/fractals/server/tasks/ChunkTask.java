@@ -12,6 +12,7 @@ public class ChunkTask extends Task {
 	
 	Chunk chunk;
 	DataDescriptor dataDescriptor;
+	boolean running = false;
 	
 	public ChunkTask(Chunk chunk, DataDescriptor dataDescriptor, int taskManagerId) {
 		super(dataDescriptor, taskManagerId);
@@ -21,6 +22,9 @@ public class ChunkTask extends Task {
 
 	@Override
 	protected void calculate() {
+		if (running == true)
+			throw new IllegalStateException("The Task is already running!");
+		running = true;
 		int depth = dataDescriptor.getMaxIterations();
 		try {
 			chunk.setReadyToDraw(false);
@@ -66,7 +70,7 @@ public class ChunkTask extends Task {
 					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state && c.arraysInstantiated()) {
 						c.setReadyToDraw(false);
 						c.calculateDiff();
-						((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getCalcThread().addChunk(c);
+						FractalsMain.threadManager.getCalcPixelThread().addChunk(c);
 					}
 				}
 			} catch (Exception e){
@@ -80,6 +84,7 @@ public class ChunkTask extends Task {
 				e.printStackTrace();
 			}
 		}
+		running = false;
 	}
 	
 	public Chunk getChunk() {
