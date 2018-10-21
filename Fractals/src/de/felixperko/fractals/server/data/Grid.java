@@ -214,6 +214,5 @@ public class Grid {
 
 	public void setChunkSize(int chunkSize) {
 		this.chunk_size = chunkSize;
-		reset();
 	}
 }
