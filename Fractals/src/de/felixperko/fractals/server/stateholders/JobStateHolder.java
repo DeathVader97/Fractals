@@ -68,6 +68,9 @@ public class JobStateHolder extends StateHolder{
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
 				((GridRenderer)FractalsMain.mainWindow.getMainRenderer()).getGrid().setChunkSize(stateChunkSize.getValue());
+				FractalsMain.mainWindow.getMainRenderer().reset();
+				FractalsMain.mainWindow.setRedraw(true);
+				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
 		});
 		stateChunkSize.setIncrementable(true).setDecrementable(true);
