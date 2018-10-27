@@ -2,6 +2,7 @@ package de.felixperko.fractals.server.tasks;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
+import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.data.ChunkAccessType;
 import de.felixperko.fractals.server.data.DataDescriptor;
@@ -12,7 +13,7 @@ public class ChunkTask extends Task {
 	
 	Chunk chunk;
 	DataDescriptor dataDescriptor;
-	boolean running = false;
+	volatile boolean running = false;
 	
 	public ChunkTask(Chunk chunk, DataDescriptor dataDescriptor, int taskManagerId) {
 		super(dataDescriptor, taskManagerId);
@@ -27,11 +28,26 @@ public class ChunkTask extends Task {
 		running = true;
 		int depth = dataDescriptor.getMaxIterations();
 		try {
+			
+			long t1 = System.nanoTime();
+			while(!chunk.isReadyToCalculate()) {
+				long deltaT = System.nanoTime()-t1;
+				if (deltaT > 0.01/NumberUtil.NS_TO_S)
+					throw new IllegalStateException("waited too long ("+NumberUtil.getRoundedDouble(deltaT*NumberUtil.NS_TO_S,5)+")");
+				Thread.sleep(1);
+			}
+			long deltaT = System.nanoTime()-t1;
+			if (deltaT > 0.001/NumberUtil.NS_TO_S)
+				chunk.addStateInfo("waited to get ready for calculation for "+NumberUtil.getRoundedDouble(deltaT*NumberUtil.NS_TO_S,5)+"s");
+			
+			
+			chunk.setReadyToCalculate(false);
 			chunk.setReadyToDraw(false);
 			if (!chunk.arraysInstantiated())
 				chunk.instantiateArrays();
 			ProcessingStep processingStep = chunk.getProcessingStepState().getNextProcessingStep();
 			sampleCalculator.calculate_samples(chunk, processingStep);
+			
 //			System.out.println("patternstate = "+(state+1)+"/"+patternProvider.getMaxState()+" ("+chunk.sampleCount[1]+")");
 			chunk.getProcessingStepState().increment();
 			chunk.calculateDiff();

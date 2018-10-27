@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.gui.PhaseProgressionCanvas;
 import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
 import de.felixperko.fractals.client.rendering.chunkprovider.LocalChunkProvider;
 import de.felixperko.fractals.server.data.Chunk;
@@ -29,6 +30,7 @@ public class CalcPixelThread extends FractalsThread {
 	
 	@Override
 	public void run() {
+		setPhase(PHASE_WAITING);
 		while (true) {
 			while (!waitingChunks.isEmpty()) {
 				synchronized (this) {
@@ -40,7 +42,7 @@ public class CalcPixelThread extends FractalsThread {
 						waitingChunks.add(c);
 						continue;
 					}
-					
+					setPhase(PHASE_WORKING);
 					try {
 						waitingChunkSet.remove(c);
 						c.calculatePixels();
@@ -56,6 +58,7 @@ public class CalcPixelThread extends FractalsThread {
 					}
 				}
 			}
+			setPhase(PHASE_WAITING);
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -65,12 +68,12 @@ public class CalcPixelThread extends FractalsThread {
 	}
 	
 	public void addChunk(Chunk c) {
-		if (!waitingChunkSet.contains(c)) {
+//		if (!waitingChunkSet.contains(c)) {
 //			finishedChunks.remove(c);
 			waitingChunks.add(c);
 			waitingChunkSet.add(c);
-			interrupt();
-		}
+//			interrupt();
+//		}
 	}
 	
 	public boolean isFinished(Chunk c, boolean reset) {
@@ -82,6 +85,12 @@ public class CalcPixelThread extends FractalsThread {
 
 	public void setLocalChunkProvider(LocalChunkProvider chunkProvider) {
 		this.localChunkProvider = chunkProvider;
+	}
+	
+	public synchronized void reset() {
+		waitingChunks.clear();
+		waitingChunkSet.clear();
+		finishedChunks.clear();
 	}
 
 }

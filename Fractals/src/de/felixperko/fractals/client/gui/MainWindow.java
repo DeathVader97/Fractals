@@ -102,6 +102,8 @@ public class MainWindow {
 	boolean visRedraw = true;
 	
 	List<ProgressBar> performanceBars = new ArrayList<>();
+	
+	List<PhaseProgressionCanvas> phaseProgressionCanvases = new ArrayList<>();
 
 	/**
 	 * Open the window.
@@ -149,6 +151,10 @@ public class MainWindow {
 		PerfInstance listeners = createNewSubInstanceAndBegin("listeners", perf);
 		stateChangeListeners.forEach(l -> l.updateIfChanged(true));
 		listeners.end();
+		
+		for(PhaseProgressionCanvas phaseProgressionCanvas : phaseProgressionCanvases) {
+			phaseProgressionCanvas.redraw();
+		}
 		
 		boolean updateTime = true;
 		if (!shift.equals(nullPos)) {
@@ -660,10 +666,14 @@ public class MainWindow {
 		composite_performance_bars.setLayout(new GridLayout(2, false));
 		
 		Label lblNewLabel = new Label(composite_performance_bars, SWT.NONE);
-		lblNewLabel.setText("New Label");
+		lblNewLabel.setText("CalcPixelThread");
 		
-		Label lblNewLabel_1 = new Label(composite_performance_bars, SWT.NONE);
-		lblNewLabel_1.setText("New Label");
+//		Label lblNewLabel_1 = new Label(composite_performance_bars, SWT.NONE);
+//		lblNewLabel_1.setText("New Label");
+		PhaseProgressionCanvas canvas = new PhaseProgressionCanvas(composite_performance_bars, SWT.NONE);
+		FractalsMain.threadManager.getCalcPixelThread().setPhaseProgressionCanvas(canvas);
+		canvas.redraw();
+		phaseProgressionCanvases.add(canvas);
 		
 		scrolledComposite_3.setContent(composite_performance_bars);
 		scrolledComposite_3.setMinSize(composite_performance_bars.computeSize(SWT.DEFAULT, SWT.DEFAULT));

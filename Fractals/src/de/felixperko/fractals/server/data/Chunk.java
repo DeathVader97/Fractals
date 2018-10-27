@@ -1,7 +1,12 @@
 package de.felixperko.fractals.server.data;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Device;
@@ -11,6 +16,7 @@ import org.eclipse.swt.graphics.PaletteData;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.painter.Painter;
+import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.steps.ProcessingStep;
 import de.felixperko.fractals.server.steps.masks.DefaultMask;
 import de.felixperko.fractals.server.steps.masks.IndexMask;
@@ -26,15 +32,17 @@ public class Chunk {
 	
 	final int chunk_size;
 	int arr_size;
-	public int finishedIterations;
+	int finishedIterations;
 
-	float[] iterationsSum;
+	volatile float[] iterationsSum;
 	float[] iterationsSumSq;
 	float[] diff;
 	float[] currentPosX;
 	float[] currentPosY;
-	int[] sampleCount;
-	int[] failSampleCount;
+	volatile int[] sampleCount;
+	volatile int[] failSampleCount;
+	
+	Map<String, Long> stateInfo = new LinkedHashMap<>();
 	
 	transient Grid grid; //required to access adjacent chunks in calculateDiff
 	transient public ImageData imageData;
@@ -52,8 +60,8 @@ public class Chunk {
 	double priorityMultiplier = 1;
 	double stepPriorityOffset = 200;
 	
-	boolean disposed = false;
-	boolean arraysInstantiated = false;
+	volatile boolean disposed = false;
+	volatile boolean arraysInstantiated = false;
 	
 	protected final Position gridPos;
 	
@@ -66,8 +74,8 @@ public class Chunk {
 	ProcessingStepState processingStepState;
 	int drawnStep = -1;
 
-	private boolean readyToDraw = false;
-	private boolean readyToCalculate = false;
+	private volatile boolean readyToDraw = false;
+	private volatile boolean readyToCalculate = false;
 	
 	Map<ChunkAccessType, IndexMask> setIndexMasks = new HashMap<>();
 	Map<ChunkAccessType, IndexMask> getIndexMasks = new HashMap<>();
@@ -75,6 +83,9 @@ public class Chunk {
 	int maxIterations = 10000;
 	
 	public Chunk(int chunk_size, DataDescriptor dataDescriptor, Grid grid, Position gridPos) {
+		addStateInfo("constructor start");
+		count_active.incrementAndGet();
+		FractalsMain.clientStateHolder.stateActiveChunkCount.incrementValue();
 		this.chunk_size = chunk_size;
 //		this.dataDescriptor = dataDescriptor;
 		this.processingStepState = new ProcessingStepState(dataDescriptor.getStepProvider());
@@ -95,6 +106,8 @@ public class Chunk {
 //		Thread.dumpStack();
 		this.grid = grid;
 		this.painter = grid.getRenderer().getPainter();
+		addStateInfo("constructor finished");
+		setReadyToCalculate(true);
 	}
 	
 	public IndexMask getGetIndexMask(ChunkAccessType accessType) {
@@ -119,7 +132,12 @@ public class Chunk {
 		return getGetIndexMask(accessType).getIndex(i);
 	}
 	
-	public void instantiateArrays() {
+	public synchronized void instantiateArrays() {
+		if (arraysInstantiated)
+			return;
+		setReadyToCalculate(false);
+		addStateInfo("array instantiation started");
+		arraysInstantiated = true;
 		arr_size = chunk_size*chunk_size;
 		iterationsSum = new float[arr_size];
 		iterationsSumSq = new float[arr_size];
@@ -128,13 +146,12 @@ public class Chunk {
 		diff = new float[arr_size];
 		sampleCount = new int[arr_size];
 		failSampleCount = new int[arr_size];
-		arraysInstantiated = true;
-		count_active.incrementAndGet();
-		FractalsMain.clientStateHolder.stateActiveChunkCount.incrementValue();
+		addStateInfo("array instantiation finished");
+		setReadyToCalculate(true);
 	}
 	
 	public boolean arraysInstantiated() {
-		return iterationsSum != null;
+		return arraysInstantiated;
 	}
 	
 	public int getIndex(int relX, int relY) {
@@ -146,6 +163,7 @@ public class Chunk {
 		prepareImageData();
 		fillPixels();
 		setRedrawFlags();
+		addStateInfo("calculated pixels");
 	}
 	
 	private void prepareArrays() {
@@ -210,6 +228,20 @@ public class Chunk {
 	
 	public float getAvgIterations(int i, ChunkAccessType accessType) {
 		i = applyGetIndexMasks(i, accessType);
+		long firstTime = -1;
+		while ((sampleCount == null || failSampleCount == null) && !isDisposed()) {
+//			System.err.println("samplecount == null "+isDisposed());
+//			System.err.println("failSampleCount == null "+isDisposed());
+			if (firstTime == -1)
+				firstTime = System.nanoTime();
+		}
+		if (firstTime != -1) {
+			double t = NumberUtil.getElapsedTimeInS(firstTime, 5);
+			if (t > 0.001) {
+				System.err.println("Waited for "+t);
+				getFormattedInfoList().forEach(e -> System.err.println(" - "+e));
+			}
+		}
 		float sucessfulIterations = sampleCount[i]-failSampleCount[i];
 		if (sucessfulIterations == 0)
 			return -1;
@@ -222,7 +254,7 @@ public class Chunk {
 	
 	private float getAvgIterationsGlobal(int x, int y, ChunkAccessType accessType) {
 		Chunk c = getGlobalChunk(x,y);
-		if (c == null || !c.arraysInstantiated)
+		if (c == null || !c.arraysInstantiated || c.isDisposed())
 			return -2;
 		int s = getChunkSize();
 		if (x < 0)
@@ -233,7 +265,23 @@ public class Chunk {
 			y += s;
 		else if (y >= s)
 			y -= s;
-		return c.getAvgIterations(x, y, accessType);
+		try {
+			return c.getAvgIterations(x, y, accessType);
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+//			System.err.println("disposed? "+c.isDisposed()+" arrays instantiated? "+c.arraysInstantiated());
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			System.err.println("pos: c:"+c.getGridPosition()+" this:"+getGridPosition());
+			System.err.println("history:");
+			for (String info : c.getFormattedInfoList()) {
+				System.err.println(" - "+info);
+			}
+			return -2;
+		}
 	}
 
 	private Chunk getGlobalChunk(int x, int y) {
@@ -273,6 +321,7 @@ public class Chunk {
 		}
 		image = new Image(device, imageData);
 		drawnStep = processingStepState.stateNumber;
+		addStateInfo("refreshed image");
 	}
 	
 	/**
@@ -294,23 +343,27 @@ public class Chunk {
 		return sizes_size + references_bytes*references_count + array_count*16 + arr_size*(int_arr_count*int_bytes + float_arr_count*float_bytes);
 	}
 
-	public void dispose() {
+	public synchronized void dispose() {
+		if (isDisposed())
+			return;
+		addStateInfo("dispose stated");
+		disposed = true;
 		count_active.decrementAndGet();
 		FractalsMain.clientStateHolder.stateActiveChunkCount.decrementValue();
-		disposed = true;
 		arraysInstantiated = false;
 		if (image != null)
 			image.dispose();
 		imageData = null;
+		addStateInfo("dispose finished");
 		
-//		arr_size = 0;
-//		iterationsSum = null;
-//		iterationsSumSq = null;
-//		currentPosX = null;
-//		currentPosY = null;
-//		diff = null;
-//		sampleCount = null;
-//		failSampleCount = null;
+		arr_size = 0;
+		iterationsSum = null;
+		iterationsSumSq = null;
+		currentPosX = null;
+		currentPosY = null;
+		diff = null;
+		sampleCount = null;
+		failSampleCount = null;
 	}
 
 	public boolean isDisposed() {
@@ -379,7 +432,7 @@ public class Chunk {
 		return gridPos;
 	}
 
-	public void calculateDiff() {
+	public synchronized void calculateDiff() {
 //		int rad = 0;
 //		int boxBlurIterations = 1;
 //		int radDim = rad*2+1;
@@ -649,5 +702,33 @@ public class Chunk {
 
 	public void setMaxIterations(int maxIterations) {
 		this.maxIterations = maxIterations;
+	}
+	
+	public Map<String, Long> getStateInfo(){
+		return stateInfo;
+	}
+	
+	public List<String> getFormattedInfoList(){
+		List<String> res = new ArrayList<>();
+		for (Entry<String, Long> e : stateInfo.entrySet()) {
+			StringBuilder builder = new StringBuilder();
+			long deltaT = System.currentTimeMillis()-e.getValue();
+			builder.append(NumberUtil.getRoundedDouble(deltaT*NumberUtil.MS_TO_S, 3)+"s ago	");
+			builder.append(" : ").append(e.getKey());
+			res.add(builder.toString());
+		}
+		return res;
+	}
+	
+	public void addStateInfo(String info) {
+		stateInfo.put(info+" [Thread:"+Thread.currentThread().getName()+"]", System.currentTimeMillis());
+	}
+
+	public int getFinishedIterations() {
+		return finishedIterations;
+	}
+
+	public void setFinishedIterations(int finishedIterations) {
+		this.finishedIterations = finishedIterations;
 	}
 }

@@ -178,6 +178,8 @@ public class GridRenderer extends AbstractRendererImpl {
 		scaleBy(spacing_factor);
 		shiftView(spaceShift);
 		
+		reset();
+		
 		//recalculate bounds
 		boundsChanged();
 	}
@@ -306,6 +308,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	@Override
 	public void reset() {
 		taskManager.clearTasks();
+		FractalsMain.threadManager.getCalcPixelThread().reset();
 		grid.reset();
 		chunkProvider.reset();
 		boundsChanged();
@@ -337,6 +340,8 @@ public class GridRenderer extends AbstractRendererImpl {
 		
 		//update distances and queue out of bounds removals
 		for (Entry<Position, Chunk> e : grid.map.entrySet()) {
+			if (e.getValue().isDisposed())
+				continue;
 			double gridX = e.getKey().getX();
 			double gridY = e.getKey().getY();
 			double dist = viewGridDist(gridX, gridY);

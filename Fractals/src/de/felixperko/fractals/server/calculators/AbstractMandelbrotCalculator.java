@@ -101,8 +101,8 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 				prevsampleoffset = sampleoffset;
 				
 				//TODO fix continuing
-//				int j = chunk.finishedIterations;
-				int j = 0;
+				int j = chunk.getFinishedIterations();
+//				int j = 0;
 				if (j == 0 || !chunk.getProcessingStepState().isDefaultState()){
 					real = startReal;
 					imag = startImag;
@@ -110,8 +110,9 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 					real = chunk.getCurrentPosX(i, ChunkAccessType.CALCULATION);
 					imag = chunk.getCurrentPosY(i, ChunkAccessType.CALCULATION);
 				}
-				double creal = xPos;
-				double cimag = yPos;
+				Position pos = getPosition(xPos, yPos);
+				double creal = pos.getX();
+				double cimag = pos.getY();
 				
 //				if (j == 0)
 				
@@ -143,22 +144,27 @@ public abstract class AbstractMandelbrotCalculator extends AbstractCalculator{
 				}
 				
 //				//still not outside
-//				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
-//					chunk.setCurrentPosX(i, (float) real);
-//					chunk.setCurrentPosY(i, (float) imag);
-//				}
-//				else { //max iterations reached -> declared as in the mandelbrot set
+				if (maxiterations < globalMaxIterations && k == 0) { //not done -> store temp result
+					chunk.setCurrentPosX(i, (float) real, ChunkAccessType.CALCULATION);
+					chunk.setCurrentPosY(i, (float) imag, ChunkAccessType.CALCULATION);
+				}
+				else { //max iterations reached -> declared as in the mandelbrot set
 					chunk.addSampleCount(i, 1, ChunkAccessType.CALCULATION);
 					chunk.addFailSampleCount(i, 1, ChunkAccessType.CALCULATION);
 					logIfDebug(chunk, i);
-//				}
+				}
 			
 			}
 		}
-		chunk.finishedIterations = maxiterations;
 		chunk.setGetIndexMask(step.getIndexMask(), ChunkAccessType.RENDERING);
 	}
 	
+	private Position getPosition(double xPos, double yPos) {
+		return new Position(xPos, yPos);
+//		Position pos = new Position(xPos, yPos);
+//		return pos.div(pos.lengthSq());
+	}
+
 	/**
 	 * can be overridden to prepare values for the loop
 	 */

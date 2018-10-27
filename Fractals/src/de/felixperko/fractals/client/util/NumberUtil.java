@@ -15,4 +15,12 @@ public class NumberUtil {
 		double f = Math.pow(10, precision);
 		return Math.round(value*100*f)/f;
 	}
+
+	public static double getTimeInS(long timeInNs, int precision) {
+		return getRoundedDouble(NS_TO_S*timeInNs, precision);
+	}
+
+	public static double getElapsedTimeInS(long sinceTimeInNs, int precision) {
+		return getTimeInS(System.nanoTime()-sinceTimeInNs, precision);
+	}
 }

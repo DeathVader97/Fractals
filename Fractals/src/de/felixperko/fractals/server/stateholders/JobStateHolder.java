@@ -90,6 +90,7 @@ public class JobStateHolder extends StateHolder{
 					Class<? extends SampleCalculator> newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
 				FractalsMain.mainWindow.getMainRenderer().reset();
+				FractalsMain.threadManager.getCalcPixelThread().reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -119,6 +120,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.threadManager.getCalcPixelThread().reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -136,6 +138,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.threadManager.getCalcPixelThread().reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -154,6 +157,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
+				FractalsMain.threadManager.getCalcPixelThread().reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}

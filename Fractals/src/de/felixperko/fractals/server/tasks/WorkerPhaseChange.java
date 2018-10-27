@@ -1,5 +1,7 @@
 package de.felixperko.fractals.server.tasks;
 
+import org.eclipse.swt.graphics.Color;
+
 public class WorkerPhaseChange {
 	
 	WorkerPhase phase;
@@ -16,5 +18,9 @@ public class WorkerPhaseChange {
 
 	public long getTime() {
 		return time;
+	}
+
+	public Color getSwtColor() {
+		return phase.getSwtColor();
 	}
 }

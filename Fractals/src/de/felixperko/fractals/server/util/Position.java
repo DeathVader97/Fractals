@@ -221,4 +221,8 @@ public class Position {
 	public Position copy() {
 		return new Position(x,y);
 	}
+
+	public double length() {
+		return Math.sqrt(x*x + y*y);
+	}
 }

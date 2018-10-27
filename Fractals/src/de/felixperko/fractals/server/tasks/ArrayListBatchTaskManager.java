@@ -48,7 +48,6 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 		@Override
 		public int compare(ChunkTask arg0, ChunkTask arg1) {
 			if (arg0 == null || arg1 == null) {//debug: why do i get occasional NPEs here?
-				Thread.dumpStack();
 				return 0;
 			}
 			return Double.compare(arg0.getPriority(), arg1.getPriority());

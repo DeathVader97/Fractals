@@ -15,6 +15,8 @@ public interface TaskManager {
 	String getStateText();
 
 	public void setUpdatePriorities();
+
+	void setGenerateTasks();
 	
 	public int getTaskManagerId();
 	

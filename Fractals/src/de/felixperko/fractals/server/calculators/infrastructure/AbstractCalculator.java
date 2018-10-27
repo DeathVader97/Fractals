@@ -53,11 +53,13 @@ public abstract class AbstractCalculator implements SampleCalculator{
 			debug = false;
 		}
 		
+		//get pattern
 		Pattern pattern = chunk.getProcessingStepState().getNextProcessingStep().getPattern();
 		int maxSize = pattern.getPositions().length;
+		//skip nothing if custom
 		if (!pattern.isGeneric())
 			return maxSize;
-
+		
 		int finishedSamples = chunk.getSampleCount(index, ChunkAccessType.CALCULATION);
 		double failRatio = chunk.getFailRatio(finishedSamples, index, ChunkAccessType.CALCULATION);
 		if (failRatio < 1)
