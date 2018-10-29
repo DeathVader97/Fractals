@@ -23,8 +23,10 @@ public class ChunkTask extends Task {
 
 	@Override
 	protected void calculate() {
-		if (running == true)
-			throw new IllegalStateException("The Task is already running!");
+		if (running == true){
+			System.err.println("The Task is already running!");
+			return;
+		}
 		running = true;
 		int depth = dataDescriptor.getMaxIterations();
 		try {
@@ -80,13 +82,13 @@ public class ChunkTask extends Task {
 			}
 			
 			try {
-				//update surrounding chunk positions
+//				update surrounding chunk positions
 				for (Position p : chunk.getNeighbourPositions()) {
 					Chunk c = chunk.getGrid().getChunkOrNull(p);
 					if (c != null && c.imageCalculated && c != chunk && c.getProcessingStepState().getStateNumber() > state && c.arraysInstantiated()) {
 						c.setReadyToDraw(false);
 						c.calculateDiff();
-						FractalsMain.threadManager.getCalcPixelThread().addChunk(c);
+//						FractalsMain.threadManager.getCalcPixelThread().addChunk(c);
 					}
 				}
 			} catch (Exception e){

@@ -6,6 +6,8 @@ import static de.felixperko.fractals.client.controls.KeyListenerControls.*;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
@@ -47,6 +49,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
+
+import com.sun.jmx.snmp.tasks.ThreadService;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.controls.Console;
@@ -66,6 +71,9 @@ import de.felixperko.fractals.server.state.StateChangeAction;
 import de.felixperko.fractals.server.state.StateChangeListener;
 import de.felixperko.fractals.server.state.StateListener;
 import de.felixperko.fractals.server.state.SwitchState;
+import de.felixperko.fractals.server.tasks.WorkerPhase;
+import de.felixperko.fractals.server.tasks.WorkerPhaseChange;
+import de.felixperko.fractals.server.threads.PerformanceThread;
 import de.felixperko.fractals.server.threads.ThreadManager;
 import de.felixperko.fractals.server.threads.WorkerThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
@@ -73,11 +81,70 @@ import de.felixperko.fractals.server.util.Logger;
 import de.felixperko.fractals.server.util.Message;
 import de.felixperko.fractals.server.util.Position;
 import de.felixperko.fractals.server.util.performance.PerfInstance;
+import de.felixperko.fractals.server.util.performance.PerformanceMonitor;
+import sun.misc.Perf;
 import swing2swt.layout.FlowLayout;
 
-public class MainWindow {
+public class MainWindow implements PerformanceThread{
 	
-	CategoryLogger log = new CategoryLogger("GUI/window", Color.BLUE);
+	WorkerPhase phase = DEFAULT_PHASE;
+	
+	List<WorkerPhaseChange> phaseChanges = new ArrayList<>();
+//	List<PhaseProgressionCanvas> phaseProgressionCanvases = new ArrayList<>();
+	
+	PerformanceMonitor monitor;
+
+	protected CategoryLogger log_thread;
+
+	public MainWindow() {
+		log_thread = CategoryLogger.INFO.createSubLogger("threads/main");
+	}
+	
+	@Override
+	public void setPhase(WorkerPhase phase) {
+		if (phase == this.phase)
+			return;
+		this.phase = phase;
+		phaseChanges.add(new WorkerPhaseChange(phase));
+		for (PhaseProgressionCanvas canvas : phaseProgressionCanvases) {
+			if (canvas.thread == this){
+				canvas.getDisplay().syncExec(() -> {
+					canvas.setRedraw(true);
+					canvas.update();
+				});
+			}
+		}
+	}
+	
+	@Override
+	public WorkerPhase getPhase() {
+		return phase;
+	}
+	
+	@Override
+	public List<WorkerPhaseChange> getPhaseChanges(){
+		return phaseChanges;
+	}
+	
+	@Override
+	public void setPhaseProgressionCanvas(PhaseProgressionCanvas canvas) {
+		phaseProgressionCanvases.add(canvas);
+		canvas.setPhaseChanges(getPhaseChanges());
+	}
+
+	@Override
+	public void removePhaseProgressionCanvas(PhaseProgressionCanvas canvas) {
+		phaseProgressionCanvases.remove(canvas);
+	}
+	
+	@Override
+	public String getName() {
+		return "Main";
+	}
+	
+	
+	
+	CategoryLogger log_gui = new CategoryLogger("GUI/window", Color.BLUE);
 
 	public Shell shell;
 	private Display display;
@@ -94,6 +161,7 @@ public class MainWindow {
 	
 	public boolean save = false;
 	boolean redraw = false;
+	Queue<RedrawInfo> redrawInfos = new PriorityQueue<>();
 
 	private ArrayList<StateChangeListener<?>> stateChangeListeners = new ArrayList<>();
 
@@ -129,10 +197,12 @@ public class MainWindow {
 		while (!shell.isDisposed()) {
 			
 //			long t1 = System.nanoTime();
-
+			setPhase(PHASE_WORKING);
+			
 			while (display.readAndDispatch()) {}
 			tick();
 			
+			setPhase(PHASE_IDLE);
 //			long t2 = System.nanoTime();
 //			System.out.println("FRAMETIME: "+NumberUtil.getRoundedDouble((t2-t1)*NumberUtil.NS_TO_S, 3));
 			
@@ -172,9 +242,20 @@ public class MainWindow {
 		if (updateTime)
 			lastTime = System.nanoTime();
 		
-		if (isRedrawReset()) {
+		boolean completeRedraw = isRedrawReset();
+		if (completeRedraw || !redrawInfos.isEmpty()) {
 			PerfInstance redraw = createNewSubInstanceAndBegin("redraw", perf);
-			canvas.redraw();
+//			if (completeRedraw){
+				canvas.redraw();
+				redrawInfos.clear();
+//			} else {
+//				while (!redrawInfos.isEmpty()){
+//					RedrawInfo info = redrawInfos.poll();
+//					if (info == null)
+//						break;
+//					canvas.redraw(info.getX(), info.getY(), info.getW(), info.getH(), true);
+//				}
+//			}
 			canvas.update();
 			redraw.end();
 		}
@@ -624,33 +705,33 @@ public class MainWindow {
 	}
 	
 	public void resetPerformanceBars() {
-		//TODO dispose StateChangeListeners?! extend ProgressBar?
-		for (ProgressBar pb : performanceBars) {
-			pb.dispose();
-		}
-		performanceBars.clear();
-		
-		ThreadManager threadManager = FractalsMain.threadManager;
-		for (WorkerThread thread : threadManager.getThreads()) {
-			
-			ProgressBar bar = new ProgressBar(composite_performance_bars, SWT.SMOOTH);
-			performanceBars.add(bar);
-			State<Integer> state = thread.getStateHolder().getStateIterationsPerSecond();
-			StateChangeListener<Integer> stateChangeListener = new StateChangeListener<Integer>(state).addStateChangeAction(new StateChangeAction() {
-				@Override
-				public void update() {
-					int val = (Integer)getState().getValue();
-					for (ProgressBar pb : performanceBars) {
-						if (pb.getMaximum() < val) {
-							pb.setMaximum(val);
-						}
-					}
-					bar.setSelection(val);
-				}
-			});
-			state.addStateListener(stateChangeListener);
-			addStateChangeListener(stateChangeListener);
-		}
+//		//TODO dispose StateChangeListeners?! extend ProgressBar?
+//		for (ProgressBar pb : performanceBars) {
+//			pb.dispose();
+//		}
+//		performanceBars.clear();
+//		
+//		ThreadManager threadManager = FractalsMain.threadManager;
+//		for (WorkerThread thread : threadManager.getThreads()) {
+//			
+//			ProgressBar bar = new ProgressBar(composite_performance_bars, SWT.SMOOTH);
+//			performanceBars.add(bar);
+//			State<Integer> state = thread.getStateHolder().getStateIterationsPerSecond();
+//			StateChangeListener<Integer> stateChangeListener = new StateChangeListener<Integer>(state).addStateChangeAction(new StateChangeAction() {
+//				@Override
+//				public void update() {
+//					int val = (Integer)getState().getValue();
+//					for (ProgressBar pb : performanceBars) {
+//						if (pb.getMaximum() < val) {
+//							pb.setMaximum(val);
+//						}
+//					}
+//					bar.setSelection(val);
+//				}
+//			});
+//			state.addStateListener(stateChangeListener);
+//			addStateChangeListener(stateChangeListener);
+//		}
 	}
 
 	private void setupPerformanceTab(TabFolder tabFolder) {
@@ -665,18 +746,78 @@ public class MainWindow {
 		composite_performance_bars = new Composite(scrolledComposite_3, SWT.NONE);
 		composite_performance_bars.setLayout(new GridLayout(2, false));
 		
-		Label lblNewLabel = new Label(composite_performance_bars, SWT.NONE);
-		lblNewLabel.setText("CalcPixelThread");
+//		Label lblNewLabel = new Label(composite_performance_bars, SWT.NONE);
+//		lblNewLabel.setText("CalcPixelThread");
+		
+		refreshProgressionThreads();
 		
 //		Label lblNewLabel_1 = new Label(composite_performance_bars, SWT.NONE);
 //		lblNewLabel_1.setText("New Label");
-		PhaseProgressionCanvas canvas = new PhaseProgressionCanvas(composite_performance_bars, SWT.NONE);
-		FractalsMain.threadManager.getCalcPixelThread().setPhaseProgressionCanvas(canvas);
-		canvas.redraw();
-		phaseProgressionCanvases.add(canvas);
+//		PhaseProgressionCanvas canvas = new PhaseProgressionCanvas(composite_performance_bars, SWT.DOUBLE_BUFFERED);
+//		FractalsMain.threadManager.getCalcPixelThread().setPhaseProgressionCanvas(canvas);
+//		setPhaseProgressionCanvas(canvas);
+//		canvas.redraw();
+//		phaseProgressionCanvases.add(canvas);
 		
 		scrolledComposite_3.setContent(composite_performance_bars);
 		scrolledComposite_3.setMinSize(composite_performance_bars.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	}
+	
+	private List<PerformanceThread> getProgressionThreads(){
+		List<PerformanceThread> threads = new ArrayList<>();
+		
+		threads.add(this);
+		
+		if (FractalsMain.taskManager != null && FractalsMain.taskManager instanceof PerformanceThread)
+			threads.add(((PerformanceThread)FractalsMain.taskManager));
+		
+		threads.add(FractalsMain.threadManager.getCalcPixelThread());
+		
+		if (FractalsMain.threadManager.getServerConnectThread() != null)
+			threads.add(FractalsMain.threadManager.getServerConnectThread());
+		
+		if (FractalsMain.threadManager.getClientThread() != null)
+			threads.add(FractalsMain.threadManager.getClientThread());
+		
+		for (PerformanceThread serverThread : FractalsMain.threadManager.getServerThreads())
+			threads.add(serverThread);
+		
+		for (WorkerThread wt : FractalsMain.threadManager.getThreads())
+			threads.add(wt);
+		
+		return threads;
+	}
+	
+	List<Widget> progressionThreadWidgets = new ArrayList<>();
+	
+	public void refreshProgressionThreads(){
+		if (display == null){
+			return;
+		}
+		display.asyncExec(() -> {
+			for (Widget w : progressionThreadWidgets){
+				if (w instanceof PhaseProgressionCanvas){
+					PhaseProgressionCanvas c = ((PhaseProgressionCanvas)w);
+					if (c.thread != this)
+						phaseProgressionCanvases.remove(c);
+				}
+				w.dispose();
+			}
+			
+			for (PerformanceThread thread : getProgressionThreads()){
+				
+				Label lblNewLabel = new Label(composite_performance_bars, SWT.NONE);
+				lblNewLabel.setText(thread.getName());
+				progressionThreadWidgets.add(lblNewLabel);
+				
+				PhaseProgressionCanvas canvas = new PhaseProgressionCanvas(composite_performance_bars, SWT.DOUBLE_BUFFERED, thread);
+//				thread.setPhaseProgressionCanvas(canvas);
+				canvas.redraw();
+				progressionThreadWidgets.add(canvas);
+				if (thread != this)
+					phaseProgressionCanvases.add(canvas);
+			}
+		});
 	}
 
 	private void setupLogTab(TabFolder tabFolder) {
@@ -822,6 +963,10 @@ public class MainWindow {
 
 	public void setRedraw(boolean redraw) {
 		this.redraw = redraw;
+	}
+	
+	public void addRedrawInfo(RedrawInfo info){
+		redrawInfos.add(info);
 	}
 
 	private void updateLog(final StyledText styledText_log, String filter) {

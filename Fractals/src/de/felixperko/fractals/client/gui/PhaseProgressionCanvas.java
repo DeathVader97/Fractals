@@ -14,14 +14,19 @@ import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.tasks.WorkerPhase;
 import de.felixperko.fractals.server.tasks.WorkerPhaseChange;
 import de.felixperko.fractals.server.threads.FractalsThread;
+import de.felixperko.fractals.server.threads.PerformanceThread;
 
 public class PhaseProgressionCanvas extends Canvas {
 	
 	List<WorkerPhaseChange> phaseChanges;
-	double timeframe = 10;
+	double timeframe = 1;
+	
+	PerformanceThread thread;
 
-	public PhaseProgressionCanvas(Composite parent, int style) {
+	public PhaseProgressionCanvas(Composite parent, int style, PerformanceThread thread) {
 		super(parent, style);
+		this.thread = thread;
+		thread.setPhaseProgressionCanvas(this);
 		addPaintListener(new ProcessPaintListener(this));
 		setSize(100, 20);
 	}
@@ -75,7 +80,7 @@ public class PhaseProgressionCanvas extends Canvas {
 				}
 				else {
 					
-					int x = w;
+					double x = w;
 					WorkerPhaseChange prev_change = changes.get(changes.size()-1);
 					
 					double deltaT = (System.nanoTime() - prev_change.getTime())*NumberUtil.NS_TO_S;
@@ -83,10 +88,10 @@ public class PhaseProgressionCanvas extends Canvas {
 						deltaT = time_left;
 					}
 					int deltaX = (int) Math.round((deltaT/time_left)*x);
-					if (deltaX != 0) {
+					if (deltaX > 0) {
 						x -= deltaX;
 						time_left -= deltaT;
-						drawRect(gc, x, deltaX, h, prev_change.getSwtColor());
+						drawRect(gc, (int)x, deltaX, h, prev_change.getSwtColor());
 					}
 					
 					for (int i = changes.size()-2 ; i >= 0 ; i--) {
@@ -109,7 +114,7 @@ public class PhaseProgressionCanvas extends Canvas {
 						x -= deltaX;
 						time_left -= deltaT;
 
-						drawRect(gc, x, deltaX, h, prev_change.getSwtColor());
+						drawRect(gc, (int)x, deltaX, h, change.getSwtColor());
 						prev_change = change;
 					}
 					
@@ -125,6 +130,12 @@ public class PhaseProgressionCanvas extends Canvas {
 			gc.fillRectangle(x, 0, deltaX, h);
 //			System.out.println(x+"-"+(x+deltaX)+": "+color.toString());
 		}
+	}
+	
+	@Override
+	public void dispose() {
+		thread.removePhaseProgressionCanvas(this);
+		super.dispose();
 	}
 
 }

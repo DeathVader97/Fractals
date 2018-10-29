@@ -1,5 +1,5 @@
-package de.felixperko.fractals.client;
 
+package de.felixperko.fractals.client;
 import de.felixperko.fractals.client.gui.MainWindow;
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
 import de.felixperko.fractals.client.rendering.renderer.Renderer;
@@ -19,7 +19,9 @@ public class FractalsMain{
 	
 	public static FractalsMain main;
 	
-	public final static int HELPER_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
+	public final static int CORE_COUNT = Runtime.getRuntime().availableProcessors();
+//	public final static int HELPER_THREAD_COUNT = CORE_COUNT*2/3 > 4 ? Math.max(CORE_COUNT*2/3, 4) : CORE_COUNT;
+	public final static int HELPER_THREAD_COUNT = CORE_COUNT/2;
 //	final static int HELPER_THREAD_COUNT = 1;
 	
 	public static MainWindow mainWindow;
@@ -56,9 +58,9 @@ public class FractalsMain{
 		
 		taskProvider = new LocalTaskProvider();
 
+		threadManager.setThreadCount(HELPER_THREAD_COUNT);
 		mainWindow.open(renderer);
 		
-		threadManager.setThreadCount(HELPER_THREAD_COUNT);
 		threadManager.addTaskProvider(taskProvider);
 		taskProvider.setDataDescriptor(renderer.getDataDescriptor());
 		taskManager = new ArrayListBatchTaskManager((GridRenderer) renderer);

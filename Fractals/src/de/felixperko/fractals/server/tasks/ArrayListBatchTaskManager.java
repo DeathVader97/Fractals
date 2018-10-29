@@ -42,7 +42,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	
 	boolean idle = true;
 	
-	public List<ChunkTask> priorityList = new ArrayList<>();
+	public List<ChunkTask> priorityList = Collections.synchronizedList(new ArrayList<>());
 	Map<Chunk, ChunkTask> taskMap = new ConcurrentHashMap<>();
 	public Comparator<ChunkTask> priorityComparator = new Comparator<ChunkTask>() {
 		@Override
@@ -75,7 +75,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 		//TODO replace sleep with reentrant lock
 		while (!Thread.interrupted()) {
 //			long t1 = System.nanoTime();
-			
+
 			idle = true;
 			
 			generateTasks();
@@ -106,9 +106,11 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 
 	@Override
 	public void generateTasks() {
+		
 		if (addChunkList.isEmpty()){
 			return;
 		}
+		
 		generateTasks = false;
 		idle = false;
 		setPhase(FractalsThread.PHASE_WORKING);
@@ -138,8 +140,10 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	}
 	
 	public void updatePriorities() {
+		
 		if (!updatePriorities)
 			return;
+		
 		updatePriorities = false;
 		idle = false;
 		setPhase(FractalsThread.PHASE_WORKING);
@@ -153,10 +157,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 					Collections.sort(priorityList, priorityComparator);
 					break;
 				} catch (Exception e) {
-					if (tryCount >= 2)
-						throw e;
-					CategoryLogger.ERROR.log("TaskManager", "reoccuring error while sorting the priority list (NewTaskManagerImpl.updatePriorities())");
-					tryCount++;
+					e.printStackTrace();
 				}
 			}
 //		}
@@ -167,6 +168,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 			return;
 		
 //		log.log("finishing tasks...");
+		setPhase(FractalsThread.PHASE_WORKING);
 		int newlyAdded = 0;
 		
 		int maxState = dataDescriptor.getStepProvider().getMaxState();

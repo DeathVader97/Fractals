@@ -54,7 +54,7 @@ public class WorkerThread extends FractalsThread {
 				if (taskProvider == null)
 					setPhase(PHASE_NO_PROVIDER);
 				else
-					setPhase(PHASE_WAITING);
+					setPhase(PHASE_IDLE);
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {

@@ -22,7 +22,7 @@ import de.felixperko.fractals.server.steps.masks.DefaultMask;
 import de.felixperko.fractals.server.steps.masks.IndexMask;
 import de.felixperko.fractals.server.util.Position;
 
-public class Chunk {
+public class Chunk implements Comparable<Chunk>{
 	
 	public static AtomicInteger count_active = new AtomicInteger(0);
 	
@@ -315,7 +315,8 @@ public class Chunk {
 	}
 	
 	public void refreshImage(Device device) {
-		
+		if (imageData == null)
+			throw new IllegalStateException();
 		if (image != null) {
 			image.dispose();
 		}
@@ -730,5 +731,12 @@ public class Chunk {
 
 	public void setFinishedIterations(int finishedIterations) {
 		this.finishedIterations = finishedIterations;
+	}
+
+	@Override
+	public int compareTo(Chunk o) {
+		if (o == null)
+			return 1;
+		return Double.compare(getPriority(), o.getPriority());
 	}
 }

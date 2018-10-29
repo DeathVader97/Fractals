@@ -6,14 +6,16 @@ import java.net.ServerSocket;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.server.FractalsServerMain;
+import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
 
-public class ServerConnectThread extends Thread{
+public class ServerConnectThread extends FractalsThread{
 
 	CategoryLogger log = new CategoryLogger("com/server", Color.MAGENTA);
 	NetworkManager networkManager;
 	
 	public ServerConnectThread() {
+		super("server_con", 5);
 		networkManager = FractalsServerMain.networkManager;
 	}
 	

@@ -46,7 +46,7 @@ public class ThreadManager {
 			else if (workerThreads.length < threadCount)
 				startThreads(threadCount - workerThreads.length);
 		}
-		FractalsMain.mainWindow.resetPerformanceBars();
+//		FractalsMain.mainWindow.resetPerformanceBars();
 	}
 
 	private void endThreads(int count) {
@@ -81,6 +81,7 @@ public class ThreadManager {
 		taskManagerThread = (ArrayListBatchTaskManager) FractalsMain.taskManager;
 		
 		updateProviders();
+		threadsChanged();
 	}
 
 	private WorkerThread startThread() {
@@ -128,12 +129,18 @@ public class ThreadManager {
 			return;
 		serverConnectThread = new ServerConnectThread();
 		serverConnectThread.start();
+		threadsChanged();
 	}
 	
+	private void threadsChanged() {
+		FractalsMain.mainWindow.refreshProgressionThreads();
+	}
+
 	public ServerWriteThread startServerSocket(Socket socket) {
 		ServerWriteThread thread = new ServerWriteThread(socket);
 		serverThreads.add(thread);
 		thread.start();
+		threadsChanged();
 		return thread;
 	}
 	
@@ -150,9 +157,34 @@ public class ThreadManager {
 			e.printStackTrace();
 		}
 		clientThread.start();
+		threadsChanged();
 	}
 
 	public IterationPositionThread getIterationWorkerThread() {
 		return iterationWorkerThread;
 	}
+
+	public ServerConnectThread getServerConnectThread() {
+		return serverConnectThread;
+	}
+
+//	public void setServerConnectThread(ServerConnectThread serverConnectThread) {
+//		this.serverConnectThread = serverConnectThread;
+//	}
+
+	public ArrayList<ServerWriteThread> getServerThreads() {
+		return serverThreads;
+	}
+
+//	public void setServerThreads(ArrayList<ServerWriteThread> serverThreads) {
+//		this.serverThreads = serverThreads;
+//	}
+
+	public ClientWriteThread getClientThread() {
+		return clientThread;
+	}
+
+//	public void setClientThread(ClientWriteThread clientThread) {
+//		this.clientThread = clientThread;
+//	}
 }

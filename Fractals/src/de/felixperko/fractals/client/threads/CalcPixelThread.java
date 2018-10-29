@@ -1,25 +1,30 @@
 package de.felixperko.fractals.client.threads;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.gui.PhaseProgressionCanvas;
+import de.felixperko.fractals.client.gui.RedrawInfo;
 import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
 import de.felixperko.fractals.client.rendering.chunkprovider.LocalChunkProvider;
 import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.threads.FractalsThread;
+import de.felixperko.fractals.server.util.Position;
 
 public class CalcPixelThread extends FractalsThread {
 	
 	Lock lock = new ReentrantLock();
 	
-	Queue<Chunk> waitingChunks = new LinkedList<>();
-	Set<Chunk> waitingChunkSet = new HashSet<>();
+	Queue<Chunk> waitingChunks = new PriorityBlockingQueue<>();
+	Set<Chunk> waitingChunkSet = Collections.synchronizedSet(new HashSet<>());
 	Set<Chunk> finishedChunks = new HashSet<>();
 	
 	LocalChunkProvider localChunkProvider;
@@ -30,37 +35,47 @@ public class CalcPixelThread extends FractalsThread {
 	
 	@Override
 	public void run() {
-		setPhase(PHASE_WAITING);
+		setPhase(PHASE_IDLE);
 		while (true) {
 			while (!waitingChunks.isEmpty()) {
 				synchronized (this) {
 					
-					Chunk c = waitingChunks.poll();
-					if (c == null)
-						continue;
-					if (!c.isReadyToCalculate()) {
-						waitingChunks.add(c);
-						continue;
-					}
-					setPhase(PHASE_WORKING);
+					System.out.println(waitingChunks.size());
+					Chunk c = null;
 					try {
-						waitingChunkSet.remove(c);
-						c.calculatePixels();
-						c.setReadyToDraw(true);
-						c.setRedrawNeeded(true);
-//						finishedChunks.add(c);
-						if (localChunkProvider != null)
-							localChunkProvider.addChunk(c);
-						FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
+					
+						c = waitingChunks.poll();
+						
+						if (c != null && !c.isReadyToCalculate()) {
+							waitingChunks.add(c);
+						}
+						else if (c != null){
+							setPhase(PHASE_WORKING);
+								waitingChunkSet.remove(c);
+								c.calculatePixels();
+								c.setReadyToDraw(true);
+								c.setRedrawNeeded(true);
+		//						finishedChunks.add(c);
+								if (localChunkProvider != null)
+									localChunkProvider.addChunk(c);
+								FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> FractalsMain.mainWindow.setRedraw(true));
+	//							FractalsMain.mainWindow.canvas.getDisplay().asyncExec(() -> {
+	//								Position screenOffset = c.getGrid().getScreenOffset(c.getGridPosition());
+	//								Position screenChunkDimensions = c.getGrid().getScreenOffset(new Position(1,1).add(c.getGridPosition())).sub(screenOffset);
+	//								FractalsMain.mainWindow.addRedrawInfo(new RedrawInfo(screenOffset, screenChunkDimensions, c.getPriority()));
+	//							});
+						}
+						
 					} catch (Exception e) {
 						if (c != null && !c.isDisposed())
 							e.printStackTrace();
 					}
+					
 				}
 			}
-			setPhase(PHASE_WAITING);
+			setPhase(PHASE_IDLE);
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				continue;
 			}
