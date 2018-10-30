@@ -9,10 +9,12 @@ import java.util.List;
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.threads.CalcPixelThread;
 import de.felixperko.fractals.client.threads.IterationPositionThread;
+import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.network.ClientWriteThread;
 import de.felixperko.fractals.server.network.ServerConnectThread;
 import de.felixperko.fractals.server.network.ServerWriteThread;
 import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
+import de.felixperko.fractals.server.tasks.TaskManager;
 import de.felixperko.fractals.server.tasks.TaskProvider;
 
 public class ThreadManager {
@@ -20,6 +22,7 @@ public class ThreadManager {
 	WorkerThread[] workerThreads;
 	IterationPositionThread iterationWorkerThread;
 	ArrayListBatchTaskManager taskManagerThread;
+	List<TaskManager> taskManagers = new ArrayList<>();
 	CalcPixelThread calcPixelThread = new CalcPixelThread("calcpixel");
 	
 	TaskProvider taskProvider;
@@ -187,4 +190,15 @@ public class ThreadManager {
 //	public void setClientThread(ClientWriteThread clientThread) {
 //		this.clientThread = clientThread;
 //	}
+	
+	public TaskManager createTaskManager(DataDescriptor dataDescriptor) {
+		TaskManager taskManager = new ArrayListBatchTaskManager(dataDescriptor);
+		taskManagers.add(taskManager);
+		taskManager.start();
+		return taskManager;
+	}
+	
+	public List<TaskManager> getTaskManagers() {
+		return taskManagers;
+	}
 }

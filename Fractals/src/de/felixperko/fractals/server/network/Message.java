@@ -40,8 +40,10 @@ public abstract class Message implements Serializable{
 		this.connection = connection;
 	}
 	
-	public void received() {
+	public void received(Connection connection, CategoryLogger log) {
 		this.latency = System.nanoTime()-sentTime;
+		setConnection(connection);
+		setComLogger(log);
 		log.log("received "+getClass().getSimpleName()+" ("+getLatencyInMs(1)+"ms)");
 		process();
 	}

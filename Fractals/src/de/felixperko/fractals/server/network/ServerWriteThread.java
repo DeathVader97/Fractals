@@ -12,7 +12,7 @@ public class ServerWriteThread extends WriteThread {
 	
 	final static CategoryLogger superLog = new CategoryLogger("com/server", Color.MAGENTA);
 	
-	ClientConnection clientConnection;
+	ClientRemoteConnection clientConnection;
 	
 	long reachableRequestInterval = (long) (1/NumberUtil.NS_TO_S);
 	long lastReachableTime;
@@ -43,7 +43,7 @@ public class ServerWriteThread extends WriteThread {
 		}
 	}
 
-	public void setClientConnection(ClientConnection clientConnection) {
+	public void setClientConnection(ClientRemoteConnection clientConnection) {
 		this.clientConnection = clientConnection;
 		super.setConnection(clientConnection);
 		setListenLogger(superLog.createSubLogger(clientConnection.getSenderInfo().getClientId()+"/in"));

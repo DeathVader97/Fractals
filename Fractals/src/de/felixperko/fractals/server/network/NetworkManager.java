@@ -16,12 +16,22 @@ public class NetworkManager {
 	
 	Map<Integer, ClientConnection> clients = new HashMap<>();
 	
-	public ClientConnection createNewClient(ServerWriteThread writeThread) {
+	public NetworkManager() {
+	}
+	
+	public ClientRemoteConnection createNewClient(ServerWriteThread writeThread) {
 		SenderInfo info = new SenderInfo(ID_COUNTER++);
-		ClientConnection clientInfo = new ClientConnection(info, writeThread);
-		clients.put((Integer)clientInfo.getSenderInfo().clientId, clientInfo);
+		ClientRemoteConnection clientConnection = new ClientRemoteConnection(info, writeThread);
+		clients.put((Integer)clientConnection.getSenderInfo().clientId, clientConnection);
 		log.log("new client connected. ID="+info.clientId);
-		return clientInfo;
+		return clientConnection;
+	}
+	
+	public ClientLocalConnection createNewLocalClient() {
+		SenderInfo info = new SenderInfo(ID_COUNTER++);
+		ClientLocalConnection clientConnection = new ClientLocalConnection(info);
+		clients.put((Integer)clientConnection.getSenderInfo().clientId, clientConnection);
+		return clientConnection;
 	}
 	
 	public ClientConnection getConnection(Integer clientId) {

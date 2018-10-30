@@ -578,6 +578,7 @@ public class MainWindow implements PerformanceThread{
 		applicableStates.addAll(FractalsServerMain.mainStateHolder.getStates());
 		applicableStates.addAll(FractalsMain.clientStateHolder.getStates());
 		applicableStates.addAll(FractalsMain.mainWindow.mainRenderer.getRendererStateHolder().getStates());
+		applicableStates.addAll(FractalsMain.rendererStateHolder.getStates());
 		
 		for (State<?> state : applicableStates) {
 			

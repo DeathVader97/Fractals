@@ -1,6 +1,9 @@
 package de.felixperko.fractals.server.data;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import de.felixperko.fractals.server.util.Position;
@@ -12,17 +15,28 @@ public class View {
 	
 	Domain domain;
 	Set<Integer> clientIds = new HashSet<>();
-	Position min, max;
+	
 	Grid grid;
+
+	Position min, max;
+	Position midPos;
+	
+	Map<Position, Chunk> chunks = new HashMap<>();
+	
 	boolean disposed;
 	
-	Position midPos;
+	int dispose_distance_limit = 5;
+	int calculation_distance_limit = 1;
+	
+	boolean updateGrid = false;
 	
 	public View(Position min, Position max) {
 		setParameters(min, max);
 	}
 	
 	private void setParameters(Position min, Position max) {
+		if (this.max == null || !this.max.subNew(this.min).equals(max.subNew(min)))
+			updateGrid = true;
 		this.min = min;
 		this.max = max;
 		this.midPos = max.addNew(min).mult(0.5);
@@ -61,6 +75,21 @@ public class View {
 	public void dispose() {
 		disposed = true;
 		domain.viewDisposed(this);
+		disposeChunks();
+//		Iterator<Position> it = chunks.keySet().iterator();
+//		next:
+//		while (it.hasNext()) {
+//			Position pos = it.next();
+//			Chunk c = chunks.get(pos);
+//			//if still contained in a view -> continue with next chunk
+//			for (View v : domain.views) {
+//				if (v.contains(c, dispose_distance_limit))
+//					continue next;
+//			}
+//			//not contained in any active views -> dispose
+//			c.dispose();
+//			it.remove();
+//		}
 	}
 
 	public boolean contains(Chunk c, int distanceLimit) {
@@ -79,14 +108,14 @@ public class View {
 	public void updateParameters(Client client) {
 		setParameters(client.config.getSpaceMin(), client.config.getSpaceMax());
 		
-		//TODO update clients and chunks
+		//TODO update grid, client, chunks
 		for (int id : clientIds) {
 			if (id == client.getId())
 				continue;
 			Client c = getClient(id);
 			c.updatePosition(min, max);
 		}
-		domain.updateChunks();
+		updateChunks();
 	}
 	
 	private Client getClient(int id) {
@@ -95,5 +124,47 @@ public class View {
 
 	public Position getMidSpacePosition() {
 		return midPos;
+	}
+
+	public void updateChunks() {
+		
+		Iterator<Chunk> it = chunks.values().iterator();
+		//update distances and remove out of bounds chunks
+		while (it.hasNext()) {
+			Chunk c = it.next();
+			Position spacePos = c.getStartPosition();
+			double lowestDistance = Double.MAX_VALUE;
+			for (View v : domain.views) {
+				if (!v.contains(c, dispose_distance_limit)) {
+					c.removeFromView(v);
+					continue;
+				}
+				c.addToView(v);
+				double distance = spacePos.distance(v.getMidSpacePosition());
+				if (distance < lowestDistance)
+					lowestDistance = distance;
+			}
+			if (lowestDistance == Double.MAX_VALUE) { //not in any view (anymore) -> dispose
+				//TODO delay of removal necessary?
+				c.dispose();
+				it.remove();
+			} else { //is in view, set distance
+				c.setDistanceToMid(lowestDistance);
+			}
+		}
+		domain.taskManager.setUpdatePriorities();
+	}
+
+	public void disposeChunks() {
+		for (Position pos : chunks.keySet()) {
+			Chunk c = chunks.get(pos);
+			if (c.getViews().size() == 1 && c.getViews().contains(this))
+				c.dispose();
+		}
+		chunks.clear();
+	}
+
+	public int getCalculationDistanceLimit() {
+		return calculation_distance_limit;
 	}
 }

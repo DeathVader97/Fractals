@@ -4,6 +4,7 @@ import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.data.Client;
 import de.felixperko.fractals.server.data.ClientConfiguration;
 import de.felixperko.fractals.server.network.ClientConnection;
+import de.felixperko.fractals.server.network.ClientRemoteConnection;
 import de.felixperko.fractals.server.network.Message;
 
 /**

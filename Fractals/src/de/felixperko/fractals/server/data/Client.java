@@ -1,12 +1,14 @@
 package de.felixperko.fractals.server.data;
 
 import de.felixperko.fractals.server.network.ClientConnection;
+import de.felixperko.fractals.server.network.ClientRemoteConnection;
+import de.felixperko.fractals.server.network.Connection;
 import de.felixperko.fractals.server.util.Position;
 
 public class Client {
 
 	ClientConfiguration config;
-	ClientConnection connection;
+	Connection connection;
 	View view;
 	
 	public Client(ClientConnection connection, ClientConfiguration configuration) {
@@ -65,7 +67,7 @@ public class Client {
 		return config;
 	}
 	
-	public ClientConnection getConnection() {
+	public Connection getConnection() {
 		return connection;
 	}
 	

@@ -1,5 +1,7 @@
 package de.felixperko.fractals.server.tasks;
 
+import de.felixperko.fractals.server.data.DataDescriptor;
+
 public interface TaskManager {
 
 	void generateTasks();
@@ -21,4 +23,7 @@ public interface TaskManager {
 	public int getTaskManagerId();
 	
 	void start();
+	
+	DataDescriptor getDataDescriptor();
+	void setDataDescriptor(DataDescriptor dataDescriptor);
 }

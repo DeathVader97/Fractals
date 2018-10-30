@@ -37,7 +37,7 @@ public class Instance {
 	
 	public void removeDomain(Domain domain) {
 		domains.remove(domain);
-		domain.disposeChunks();
+		domain.dispose();
 	}
 	
 	private Domain addDomain(Domain domain) {

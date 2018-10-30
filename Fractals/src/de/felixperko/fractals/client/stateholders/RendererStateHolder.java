@@ -1,7 +1,14 @@
 package de.felixperko.fractals.client.stateholders;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.gui.SelectionState;
+import de.felixperko.fractals.client.rendering.painter.FailRatioPainter;
+import de.felixperko.fractals.client.rendering.painter.Painter;
+import de.felixperko.fractals.client.rendering.painter.SamplesPainter;
+import de.felixperko.fractals.client.rendering.painter.StandardPainter;
 import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.server.calculators.MandelbrotCalculator;
 import de.felixperko.fractals.server.calculators.infrastructure.SampleCalculator;
@@ -16,6 +23,7 @@ public class RendererStateHolder extends StateHolder {
 	
 	public RangeState stateColorScale;
 	public RangeState stateColorShift;
+	public SelectionState<Class<? extends Painter>> statePainter;
 	
 	public RendererStateHolder(Renderer renderer) {
 		this.renderer = renderer;
@@ -23,11 +31,41 @@ public class RendererStateHolder extends StateHolder {
 
 	@Override
 	protected void stateSetup() {
+		configurePainter();
 		configureColorScale();
 		configureColorShift();
 
+		addState(statePainter);
 		addState(stateColorScale);
 		addState(stateColorShift);
+	}
+
+	private void configurePainter() {
+		statePainter = new SelectionState<Class<? extends Painter>>("painter", StandardPainter.class) {
+			@Override
+			public String getName(Class<? extends Painter> obj) {
+				return obj.getSimpleName();
+			}
+			@Override
+			public String getValueString() {
+				return getValue().getSimpleName();
+			}
+		};
+		statePainter.addStateListener(new StateChangeListener<Class<? extends Painter>>(statePainter){
+			@Override
+			public void valueChanged(Class<? extends Painter> oldValue, Class<? extends Painter> newValue) {
+				try {
+					renderer.setPainter(newValue.newInstance());
+				} catch (InstantiationException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		List<Class<? extends Painter>> options = new ArrayList<>();
+		options.add(StandardPainter.class);
+		options.add(SamplesPainter.class);
+		options.add(FailRatioPainter.class);
+		statePainter.addOptions(options);
 	}
 
 	private void configureColorScale() {

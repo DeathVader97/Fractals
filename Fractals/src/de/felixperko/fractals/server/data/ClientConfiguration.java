@@ -21,6 +21,15 @@ public class ClientConfiguration implements Serializable{
 	boolean update_domain;
 	boolean update_instance;
 	
+	public ClientConfiguration(Class<? extends SampleCalculator> calculatorClass, int chunkSize, double chunkDimensions,
+			Position spaceMin, Position spaceMax) {
+		this.calculatorClass = calculatorClass;
+		this.chunkSize = chunkSize;
+		this.chunkDimensions = chunkDimensions;
+		this.spaceMin = spaceMin;
+		this.spaceMax = spaceMax;
+	}
+
 	public Class<? extends SampleCalculator> getCalculatorClass() {
 		return calculatorClass;
 	}

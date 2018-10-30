@@ -21,6 +21,6 @@ public class SamplesPainter extends AbstractPainterImpl {
 		b *= 1 - chunk.getFailRatio(index, ChunkAccessType.RENDERING)*0.5f;
 		if (b > 1)
 			b = 1;
-		imageData.setPixel(y, x, Color.HSBtoRGB((float) (hue), 0.4f, b));
+		imageData.setPixel(x, y, Color.HSBtoRGB((float) (hue), 0.4f, b));
 	}
 }

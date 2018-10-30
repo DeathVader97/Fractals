@@ -3,10 +3,12 @@ package de.felixperko.fractals.server.data;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Device;
@@ -29,6 +31,8 @@ public class Chunk implements Comparable<Chunk>{
 	public static int getIndex(int relX, int relY, int chunkSize) {
 		return relX*chunkSize + relY;
 	}
+	
+	Set<View> inViews = new HashSet<>();
 	
 	final int chunk_size;
 	int arr_size;
@@ -184,6 +188,8 @@ public class Chunk implements Comparable<Chunk>{
 	 * fill the pixels according to finished iterations
 	 */
 	private void fillPixels() {
+		//update painter
+		this.painter = grid.getRenderer().getPainter();
 		int i = 0;
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {
@@ -738,5 +744,17 @@ public class Chunk implements Comparable<Chunk>{
 		if (o == null)
 			return 1;
 		return Double.compare(getPriority(), o.getPriority());
+	}
+	
+	public void addToView(View view) {
+		inViews.add(view);
+	}
+	
+	public void removeFromView(View view) {
+		inViews.remove(view);
+	}
+
+	public Set<View> getViews() {
+		return inViews;
 	}
 }

@@ -48,6 +48,7 @@ public interface Renderer {
 	public void shiftView(Position shift);
 	
 	public Painter getPainter();
+	public void setPainter(Painter painter);
 	
 	public float getColorOffset();
 	public void setColorOffset(float colorOffset);

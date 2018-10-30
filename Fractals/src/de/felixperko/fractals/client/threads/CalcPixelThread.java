@@ -40,7 +40,7 @@ public class CalcPixelThread extends FractalsThread {
 			while (!waitingChunks.isEmpty()) {
 				synchronized (this) {
 					
-					System.out.println(waitingChunks.size());
+//					System.out.println(waitingChunks.size());
 					Chunk c = null;
 					try {
 					

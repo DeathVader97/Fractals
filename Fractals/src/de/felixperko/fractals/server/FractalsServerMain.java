@@ -13,6 +13,7 @@ public class FractalsServerMain {
 	public static void main(String[] args) {
 		mainStateHolder = new MainStateHolder();
 		networkManager = new NetworkManager();
+		dataContainer = new DataContainer();
 	}
 
 }

@@ -33,7 +33,7 @@ public class ServerConnectThread extends FractalsThread{
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-				ClientConnection connection = networkManager.createNewClient(serverWriteThread);
+				ClientRemoteConnection connection = networkManager.createNewClient(serverWriteThread);
 				serverWriteThread.setClientConnection(connection);
 			}
 			server.close();

@@ -428,6 +428,12 @@ public class GridRenderer extends AbstractRendererImpl {
 	public Painter getPainter() {
 		return painter;
 	}
+	
+	@Override
+	public void setPainter(Painter painter) {
+		this.painter = painter;
+		FractalsMain.threadManager.getCalcPixelThread().reset();
+	}
 
 	@Override
 	public float getColorOffset() {

@@ -16,6 +16,7 @@ import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Grid;
 import de.felixperko.fractals.server.data.ProcessingStepState;
+import de.felixperko.fractals.server.data.View;
 import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
 import de.felixperko.fractals.server.util.Position;
@@ -25,14 +26,15 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	static int ID_COUNTER = 0;
 	int id;
 	
-	public ArrayListBatchTaskManager(GridRenderer renderer) {
+	public ArrayListBatchTaskManager(DataDescriptor dataDescriptor) {
 		super("TaskManager", 5);
 		this.id = ID_COUNTER++;
-		this.renderer = renderer;
+		this.dataDescriptor = dataDescriptor;
+//		this.renderer = renderer;
 	}
 
-	GridRenderer renderer;
-	Grid grid;
+//	GridRenderer renderer;
+//	Grid grid;
 	DataDescriptor dataDescriptor;
 	
 	boolean generateTasks;
@@ -120,7 +122,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 //		synchronized (addChunkList) {
 //			if (!addChunkList.isEmpty()){
 				setUpdatePriorities();
-				dataDescriptor = renderer.getDataDescriptor();
+//				dataDescriptor = renderer.getDataDescriptor();
 				for (Chunk add : addChunkList) {
 					if (!add.isDisposed()) {
 						addTask(new ChunkTask(add, dataDescriptor, id));
@@ -179,8 +181,16 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 			calcThread.addChunk(finishedTask.chunk);
 			ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
 			Position gridPos = finishedTask.getChunk().getGridPosition();
-			double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
-			if (state.getStateNumber() < maxState && viewDist < 1) {
+			
+			boolean inView = false;
+			for (View v : finishedTask.getChunk().getViews()) {
+				if (v.contains(finishedTask.chunk, v.getCalculationDistanceLimit())) {
+					inView = true;
+					break;
+				}
+			}
+//			double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
+			if (inView && state.getStateNumber() < maxState) {
 				addTask(finishedTask);
 				newlyAdded++;
 			} else {
@@ -257,6 +267,16 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	@Override
 	public int getTaskManagerId() {
 		return id;
+	}
+
+	@Override
+	public DataDescriptor getDataDescriptor() {
+		return dataDescriptor;
+	}
+
+	@Override
+	public void setDataDescriptor(DataDescriptor dataDescriptor) {
+		this.dataDescriptor = dataDescriptor;
 	}
 
 }
