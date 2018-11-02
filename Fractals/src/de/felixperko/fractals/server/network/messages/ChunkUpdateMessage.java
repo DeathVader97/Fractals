@@ -6,15 +6,18 @@ import de.felixperko.fractals.server.network.Message;
 
 public class ChunkUpdateMessage extends Message {
 	
+	private static final long serialVersionUID = -2349690041977280160L;
+	
 	Chunk chunk;
 	
 	public ChunkUpdateMessage(Chunk chunk) {
 		this.chunk = chunk;
+		log_received = false;
 	}
 
 	@Override
 	protected void process() {
-		FractalsMain.threadManager.getCalcPixelThread().addChunk(chunk);
+		FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer()).addChunk(chunk);
 	}
 
 	public Chunk getChunk() {

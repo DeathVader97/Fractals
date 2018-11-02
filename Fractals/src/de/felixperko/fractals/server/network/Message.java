@@ -21,6 +21,8 @@ public abstract class Message implements Serializable{
 	
 	protected transient Connection connection;
 	
+	protected boolean log_received = true;
+	
 	public Message() {
 		
 	}
@@ -44,7 +46,8 @@ public abstract class Message implements Serializable{
 		this.latency = System.nanoTime()-sentTime;
 		setConnection(connection);
 		setComLogger(log);
-		log.log("received "+getClass().getSimpleName()+" ("+getLatencyInMs(1)+"ms)");
+		if (log_received)
+			log.log("received "+getClass().getSimpleName()+" ("+getLatencyInMs(1)+"ms)");
 		process();
 	}
 	

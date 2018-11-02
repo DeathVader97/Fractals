@@ -6,6 +6,7 @@ import org.eclipse.swt.events.PaintEvent;
 
 import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
 import de.felixperko.fractals.client.rendering.painter.Painter;
+import de.felixperko.fractals.client.stateholders.RendererStateHolder;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Location;
 import de.felixperko.fractals.server.state.StateHolder;
@@ -31,7 +32,7 @@ public interface Renderer {
 	public Location getLocation(String name);
 	
 	public StateHolder getRendererStateHolder();
-	public void setRendererStateHolder(JobStateHolder rendererStateHolder);
+	public void setRendererStateHolder(RendererStateHolder rendererStateHolder);
 
 	public void startIterationPositionThread();
 

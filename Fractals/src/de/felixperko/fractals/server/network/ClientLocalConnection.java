@@ -21,6 +21,7 @@ public class ClientLocalConnection implements ClientConnection {
 	
 	@Override
 	public void writeMessage(Message msg) {
+		msg.setSentTime();
 		msg.received(this, log);
 	}
 

@@ -11,6 +11,7 @@ import de.felixperko.fractals.server.data.ClientConfiguration;
 import de.felixperko.fractals.server.data.LocationHolder;
 import de.felixperko.fractals.server.network.ClientLocalConnection;
 import de.felixperko.fractals.server.network.ServerConnection;
+import de.felixperko.fractals.server.network.messages.ConnectedMessage;
 import de.felixperko.fractals.server.network.messages.SessionInitRequestMessage;
 import de.felixperko.fractals.server.tasks.LocalTaskProvider;
 import de.felixperko.fractals.server.tasks.ArrayListBatchTaskManager;
@@ -53,9 +54,7 @@ public class FractalsMain{
 		FractalsServerMain.main(args);
 		localClientConnection = FractalsServerMain.networkManager.createNewLocalClient();
 		
-		double dimensions = 20/4;
-		ClientConfiguration clientConfiguration = new ClientConfiguration(MandelbrotCalculator.class, 128, dimensions, new Position(-2, -2), new Position(2, 2));
-		localClientConnection.writeMessage(new SessionInitRequestMessage(clientConfiguration));
+//		localClientConnection.writeMessage(new ConnectedMessage(localClientConnection));
 		
 		clientStateHolder = new ClientStateHolder();
 		
@@ -81,7 +80,11 @@ public class FractalsMain{
 		((GridRenderer) renderer).setTaskManager(FractalsMain.taskManager);
 		((GridRenderer) renderer).boundsChanged();
 		performanceMonitor.startPhase();
-		
+
+		Position dims = new Position(mainWindow.canvas.getBounds().width, mainWindow.canvas.getBounds().height);
+		ClientConfiguration clientConfiguration = new ClientConfiguration(MandelbrotCalculator.class, 128, new Position(-2, -2), new Position(2, 2), dims, localClientConnection);
+		((GridRenderer) renderer).setClientConfiguration(clientConfiguration);
+		localClientConnection.writeMessage(new SessionInitRequestMessage(clientConfiguration));
 		mainWindow.windowLoop();
 	}
 

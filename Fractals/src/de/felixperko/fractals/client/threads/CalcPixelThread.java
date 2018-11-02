@@ -15,6 +15,8 @@ import de.felixperko.fractals.client.gui.PhaseProgressionCanvas;
 import de.felixperko.fractals.client.gui.RedrawInfo;
 import de.felixperko.fractals.client.rendering.chunkprovider.ChunkProvider;
 import de.felixperko.fractals.client.rendering.chunkprovider.LocalChunkProvider;
+import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
+import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.Position;
@@ -28,6 +30,8 @@ public class CalcPixelThread extends FractalsThread {
 	Set<Chunk> finishedChunks = new HashSet<>();
 	
 	LocalChunkProvider localChunkProvider;
+	
+	Renderer renderer;
 	
 	public CalcPixelThread(String name) {
 		super(name, 5);
@@ -52,7 +56,7 @@ public class CalcPixelThread extends FractalsThread {
 						else if (c != null){
 							setPhase(PHASE_WORKING);
 								waitingChunkSet.remove(c);
-								c.calculatePixels();
+								c.calculatePixels(renderer);
 								c.setReadyToDraw(true);
 								c.setRedrawNeeded(true);
 		//						finishedChunks.add(c);
@@ -106,6 +110,10 @@ public class CalcPixelThread extends FractalsThread {
 		waitingChunks.clear();
 		waitingChunkSet.clear();
 		finishedChunks.clear();
+	}
+
+	public void setRenderer(Renderer renderer) {
+		this.renderer = renderer;
 	}
 
 }

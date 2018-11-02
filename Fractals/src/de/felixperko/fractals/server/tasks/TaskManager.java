@@ -1,5 +1,6 @@
 package de.felixperko.fractals.server.tasks;
 
+import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.data.DataDescriptor;
 
 public interface TaskManager {
@@ -26,4 +27,8 @@ public interface TaskManager {
 	
 	DataDescriptor getDataDescriptor();
 	void setDataDescriptor(DataDescriptor dataDescriptor);
+
+	void addChunk(Chunk c);
+
+	void removeChunkTask(Chunk c);
 }

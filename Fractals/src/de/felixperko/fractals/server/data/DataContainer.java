@@ -33,9 +33,10 @@ public class DataContainer {
 		Instance inst = getApplicableInstance(config);
 		Domain domain = inst.getApplicableDomain(config);
 		View view = domain.getApplicableView(config);
-		
-		view.addClient(client);
+
 		client.setView(view);
+		view.addClient(client);
+		clients.put(client.getId(), client);
 	}
 	
 	public Client getClient(int id) {

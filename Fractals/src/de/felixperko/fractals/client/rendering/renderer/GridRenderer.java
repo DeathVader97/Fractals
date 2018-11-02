@@ -21,8 +21,10 @@ import de.felixperko.fractals.client.rendering.painter.Painter;
 import de.felixperko.fractals.client.rendering.painter.StandardPainter;
 import de.felixperko.fractals.client.threads.CalcPixelThread;
 import de.felixperko.fractals.client.util.NumberUtil;
+import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.calculators.infrastructure.AbstractCalculator;
 import de.felixperko.fractals.server.data.Chunk;
+import de.felixperko.fractals.server.data.ClientConfiguration;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Grid;
 import de.felixperko.fractals.server.data.Location;
@@ -65,18 +67,25 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	boolean redraw = true;
 	
+	ClientConfiguration configuration;
+	
 	public GridRenderer() {
-		grid = new Grid(this);
 		chunkProvider = new LocalChunkProvider();
-		CalcPixelThread calcPixelThread = FractalsMain.threadManager.getCalcPixelThread();
+		grid = new Grid();
+		CalcPixelThread calcPixelThread = FractalsMain.threadManager.getCalcPixelThread(this);
 		calcPixelThread.setLocalChunkProvider((LocalChunkProvider)chunkProvider);
 		calcPixelThread.start();
+	}
+	
+	public void setClientConfiguration(ClientConfiguration configuration) {
+		this.configuration = configuration;
 	}
 	
 	public void setTaskManager(TaskManager taskManager){
 		if (!(taskManager instanceof ArrayListBatchTaskManager))
 			throw new IllegalArgumentException();
 		this.taskManager = (ArrayListBatchTaskManager) taskManager;
+		grid.setTaskManager(taskManager);
 	}
 	
 	public void setGridMin(Position min) {
@@ -131,9 +140,8 @@ public class GridRenderer extends AbstractRendererImpl {
 		this.canvas = FractalsMain.mainWindow.canvas;
 		int w = canvas.getSize().x;
 		int h = canvas.getSize().y;
-		DataDescriptor dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, w, h, w, h, 10000, rendererStateHolder, grid.getChunkSize());
+		DataDescriptor dataDescriptor = new DataDescriptor(-2, -2, 2.*w/h, 2, w, h, w, h, 10000, FractalsServerMain.jobStateHolder, grid.getChunkSize());
 		setDataDescriptor(dataDescriptor);
-		grid.init();
 		updateRendererPositions();
 		initialized = true;
 	}
@@ -308,7 +316,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	@Override
 	public void reset() {
 		taskManager.clearTasks();
-		FractalsMain.threadManager.getCalcPixelThread().reset();
+		FractalsMain.threadManager.getCalcPixelThread(this).reset();
 		grid.reset();
 		chunkProvider.reset();
 		boundsChanged();
@@ -322,10 +330,12 @@ public class GridRenderer extends AbstractRendererImpl {
 	
 	public void shiftViewGrid(Position gridShift) {
 //		System.out.println("GridRenderer.shiftViewGrid(): "+gridShift);
+		configuration.updateShiftView(grid.getSpacePosition(getGridMin().addNew(gridShift)), getGridMax().addNew(gridShift));
 		minGridX += gridShift.getX();
 		minGridY += gridShift.getY();
 		maxGridX += gridShift.getX();
 		maxGridY += gridShift.getY();
+//		configuration.updateShiftView(grid.getSpacePosition(getGridMin()), getGridMax().addNew(gridShift));
 		calcMid();
 		boundsChanged();
 	}
@@ -400,6 +410,7 @@ public class GridRenderer extends AbstractRendererImpl {
 		setGridMin(getGridMin().mult(1/scaleBy));
 		setGridMax(getGridMin().add(diff));
 		FractalsMain.mainWindow.setRedraw(true);
+		configuration.updateZoom();
 //		scaleGridMax(scaleBy);
 	}
 
@@ -432,7 +443,7 @@ public class GridRenderer extends AbstractRendererImpl {
 	@Override
 	public void setPainter(Painter painter) {
 		this.painter = painter;
-		FractalsMain.threadManager.getCalcPixelThread().reset();
+		FractalsMain.threadManager.getCalcPixelThread(this).reset();
 	}
 
 	@Override

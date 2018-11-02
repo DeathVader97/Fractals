@@ -84,8 +84,12 @@ import de.felixperko.fractals.server.util.performance.PerfInstance;
 import de.felixperko.fractals.server.util.performance.PerformanceMonitor;
 import sun.misc.Perf;
 import swing2swt.layout.FlowLayout;
+import org.eclipse.swt.layout.RowData;
 
 public class MainWindow implements PerformanceThread{
+	
+	public static int w = 500;
+	public static int h = 400;
 	
 	WorkerPhase phase = DEFAULT_PHASE;
 	
@@ -338,13 +342,13 @@ public class MainWindow implements PerformanceThread{
 		
 		setupMainRenderer(sashForm);
 		
-		TabFolder tabFolder = new TabFolder(sashForm, SWT.NONE);
+		tabFolder_1 = new TabFolder(sashForm, SWT.NONE);
 		
-		setupPropertyTab(tabFolder);
-		setupPerformanceTab(tabFolder);
-		setupLogTab(tabFolder);
+		setupPropertyTab(tabFolder_1);
+		setupPerformanceTab(tabFolder_1);
+		setupLogTab(tabFolder_1);
 		
-		setupContextMenu(tabFolder);
+		setupContextMenu(tabFolder_1);
 		
 		sashForm.setWeights(new int[] {2, 1});
 
@@ -352,6 +356,7 @@ public class MainWindow implements PerformanceThread{
 
 	private void setupShell() {
 		shell = new Shell();
+		shell.setSize(w, h);
 		if (display.getMonitors().length > 1) {
 			Rectangle monitorBounds = display.getMonitors()[1].getBounds();
 			Rectangle shellBounds = shell.getBounds();
@@ -461,15 +466,14 @@ public class MainWindow implements PerformanceThread{
 		TabItem tbtmStatus = new TabItem(tabFolder, SWT.NONE);
 		tbtmStatus.setText("Eigenschaften");
 		
-		ScrolledComposite scrolledComposite = new ScrolledComposite(tabFolder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
-		scrolledComposite.setExpandHorizontal(true);
-		tbtmStatus.setControl(scrolledComposite);
-		scrolledComposite.setExpandVertical(true);
-		
-		Composite composite = new Composite(scrolledComposite, SWT.NONE);
+		Composite composite = new Composite(tabFolder_1, SWT.NONE);
+		tbtmStatus.setControl(composite);
 		composite.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		Composite composite_2 = new Composite(composite, SWT.NONE);
+		RowData rd_composite_2 = new RowData(SWT.DEFAULT, SWT.DEFAULT);
+		rd_composite_2.exclude = true;
+		composite_2.setLayoutData(rd_composite_2);
 		composite_2.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		
 		Button btnNeuZeichnen = new Button(composite_2, SWT.NONE);
@@ -565,9 +569,6 @@ public class MainWindow implements PerformanceThread{
 			}
 		});
 		button_3.setText("-");
-		
-		scrolledComposite.setContent(composite);
-		scrolledComposite.setMinSize(composite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
 		setupStateTable(composite_7);
 	}
@@ -772,7 +773,7 @@ public class MainWindow implements PerformanceThread{
 		if (FractalsMain.taskManager != null && FractalsMain.taskManager instanceof PerformanceThread)
 			threads.add(((PerformanceThread)FractalsMain.taskManager));
 		
-		threads.add(FractalsMain.threadManager.getCalcPixelThread());
+		threads.add(FractalsMain.threadManager.getCalcPixelThread(mainRenderer));
 		
 		if (FractalsMain.threadManager.getServerConnectThread() != null)
 			threads.add(FractalsMain.threadManager.getServerConnectThread());
@@ -790,6 +791,7 @@ public class MainWindow implements PerformanceThread{
 	}
 	
 	List<Widget> progressionThreadWidgets = new ArrayList<>();
+	private TabFolder tabFolder_1;
 	
 	public void refreshProgressionThreads(){
 		if (display == null){
@@ -825,10 +827,10 @@ public class MainWindow implements PerformanceThread{
 		TabItem tbtmLog = new TabItem(tabFolder, SWT.NONE);
 		tbtmLog.setText("Log");
 		
-		ScrolledComposite scrolledComposite_2 = new ScrolledComposite(tabFolder, SWT.H_SCROLL | SWT.V_SCROLL);
-		tbtmLog.setControl(scrolledComposite_2);
+		ScrolledComposite scrolledComposite_2 = new ScrolledComposite(tabFolder, SWT.NONE);
 		scrolledComposite_2.setExpandHorizontal(true);
 		scrolledComposite_2.setExpandVertical(true);
+		tbtmLog.setControl(scrolledComposite_2);
 		
 		Composite composite_10 = new Composite(scrolledComposite_2, SWT.NONE);
 		GridLayout gl_composite_10 = new GridLayout(1, false);
@@ -839,6 +841,7 @@ public class MainWindow implements PerformanceThread{
 		
 		text_filter = new Text(composite_10, SWT.BORDER);
 		final StyledText styledText_log = new StyledText(composite_10, SWT.BORDER);
+		styledText_log.setAlwaysShowScrollBars(false);
 		text_filter.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		text_filter.setMessage("Filter");
 		text_filter.addKeyListener(new KeyAdapter() {

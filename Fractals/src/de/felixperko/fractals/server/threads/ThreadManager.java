@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.felixperko.fractals.client.FractalsMain;
+import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
+import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.client.threads.CalcPixelThread;
 import de.felixperko.fractals.client.threads.IterationPositionThread;
 import de.felixperko.fractals.server.data.DataDescriptor;
@@ -36,7 +38,8 @@ public class ThreadManager {
 	public ThreadManager() {
 	}
 	
-	public CalcPixelThread getCalcPixelThread() {
+	public CalcPixelThread getCalcPixelThread(Renderer mainRenderer) {
+		calcPixelThread.setRenderer(mainRenderer);
 		return calcPixelThread;
 	}
 	

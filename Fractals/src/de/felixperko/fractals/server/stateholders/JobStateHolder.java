@@ -21,16 +21,13 @@ import de.felixperko.fractals.server.util.Position;
 
 public class JobStateHolder extends StateHolder{
 	
-	Renderer renderer;
-	
 	public DiscreteState<Integer> statePower;
 	public RangeState stateBiasReal;
 	public RangeState stateBiasImag;
 	public SelectionState<Class<? extends SampleCalculator>> stateCalculator;
 	public DiscreteState<Integer> stateChunkSize;
 	
-	public JobStateHolder(Renderer renderer) {
-		this.renderer = renderer;
+	public JobStateHolder() {
 	}
 
 	@Override
@@ -93,7 +90,7 @@ public class JobStateHolder extends StateHolder{
 					Class<? extends SampleCalculator> newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
 				FractalsMain.mainWindow.getMainRenderer().reset();
-				FractalsMain.threadManager.getCalcPixelThread().reset();
+				FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer()).reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -123,7 +120,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
-				FractalsMain.threadManager.getCalcPixelThread().reset();
+				FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer()).reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -141,7 +138,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
-				FractalsMain.threadManager.getCalcPixelThread().reset();
+				FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer()).reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}
@@ -160,7 +157,7 @@ public class JobStateHolder extends StateHolder{
 			@Override
 			public void valueChanged(Integer oldValue, Integer newValue) {
 				FractalsMain.mainWindow.getMainRenderer().getDataDescriptor().refreshStateParams();
-				FractalsMain.threadManager.getCalcPixelThread().reset();
+				FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer()).reset();
 				FractalsMain.mainWindow.setRedraw(true);
 				FractalsMain.mainWindow.getDisplay().asyncExec(() -> {FractalsMain.mainWindow.getMainRenderer().reset();});
 			}

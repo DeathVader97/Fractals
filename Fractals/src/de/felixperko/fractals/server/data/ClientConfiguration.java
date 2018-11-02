@@ -3,6 +3,10 @@ package de.felixperko.fractals.server.data;
 import java.io.Serializable;
 
 import de.felixperko.fractals.server.calculators.infrastructure.SampleCalculator;
+import de.felixperko.fractals.server.network.ClientConnection;
+import de.felixperko.fractals.server.network.Connection;
+import de.felixperko.fractals.server.network.ServerConnection;
+import de.felixperko.fractals.server.network.messages.UpdateConfigurationMessage;
 import de.felixperko.fractals.server.util.Position;
 
 public class ClientConfiguration implements Serializable{
@@ -14,6 +18,8 @@ public class ClientConfiguration implements Serializable{
 	int chunkSize;
 	double chunkDimensions;
 	
+	Position drawDimensions;
+	
 	Position spaceMin;
 	Position spaceMax;
 	
@@ -21,13 +27,18 @@ public class ClientConfiguration implements Serializable{
 	boolean update_domain;
 	boolean update_instance;
 	
-	public ClientConfiguration(Class<? extends SampleCalculator> calculatorClass, int chunkSize, double chunkDimensions,
-			Position spaceMin, Position spaceMax) {
+	transient Connection connection;
+	
+	public ClientConfiguration(Class<? extends SampleCalculator> calculatorClass, int chunkSize,
+			Position spaceMin, Position spaceMax, Position drawDimensions, Connection connection) {
 		this.calculatorClass = calculatorClass;
 		this.chunkSize = chunkSize;
-		this.chunkDimensions = chunkDimensions;
+		Position chunkCounts = drawDimensions.divNew(chunkSize);
+		this.chunkDimensions = (spaceMax.getX()-spaceMin.getX())/chunkCounts.getX();
 		this.spaceMin = spaceMin;
 		this.spaceMax = spaceMax;
+		this.drawDimensions = drawDimensions;
+		this.connection = connection;
 	}
 
 	public Class<? extends SampleCalculator> getCalculatorClass() {
@@ -56,13 +67,17 @@ public class ClientConfiguration implements Serializable{
 		this.spaceMin = spaceMin;
 		this.spaceMax = spaceMax;
 		update_view = true;
+		if (connection != null)
+			connection.writeMessage(new UpdateConfigurationMessage(this));
 	}
 	
-	public void updateZoom(double chunkDimensions) {
-		if (chunkDimensions == this.chunkDimensions)
-			return;
-		this.chunkDimensions = chunkDimensions;
+	public void updateZoom() {
+//		if (chunkDimensions == this.chunkDimensions)
+//			return;
+//		this.chunkDimensions = chunkDimensions;
 		update_domain = true;
+//		if (connection != null)
+//			connection.writeMessage(new UpdateConfigurationMessage(this));
 	}
 	
 	public void updateChunkSize(int chunkSize) {
@@ -70,6 +85,8 @@ public class ClientConfiguration implements Serializable{
 			return;
 		this.chunkSize = chunkSize;
 		update_domain = true;
+		if (connection != null)
+			connection.writeMessage(new UpdateConfigurationMessage(this));
 	}
 	
 	public void updateCalculatorParameters(Class<? extends SampleCalculator> calculatorClass) {
@@ -77,5 +94,23 @@ public class ClientConfiguration implements Serializable{
 			return;
 		this.calculatorClass = calculatorClass;
 		update_instance = true;
+		if (connection != null)
+			connection.writeMessage(new UpdateConfigurationMessage(this));
+	}
+
+	public Position getDrawDimensions() {
+		return drawDimensions;
+	}
+
+	public boolean isUpdate_view() {
+		return update_view;
+	}
+
+	public boolean isUpdate_domain() {
+		return update_domain;
+	}
+
+	public boolean isUpdate_instance() {
+		return update_instance;
 	}
 }

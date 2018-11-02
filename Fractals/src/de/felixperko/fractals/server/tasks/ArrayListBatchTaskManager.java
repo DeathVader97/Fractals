@@ -12,11 +12,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
 import de.felixperko.fractals.client.threads.CalcPixelThread;
+import de.felixperko.fractals.server.FractalsServerMain;
 import de.felixperko.fractals.server.data.Chunk;
 import de.felixperko.fractals.server.data.DataDescriptor;
 import de.felixperko.fractals.server.data.Grid;
 import de.felixperko.fractals.server.data.ProcessingStepState;
 import de.felixperko.fractals.server.data.View;
+import de.felixperko.fractals.server.network.messages.ChunkUpdateMessage;
 import de.felixperko.fractals.server.threads.FractalsThread;
 import de.felixperko.fractals.server.util.CategoryLogger;
 import de.felixperko.fractals.server.util.Position;
@@ -60,6 +62,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	 * Adds a chunk to be calculated.
 	 * @param c
 	 */
+	@Override
 	public void addChunk(Chunk c) {
 		addChunkList.add(c);
 		generateTasks = true;
@@ -174,19 +177,20 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 		int newlyAdded = 0;
 		
 		int maxState = dataDescriptor.getStepProvider().getMaxState();
-		CalcPixelThread calcThread = FractalsMain.threadManager.getCalcPixelThread();
+		CalcPixelThread calcThread = FractalsMain.threadManager.getCalcPixelThread(FractalsMain.mainWindow.getMainRenderer());
 		
 		for (ChunkTask finishedTask : finishedTaskList) {
 			//TODO remote chunk handling
-			calcThread.addChunk(finishedTask.chunk);
-			ProcessingStepState state = finishedTask.getChunk().getProcessingStepState();
-			Position gridPos = finishedTask.getChunk().getGridPosition();
+			Chunk chunk = finishedTask.getChunk();
+			ProcessingStepState state = chunk.getProcessingStepState();
+			Position gridPos = chunk.getGridPosition();
 			
 			boolean inView = false;
-			for (View v : finishedTask.getChunk().getViews()) {
+			for (View v : chunk.getViews()) {
 				if (v.contains(finishedTask.chunk, v.getCalculationDistanceLimit())) {
 					inView = true;
-					break;
+					for (Integer clientId : v.getClientIds())
+						FractalsServerMain.networkManager.getConnection(clientId).writeMessage(new ChunkUpdateMessage(chunk));
 				}
 			}
 //			double viewDist = renderer.viewGridDist(gridPos.getX(), gridPos.getY());
@@ -194,7 +198,7 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 				addTask(finishedTask);
 				newlyAdded++;
 			} else {
-				taskMap.remove(finishedTask.getChunk());
+				taskMap.remove(chunk);
 			}
 		}
 		
@@ -253,7 +257,8 @@ public class ArrayListBatchTaskManager extends FractalsThread implements TaskMan
 	public void setGenerateTasks() {
 		generateTasks = true;
 	}
-
+	
+	@Override
 	public void removeChunkTask(Chunk c) {
 		if (!addChunkList.remove(c)) {
 			ChunkTask task = taskMap.remove(c);

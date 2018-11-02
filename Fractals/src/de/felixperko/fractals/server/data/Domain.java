@@ -22,8 +22,6 @@ public class Domain {
 	
 	List<View> views = new ArrayList<>();
 	
-	TaskManager taskManager;
-	
 	public Domain(int chunkSize, double chunkDimensions) {
 		this.chunkSize = chunkSize;
 		this.chunkDimensions = chunkDimensions;

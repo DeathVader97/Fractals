@@ -18,6 +18,8 @@ import org.eclipse.swt.graphics.PaletteData;
 
 import de.felixperko.fractals.client.FractalsMain;
 import de.felixperko.fractals.client.rendering.painter.Painter;
+import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
+import de.felixperko.fractals.client.rendering.renderer.Renderer;
 import de.felixperko.fractals.client.util.NumberUtil;
 import de.felixperko.fractals.server.steps.ProcessingStep;
 import de.felixperko.fractals.server.steps.masks.DefaultMask;
@@ -71,8 +73,6 @@ public class Chunk implements Comparable<Chunk>{
 	
 	protected final Position[] neigbourPositions = new Position[9];
 	
-	Painter painter;
-	
 	float colorOffset = 0; //TODO move to painter
 
 	ProcessingStepState processingStepState;
@@ -109,7 +109,6 @@ public class Chunk implements Comparable<Chunk>{
 //		System.out.println("Chunk.new : deltaX = "+delta.getX()+" deltaY = "+delta.getY()+" gridPos: "+gridPos);
 //		Thread.dumpStack();
 		this.grid = grid;
-		this.painter = grid.getRenderer().getPainter();
 		addStateInfo("constructor finished");
 		setReadyToCalculate(true);
 	}
@@ -162,10 +161,10 @@ public class Chunk implements Comparable<Chunk>{
 		return relX*chunk_size + relY;
 	}
 	
-	public void calculatePixels() {
+	public void calculatePixels(Renderer renderer) {
 		prepareArrays();
 		prepareImageData();
-		fillPixels();
+		fillPixels(renderer);
 		setRedrawFlags();
 		addStateInfo("calculated pixels");
 	}
@@ -187,9 +186,8 @@ public class Chunk implements Comparable<Chunk>{
 	/**
 	 * fill the pixels according to finished iterations
 	 */
-	private void fillPixels() {
-		//update painter
-		this.painter = grid.getRenderer().getPainter();
+	private void fillPixels(Renderer renderer) {
+		Painter painter = renderer.getPainter();
 		int i = 0;
 		for (int x = 0 ; x < chunk_size ; x++) {
 			for (int y = 0 ; y < chunk_size ; y++) {

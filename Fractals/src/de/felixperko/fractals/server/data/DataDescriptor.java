@@ -34,10 +34,10 @@ public class DataDescriptor{
 	
 	private CalculatorFactory calculatorFactory = new CalculatorFactory(MandelbrotCalculator.class, this);
 	private StepProvider stepProvider;
-	private JobStateHolder rendererStateHolder;
+	private JobStateHolder jobStateHolder;
 	
 	public DataDescriptor(double start_x, double start_y, double end_x, double end_y, int dim_sampled_x, int dim_sampled_y,
-			int dim_goal_x, int dim_goal_y, int maxIterations, JobStateHolder rendererStateHolder, int chunkSize) {
+			int dim_goal_x, int dim_goal_y, int maxIterations, JobStateHolder jobStateHolder, int chunkSize) {
 		this.start_x = start_x;
 		this.start_y = start_y;
 		this.spacing = (end_x - start_x)/dim_sampled_x;
@@ -53,14 +53,14 @@ public class DataDescriptor{
 		this.end_x = start_x + delta_x;
 		this.end_y = start_y + delta_y;
 		
-		this.rendererStateHolder = rendererStateHolder;
+		this.jobStateHolder = jobStateHolder;
 		refreshStateParams();
 		this.chunkSize = chunkSize;
 		this.stepProvider = new DefaultStepProvider(this);
 	}
 
 	public DataDescriptor getRefreshedDescriptor() {
-		DataDescriptor newDD = new DataDescriptor(start_x, start_y, end_x, end_y, dim_sampled_x, dim_sampled_y, dim_goal_x, dim_goal_y, maxIterations, rendererStateHolder, chunkSize);
+		DataDescriptor newDD = new DataDescriptor(start_x, start_y, end_x, end_y, dim_sampled_x, dim_sampled_y, dim_goal_x, dim_goal_y, maxIterations, jobStateHolder, chunkSize);
 		newDD.setSpacing(spacing);
 		return newDD;
 	}
@@ -221,10 +221,10 @@ public class DataDescriptor{
 	}
 
 	public void refreshStateParams() {
-		this.fractalPower = (int) rendererStateHolder.statePower.getOutput();
-		this.fractalBias = rendererStateHolder.getBias();
-		this.calculatorFactory = new CalculatorFactory(rendererStateHolder.stateCalculator.getValue(), this);
-		this.chunkSize = rendererStateHolder.stateChunkSize.getValue();
+		this.fractalPower = (int) jobStateHolder.statePower.getOutput();
+		this.fractalBias = jobStateHolder.getBias();
+		this.calculatorFactory = new CalculatorFactory(jobStateHolder.stateCalculator.getValue(), this);
+		this.chunkSize = jobStateHolder.stateChunkSize.getValue();
 	}
 
 	public StepProvider getStepProvider() {

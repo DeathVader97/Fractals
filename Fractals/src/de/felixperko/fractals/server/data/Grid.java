@@ -3,13 +3,14 @@ package de.felixperko.fractals.server.data;
 import java.util.HashMap;
 
 import de.felixperko.fractals.client.rendering.renderer.GridRenderer;
+import de.felixperko.fractals.server.tasks.TaskManager;
 import de.felixperko.fractals.server.util.Position;
 
 public class Grid {
 	
 	int chunk_size = 128;
 	
-	GridRenderer renderer;
+	TaskManager taskManager;
 	
 	HashMap<Long, HashMap<Long, Position>> positions = new HashMap<>();
 	
@@ -23,15 +24,15 @@ public class Grid {
 	double spaceShiftX;
 	double spaceShiftY;
 	
-	public Grid(GridRenderer renderer) {
-		this.renderer = renderer;
+	public Grid() {
 		
 		this.screenOffset = new Position(0,0);
 		this.screenShiftX = chunk_size;
 		this.screenShiftY = chunk_size;
 	}
 	
-	public void init(){
+	public void setTaskManager(TaskManager taskManager) {
+		this.taskManager = taskManager;
 		updateSpaceDimensions();
 	}
 
@@ -39,9 +40,9 @@ public class Grid {
 		Position pos = getPosition(gridX, gridY);
 		Chunk c = map.get(pos);
 		if (c == null) {
-			c = new Chunk(chunk_size, renderer.getDataDescriptor(), this, pos);
+			c = new Chunk(chunk_size, taskManager.getDataDescriptor(), this, pos);
 			map.put(pos, c);
-			renderer.getTaskManager().addChunk(c);
+			taskManager.addChunk(c);
 		}
 		return c;
 	}
@@ -89,8 +90,8 @@ public class Grid {
 		this.screenOffset = offset;
 //		Position newGridStart = getGridPosition((int)offset.getX(), (int)offset.getY());
 //		Position newSpaceStart = getSpacePosition(newGridStart);
-//		renderer.getDataDescriptor().setStart_x(newSpaceStart.getX());
-//		renderer.getDataDescriptor().setStart_y(newSpaceStart.getY());
+//		taskManager.getDataDescriptor().setStart_x(newSpaceStart.getX());
+//		taskManager.getDataDescriptor().setStart_y(newSpaceStart.getY());
 //		updateSpaceDimensions();
 	}
 
@@ -102,7 +103,7 @@ public class Grid {
 	public void updateSpaceDimensions() {
 		double scaleX = getScaleX();
 		double scaleY = getScaleY();
-		this.spaceOffset = new Position(renderer.getDataDescriptor().getStart_x(), renderer.getDataDescriptor().getStart_y());
+		this.spaceOffset = new Position(taskManager.getDataDescriptor().getStart_x(), taskManager.getDataDescriptor().getStart_y());
 //		this.spaceOffset = new Position(screenOffset.getX()*scaleX, screenOffset.getY()*scaleY);
 		this.spaceShiftX = screenShiftX*scaleX;
 		this.spaceShiftY = screenShiftY*scaleY;
@@ -110,14 +111,14 @@ public class Grid {
 	}
 	
 	public double getScaleX(){
-		return renderer.getDataDescriptor().getDelta_x()/renderer.getDataDescriptor().getDim_goal_x();
+		return taskManager.getDataDescriptor().getDelta_x()/taskManager.getDataDescriptor().getDim_goal_x();
 	}
 	
 	public double getScaleY(){
-		return renderer.getDataDescriptor().getDelta_y()/renderer.getDataDescriptor().getDim_goal_y();
+		return taskManager.getDataDescriptor().getDelta_y()/taskManager.getDataDescriptor().getDim_goal_y();
 	}
 
-	private Position getPosition(long gridX, long gridY) {
+	public Position getPosition(long gridX, long gridY) {
 		Position pos = null;
 		HashMap<Long, Position> yMap = positions.get(gridX);
 		if (yMap == null) {
@@ -136,7 +137,7 @@ public class Grid {
 	public void disposeChunk(Position key) {
 		Chunk c = map.remove(key);
 		c.dispose();
-		renderer.getTaskManager().removeChunkTask(c);
+		taskManager.removeChunkTask(c);
 		positions.get((long)key.getX()).remove((long)key.getY());
 	}
 
@@ -157,10 +158,6 @@ public class Grid {
 		
 //		spaceShiftX *= 0.5;
 //		spaceShiftY *= 0.5;
-	}
-
-	public GridRenderer getRenderer() {
-		return renderer;
 	}
 
 	public Position getSpacePosition(Position gridPosition) {

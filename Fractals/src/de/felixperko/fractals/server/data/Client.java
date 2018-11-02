@@ -49,6 +49,7 @@ public class Client {
 		
 		Domain domain = instance.getApplicableDomain(config);
 		view = domain.getApplicableView(config);
+		view.addClient(this);
 		
 		config.update_domain = false;
 		config.update_view = false;
